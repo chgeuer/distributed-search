@@ -1,0 +1,100 @@
+namespace MyTests
+{
+    using DataTypesFSharp;
+    using Fundamentals;
+    using Interfaces;
+    using NUnit.Framework;
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Reactive.Linq;
+
+    public class Tests
+    {
+        [SetUp]
+        public void Setup() { }
+
+        [Test]
+        public void Test1()
+        {
+            static Func<ProcessingContext, FashionItem, bool> NewStatefulFilter()
+            {
+                var bySizeDict = new Dictionary<int, FashionItem>();
+                bool emitNewEntry(ProcessingContext _, FashionItem i)
+                {
+                    var alreadyEmitted = bySizeDict.ContainsKey(i.Size);
+                    if (!alreadyEmitted)
+                    {
+                        bySizeDict.Add(i.Size, i);
+                    }
+                    return !alreadyEmitted;
+                }
+                return emitNewEntry;
+            }
+
+            IBusinessLogicFilterStatefulPredicate<ProcessingContext, FashionItem> createF()
+            {
+                static ComparisonResult comparePrice(ProcessingContext _, FashionItem existingItem, FashionItem newItem)
+                {
+                    if (existingItem.StockKeepingUnitID != newItem.StockKeepingUnitID)
+                    {
+                        return ComparisonResult.NotComparable;
+                    }
+
+                    return newItem.Price < existingItem.Price
+                        ? ComparisonResult.BetterAlternative
+                        : ComparisonResult.NotBetterAlternative;
+                }
+
+                return new GenericBetterAlternativeFilter<ProcessingContext, FashionItem>(comparePrice);
+            }
+
+            IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>> CreatePipeline() =>
+                new IBusinessLogicStep<ProcessingContext, FashionItem>[]
+                {
+                    new GenericFilter<ProcessingContext, FashionItem>((c,i) => c.Query.Size == i.Size),
+                    new GenericFilter<ProcessingContext, FashionItem>(NewStatefulFilter()),
+                    new MarkupAdder(),
+                };
+
+            static decimal markup2(FashionItem fi) => fi.FashionType switch
+            {
+                var x when x == FashionTypes.Hat => 0_12,
+                var x when x == FashionTypes.Throusers => 1_50,
+                _ => 1_00,
+            };
+            var businessData = new BusinessData(markup: markup2);
+
+            var query = new FashionQuery(size: 16, fashionType: FashionTypes.Hat);
+            var ctx2 = new ProcessingContext(query: query, businessData: businessData);
+
+            var sufficientlyGoodHat = new FashionItem(size: 16, fashionType: FashionTypes.Hat, price: 12_00, description: "A nice large hat", stockKeepingUnitID: Guid.NewGuid().ToString());
+            var sufficientlyGoodHatButTooExpensive = new FashionItem(size: 16, fashionType: FashionTypes.Hat, price: 12_50, description: "A nice large hat", stockKeepingUnitID: sufficientlyGoodHat.StockKeepingUnitID);
+            var someThrouser = new FashionItem(size: 54, fashionType: FashionTypes.Throusers, price: 120_00, description: "A blue Jeans", stockKeepingUnitID: Guid.NewGuid().ToString());
+            var aHatButTooSmall = new FashionItem(size: 15, fashionType: FashionTypes.Hat, price: 13_00, description: "A smaller hat", stockKeepingUnitID: Guid.NewGuid().ToString());
+            var someDifferentHat = new FashionItem(size: 16, fashionType: FashionTypes.Hat, price: 12_00, description: "A different large hat", stockKeepingUnitID: Guid.NewGuid().ToString());
+
+            var funcItems = new[] { sufficientlyGoodHat, someThrouser, aHatButTooSmall, someDifferentHat, sufficientlyGoodHatButTooExpensive };
+
+            var list = funcItems
+                .ApplySteps(ctx2, CreatePipeline())
+                .ToList();
+            Assert.AreEqual(list.Count, 1, "list.Count");
+            Assert.AreEqual(list[0].StockKeepingUnitID, sufficientlyGoodHat.StockKeepingUnitID, "list[0].StockKeepingUnitID, sufficientlyGoodHat.StockKeepingUnitID");
+            Assert.Greater(list[0].Price, funcItems[0].Price, "list[0].Price, funcItems[0].Price");
+
+            Console.WriteLine($"Result {list[0].Description}");
+
+            var list2 = funcItems
+                .ToObservable()
+                .ApplySteps(ctx2, CreatePipeline())
+                .ToEnumerable().ToList();
+
+            Assert.AreEqual(list2.Count, 1, "list.Count");
+            Assert.AreEqual(list2[0].Description, funcItems[0].Description, "list[0].Description, funcItems[0].Description");
+            Assert.Greater(list2[0].Price, funcItems[0].Price, "list[0].Price, funcItems[0].Price");
+
+            Console.WriteLine($"Result {list2[0].Description}");
+        }
+    }
+}
