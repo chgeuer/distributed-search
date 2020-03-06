@@ -22,5 +22,4 @@
     <NupkgPreviewTag>-preview01</NupkgPreviewTag>
     <NupkgVersion>$(NupkgMajorVersion).$(NupkgMinorVersion).$(NupkgPatchVersion)$(NupkgPreviewTag)</NupkgVersion>
   </PropertyGroup>
-  
 </Project>

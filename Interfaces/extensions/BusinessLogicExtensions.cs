@@ -7,8 +7,9 @@
 
     public static class BusinessLogicExtensions
     {
-        // TODO Needs to return IObservable<Command<TItem>>
-
+        /*
+         * TODO Needs to return IObservable<Command<TItem>>
+         **/
         public static IEnumerable<TItem> ApplySteps<TContext, TItem>(this IEnumerable<TItem> items, TContext ctx, IEnumerable<IBusinessLogicStep<TContext, TItem>> steps)
             => steps.Aggregate(items, (items, step) => items.ApplyStep(ctx, step));
 

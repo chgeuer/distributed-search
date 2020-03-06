@@ -1,9 +1,5 @@
 ﻿namespace Interfaces
 {
-    using Azure.Messaging.EventHubs;
-    using Azure.Messaging.EventHubs.Consumer;
-    using Azure.Messaging.EventHubs.Producer;
-    using LanguageExt;
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -12,6 +8,11 @@
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
+
+    using Azure.Messaging.EventHubs;
+    using Azure.Messaging.EventHubs.Consumer;
+    using Azure.Messaging.EventHubs.Producer;
+    using LanguageExt;
     using static LanguageExt.Prelude;
 
     public static class EventHubExtensions
@@ -31,15 +32,18 @@
                     readOptions: new ReadEventOptions(),
                     cancellationToken: cancellationToken);
 
-                _ = Task.Run(async () =>
-                {
-                    await foreach (var e in events)
+                _ = Task.Run(
+                    async () =>
                     {
-                        cts.Token.ThrowIfCancellationRequested();
-                        o.OnNext(e);
-                    }
-                    o.OnCompleted();
-                }, cts.Token);
+                        await foreach (var e in events)
+                        {
+                            cts.Token.ThrowIfCancellationRequested();
+                            o.OnNext(e);
+                        }
+
+                        o.OnCompleted();
+                    },
+                    cts.Token);
 
                 return new CancellationDisposable(cts);
             });

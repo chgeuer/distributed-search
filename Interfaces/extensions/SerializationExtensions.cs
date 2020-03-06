@@ -1,9 +1,9 @@
 ﻿namespace Interfaces
 {
-    using Newtonsoft.Json;
     using System.IO;
     using System.Text;
     using System.Threading.Tasks;
+    using Newtonsoft.Json;
 
     public static class SerializationExtensions
     {

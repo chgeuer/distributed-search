@@ -3,7 +3,9 @@
     using System.Collections.Generic;
     using Fundamentals;
 
-    public interface IBusinessLogicStep<TContext, TItem> { }
+    public interface IBusinessLogicStep<TContext, TItem>
+    {
+    }
 
     public interface IBusinessLogicFilterProjection<TContext, TItem> : IBusinessLogicStep<TContext, TItem>
     {
