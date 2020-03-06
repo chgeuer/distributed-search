@@ -49,6 +49,14 @@ type MarkupAdder() =
             let newPrice = item.Price + markup
             { item with Price = newPrice }
 
+type SizeFilter() =
+    interface IBusinessLogicFilterPredicate<ProcessingContext, FashionItem> with
+        member this.Matches(ctx, item) = ctx.Query.Size = item.Size
+
+type FashionTypeFilter() =
+    interface IBusinessLogicFilterPredicate<ProcessingContext, FashionItem> with
+        member this.Matches(ctx, item) = ctx.Query.FashionType = item.FashionType
+        
 open System.Runtime.CompilerServices
 // Don't want to do this https://stackoverflow.com/questions/18151969/can-we-get-access-to-the-f-copy-and-update-feature-from-c
 [<Extension>]

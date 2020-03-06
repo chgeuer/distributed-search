@@ -31,8 +31,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		Properties\common.props = Properties\common.props
 		Properties\netcore.props = Properties\netcore.props
-		README.md = README.md
 		Properties\stylecop.props = Properties\stylecop.props
+		README.md = README.md
 	EndProjectSection
 EndProject
 Global

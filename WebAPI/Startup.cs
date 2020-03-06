@@ -35,10 +35,12 @@ namespace WebAPI
             {
                 return new IBusinessLogicStep<ProcessingContext, FashionItem>[]
                 {
-                new GenericFilter<ProcessingContext, FashionItem>((c,i) => c.Query.Size == i.Size),
-                new GenericFilter<ProcessingContext, FashionItem>((c,i) => c.Query.FashionType == i.FashionType),
-                // GenericBetterAlternativeFilter<ProcessingContext, FashionItem>.FilterCheaperPrice(fi => fi.StockKeepingUnitID, fi => fi.Price),
-                new MarkupAdder(),
+                    // new GenericFilter<ProcessingContext, FashionItem>((c,i) => c.Query.Size == i.Size),
+                    new SizeFilter(),
+                    // new GenericFilter<ProcessingContext, FashionItem>((c,i) => c.Query.FashionType == i.FashionType),
+                    new FashionTypeFilter(),
+                    // GenericBetterAlternativeFilter<ProcessingContext, FashionItem>.FilterCheaperPrice(fi => fi.StockKeepingUnitID, fi => fi.Price),
+                    new MarkupAdder(),
                 };
             });
             services.AddSingleton<Func<BusinessData>>(() =>
@@ -71,7 +73,6 @@ namespace WebAPI
                 eventHubName: DemoCredential.EventHubTopicNameResponses,
                 credential: DemoCredential.AADServicePrincipal);
 
-
             // var replaySubject = new ReplaySubject<EventData>(window: TimeSpan.FromSeconds(15));
 
             var connectable = client
@@ -86,7 +87,7 @@ namespace WebAPI
                 .AsObservable();
         }
 
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public static void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
             {
