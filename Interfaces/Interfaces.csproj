@@ -12,9 +12,9 @@
     <PackageReference Include="Azure.Messaging.EventHubs" Version="5.0.1" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.3.0" />
     <PackageReference Include="Azure.Identity" Version="1.1.1" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="4.8.1" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.9.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="LanguageExt.Core" Version="3.4.10" />
+    <PackageReference Include="LanguageExt.Core" Version="3.4.12" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

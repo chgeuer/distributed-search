@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Pidgin" Version="2.2.0" />
+    <PackageReference Include="Pidgin" Version="2.3.0" />
     <PackageReference Include="Sprache" Version="2.2.0" />
   </ItemGroup>
 </Project>

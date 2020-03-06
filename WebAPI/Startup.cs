@@ -1,5 +1,9 @@
 namespace WebAPI
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Reactive.Linq;
+    using System.Threading.Tasks;
     using Azure.Messaging.EventHubs;
     using Azure.Messaging.EventHubs.Consumer;
     using Azure.Messaging.EventHubs.Producer;
@@ -11,10 +15,6 @@ namespace WebAPI
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using System;
-    using System.Collections.Generic;
-    using System.Reactive.Linq;
-    using System.Threading.Tasks;
 
     public class Startup
     {
@@ -22,7 +22,22 @@ namespace WebAPI
 
         public Startup(IConfiguration configuration)
         {
-            Configuration = configuration;
+            this.Configuration = configuration;
+        }
+
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+
+            app.UseRouting();
+            app.UseAuthorization();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -31,29 +46,34 @@ namespace WebAPI
             services.AddControllers();
             services.AddSingleton<Func<SearchRequest, Task>>(_ => SendSearchRequest());
             services.AddSingleton<IObservable<EventData>>(_ => CreateEventHubObservable());
-            services.AddSingleton<Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>>>(() =>
-            {
-                return new IBusinessLogicStep<ProcessingContext, FashionItem>[]
-                {
-                    // new GenericFilter<ProcessingContext, FashionItem>((c,i) => c.Query.Size == i.Size),
-                    new SizeFilter(),
-                    // new GenericFilter<ProcessingContext, FashionItem>((c,i) => c.Query.FashionType == i.FashionType),
-                    new FashionTypeFilter(),
-                    // GenericBetterAlternativeFilter<ProcessingContext, FashionItem>.FilterCheaperPrice(fi => fi.StockKeepingUnitID, fi => fi.Price),
-                    new MarkupAdder(),
-                };
-            });
-            services.AddSingleton<Func<BusinessData>>(() =>
-                {
-                    static decimal markup2(FashionItem fi) => fi.FashionType switch
-                    {
-                        var x when x == FashionTypes.Hat => 0_12,
-                        var x when x == FashionTypes.Throusers => 1_50,
-                        _ => 1_00,
-                    };
-                    return new BusinessData(markup: markup2);
-                });
+            services.AddSingleton<Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>>>(CreateBusinessSteps);
+            services.AddSingleton<Func<BusinessData>>(_ => GetBusinessData());
         }
+
+        private static Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> CreateBusinessSteps => () =>
+        {
+            return new IBusinessLogicStep<ProcessingContext, FashionItem>[]
+            {
+                    // new GenericFilter<ProcessingContext, FashionItem>((c,i) => c.Query.Size == i.Size),
+                    // new GenericFilter<ProcessingContext, FashionItem>((c,i) => c.Query.FashionType == i.FashionType),
+                    new SizeFilter(),
+
+                    // GenericBetterAlternativeFilter<ProcessingContext, FashionItem>.FilterCheaperPrice(fi => fi.StockKeepingUnitID, fi => fi.Price),
+                    new FashionTypeFilter(),
+                    new MarkupAdder(),
+            };
+        };
+
+        private static Func<BusinessData> GetBusinessData() => () =>
+        {
+            static decimal Markup2(FashionItem fi) => fi.FashionType switch
+            {
+                var x when x == FashionTypes.Hat => 0_12,
+                var x when x == FashionTypes.Throusers => 1_50,
+                _ => 1_00,
+            };
+            return new BusinessData(markup: Markup2);
+        };
 
         private static Func<SearchRequest, Task> SendSearchRequest()
         {
@@ -73,32 +93,19 @@ namespace WebAPI
                 eventHubName: DemoCredential.EventHubTopicNameResponses,
                 credential: DemoCredential.AADServicePrincipal);
 
-            // var replaySubject = new ReplaySubject<EventData>(window: TimeSpan.FromSeconds(15));
+            /* var replaySubject = new ReplaySubject<EventData>(window: TimeSpan.FromSeconds(15));
+             */
 
             var connectable = client
                 .CreateObservable()
                 .Select(partitionEvent => partitionEvent.Data)
                 .Publish();
-            // .Multicast(replaySubject);
+            /* .Multicast(replaySubject);*/
 
             connectable.Connect();
 
             return connectable // replaySubject
                 .AsObservable();
-        }
-
-        public static void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-        {
-            if (env.IsDevelopment())
-            {
-                app.UseDeveloperExceptionPage();
-            }
-            app.UseRouting();
-            app.UseAuthorization();
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapControllers();
-            });
         }
     }
 }
