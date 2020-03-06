@@ -14,4 +14,10 @@
   <ItemGroup>
     <ProjectReference Include="..\Fundamentals\Fundamentals.fsproj" />
   </ItemGroup>
+  <ItemGroup>
+    <AdditionalFiles Update="..\Properties\stylecop\stylecop.json" Link="Properties\stylecop.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="..\Properties\stylecop\GlobalStylecopSuppressions.cs" Link="GlobalStylecopSuppressions.cs" />
+  </ItemGroup>
 </Project>

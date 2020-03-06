@@ -1,10 +1,10 @@
 ﻿namespace Credentials
 {
-    using System;
-    using System.IO;
     using Azure.Core;
     using Azure.Identity;
     using Newtonsoft.Json;
+    using System;
+    using System.IO;
 
     public static class DemoCredential
     {
