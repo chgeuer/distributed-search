@@ -15,6 +15,7 @@ namespace WebAPI
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.FSharp.Collections;
 
     public class Startup
     {
@@ -66,13 +67,13 @@ namespace WebAPI
 
         private static Func<BusinessData> GetBusinessData() => () =>
         {
-            static decimal Markup2(FashionItem fi) => fi.FashionType switch
-            {
-                var x when x == FashionTypes.Hat => 0_12,
-                var x when x == FashionTypes.Throusers => 1_50,
-                _ => 1_00,
-            };
-            return new BusinessData(markup: Markup2);
+            return new BusinessData(
+              markup: new FSharpMap<string, decimal>(new[]
+              {
+                    Tuple.Create(FashionTypes.Hat, 0_12m),
+                    Tuple.Create(FashionTypes.Throusers, 1_50m),
+              }),
+              defaultMarkup: 1_00);
         };
 
         private static string GetCurrentComputeNodeResponseTopic() => DemoCredential.EventHubTopicNameResponses;

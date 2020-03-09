@@ -3,6 +3,7 @@ namespace MyTests
     using DataTypesFSharp;
     using Fundamentals;
     using Interfaces;
+    using Microsoft.FSharp.Collections;
     using NUnit.Framework;
     using System;
     using System.Collections.Generic;
@@ -57,13 +58,12 @@ namespace MyTests
                     new MarkupAdder(),
                 };
 
-            static decimal markup2(FashionItem fi) => fi.FashionType switch
-            {
-                var x when x == FashionTypes.Hat => 0_12,
-                var x when x == FashionTypes.Throusers => 1_50,
-                _ => 1_00,
-            };
-            var businessData = new BusinessData(markup: markup2);
+            var businessData = new BusinessData(
+                markup: new FSharpMap<string, decimal>(new[] { 
+                    Tuple.Create(FashionTypes.Hat, 0_12m),
+                    Tuple.Create(FashionTypes.Throusers, 1_50m),
+                }),
+                defaultMarkup: 1_00);
 
             var query = new FashionQuery(size: 16, fashionType: FashionTypes.Hat);
             var ctx2 = new ProcessingContext(query: query, businessData: businessData);

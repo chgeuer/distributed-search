@@ -14,7 +14,8 @@ type FashionItem =
       StockKeepingUnitID : string }
 
 type BusinessData =
-    { Markup: System.Func<FashionItem, decimal> }
+    { Markup: Map<FashionType, decimal>
+      DefaultMarkup: decimal }
 
 type ProcessingContext =
     { Query: FashionQuery 
@@ -45,7 +46,11 @@ open Interfaces
 type MarkupAdder() =
     interface IBusinessLogicFilterProjection<ProcessingContext, FashionItem> with
         member this.Map(ctx, item) =
-            let markup = ctx.BusinessData.Markup.Invoke(item)
+            let markup =
+                match ctx.BusinessData.Markup.TryFind(item.FashionType) with
+                    | Some value -> value
+                    | None -> ctx.BusinessData.DefaultMarkup
+
             let newPrice = item.Price + markup
             { item with Price = newPrice }
 
