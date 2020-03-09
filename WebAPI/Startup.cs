@@ -44,13 +44,13 @@ namespace WebAPI
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddSingleton<Func<SearchRequest, Task>>(_ => SendSearchRequest());
-            services.AddSingleton<IObservable<EventData>>(_ => CreateEventHubObservable());
-            services.AddSingleton<Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>>>(CreateBusinessSteps);
-            services.AddSingleton<Func<BusinessData>>(_ => GetBusinessData());
+            services.AddSingleton(_ => CreateEventHubObservable());
+            services.AddSingleton(_ => GetBusinessData());
+            services.AddSingleton(_ => SendSearchRequest());
+            services.AddSingleton(_ => CreateBusinessSteps());
         }
 
-        private static Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> CreateBusinessSteps => () =>
+        private static Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> CreateBusinessSteps() => () =>
         {
             return new IBusinessLogicStep<ProcessingContext, FashionItem>[]
             {
@@ -75,6 +75,8 @@ namespace WebAPI
             return new BusinessData(markup: Markup2);
         };
 
+        private static string GetCurrentComputeNodeResponseTopic() => DemoCredential.EventHubTopicNameResponses;
+
         private static Func<SearchRequest, Task> SendSearchRequest()
         {
             var responseProducer = new EventHubProducerClient(
@@ -90,7 +92,7 @@ namespace WebAPI
             var client = new EventHubConsumerClient(
                 consumerGroup: EventHubConsumerClient.DefaultConsumerGroupName,
                 fullyQualifiedNamespace: $"{DemoCredential.EventHubName}.servicebus.windows.net",
-                eventHubName: DemoCredential.EventHubTopicNameResponses,
+                eventHubName: GetCurrentComputeNodeResponseTopic(),
                 credential: DemoCredential.AADServicePrincipal);
 
             /* var replaySubject = new ReplaySubject<EventData>(window: TimeSpan.FromSeconds(15));
