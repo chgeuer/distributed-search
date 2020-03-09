@@ -13,9 +13,12 @@ type FashionItem =
       Description: string
       StockKeepingUnitID : string }
 
+type UpdateOffset = int64
+
 type BusinessData =
     { Markup: Map<FashionType, decimal>
-      DefaultMarkup: decimal }
+      DefaultMarkup: decimal
+      Version: UpdateOffset }
 
 type ProcessingContext =
     { Query: FashionQuery 
@@ -42,7 +45,7 @@ module FashionTypes =
     let Throusers : FashionType = "Throusers"
 
 open Interfaces
-    
+
 type MarkupAdder() =
     interface IBusinessLogicFilterProjection<ProcessingContext, FashionItem> with
         member this.Map(ctx, item) =
@@ -52,6 +55,7 @@ type MarkupAdder() =
                     | None -> ctx.BusinessData.DefaultMarkup
 
             let newPrice = item.Price + markup
+
             { item with Price = newPrice }
 
 type SizeFilter() =
@@ -63,10 +67,16 @@ type FashionTypeFilter() =
         member this.Matches(ctx, item) = ctx.Query.FashionType = item.FashionType
         
 open System.Runtime.CompilerServices
+
 // Don't want to do this https://stackoverflow.com/questions/18151969/can-we-get-access-to-the-f-copy-and-update-feature-from-c
+
 [<Extension>]
-module FashionItemExtensions =   
+module FashionExtensions =   
     [<Extension>]
     let WithPrice(fashionItem : FashionItem, newPrice : decimal) = 
         // This is a simple convenience extension method so that C# devs can say fashionItem.WithPrice(newPrice: fashionItem.Price + 1_00m)
         { fashionItem with Price = newPrice }
+
+    [<Extension>]
+    let AddMarkup(businessData: BusinessData, version: UpdateOffset, fashionType: FashionType, markupPrice: decimal) =
+        { businessData with Version = version ; Markup = businessData.Markup.Add(fashionType, markupPrice) }

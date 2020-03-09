@@ -1,19 +1,43 @@
 namespace MyTests
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Reactive.Linq;
     using DataTypesFSharp;
     using Fundamentals;
     using Interfaces;
     using Microsoft.FSharp.Collections;
     using NUnit.Framework;
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Reactive.Linq;
 
     public class Tests
     {
         [SetUp]
         public void Setup() { }
+
+        [Test]
+        public void TestBusinessDataUpdate()
+        {
+            var v1 = new BusinessData(
+              version: 1,
+              markup: new FSharpMap<string, decimal>(new[]
+              {
+                    Tuple.Create(FashionTypes.Hat, 0_12m),
+                    Tuple.Create(FashionTypes.Throusers, 1_50m),
+              }),
+              defaultMarkup: 1_00);
+
+            var v2 = v1.AddMarkup(
+                version: 2,
+                FashionTypes.Throusers, 2_00m);
+
+            Assert.AreEqual(v1.Version, 1);
+            Assert.AreEqual(v1.Markup[FashionTypes.Hat], 0_12m);
+            Assert.AreEqual(v1.Markup[FashionTypes.Throusers], 1_50m);
+            Assert.AreEqual(v2.Version, 2);
+            Assert.AreEqual(v2.Markup[FashionTypes.Hat], 0_12m);
+            Assert.AreEqual(v2.Markup[FashionTypes.Throusers], 2_00m);
+        }
 
         [Test]
         public void Test1()
@@ -63,7 +87,8 @@ namespace MyTests
                     Tuple.Create(FashionTypes.Hat, 0_12m),
                     Tuple.Create(FashionTypes.Throusers, 1_50m),
                 }),
-                defaultMarkup: 1_00);
+                defaultMarkup: 1_00,
+                version: 0);
 
             var query = new FashionQuery(size: 16, fashionType: FashionTypes.Hat);
             var ctx2 = new ProcessingContext(query: query, businessData: businessData);

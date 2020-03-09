@@ -1,4 +1,4 @@
-namespace WebAPI
+﻿namespace WebAPI
 {
     using System;
     using System.Collections.Generic;
@@ -15,7 +15,6 @@ namespace WebAPI
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using Microsoft.FSharp.Collections;
 
     public class Startup
     {
@@ -46,7 +45,7 @@ namespace WebAPI
         {
             services.AddControllers();
             services.AddSingleton(_ => CreateEventHubObservable());
-            services.AddSingleton(_ => GetBusinessData());
+            services.AddSingleton(_ => BusinessDataUpdates.GetBusinessData());
             services.AddSingleton(_ => SendSearchRequest());
             services.AddSingleton(_ => CreateBusinessSteps());
         }
@@ -63,17 +62,6 @@ namespace WebAPI
                     new FashionTypeFilter(),
                     new MarkupAdder(),
             };
-        };
-
-        private static Func<BusinessData> GetBusinessData() => () =>
-        {
-            return new BusinessData(
-              markup: new FSharpMap<string, decimal>(new[]
-              {
-                    Tuple.Create(FashionTypes.Hat, 0_12m),
-                    Tuple.Create(FashionTypes.Throusers, 1_50m),
-              }),
-              defaultMarkup: 1_00);
         };
 
         private static string GetCurrentComputeNodeResponseTopic() => DemoCredential.EventHubTopicNameResponses;

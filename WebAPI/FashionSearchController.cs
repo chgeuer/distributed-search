@@ -42,6 +42,9 @@
         [HttpGet]
         public async Task<SearchResponse<FashionItem>> Get(int size, string type = "Hat", int timeout = 15000)
         {
+            // snap a copy of the business data early in the process
+            var businessData = this.getBusinessData();
+
             /* curl --silent "http://localhost:5000/fashionsearch?size=54&type=Throusers&timeout=15000" | jq
              * curl --silent "http://localhost:5000/fashionsearch?size=16&type=Hat&timeout=5000" | jq
              **/
@@ -60,7 +63,7 @@
             stopwatch.Start();
             var responses =
                 this.GetResponses(requestId: searchRequest.RequestID)
-                    .ApplySteps(new ProcessingContext(query, this.getBusinessData()), this.createBusinessLogic())
+                    .ApplySteps(new ProcessingContext(query, businessData), this.createBusinessLogic())
                     .TakeUntil(responseMustBeReadyBy);
 
             await this.sendSearchRequest(searchRequest);
@@ -72,6 +75,7 @@
                 RequestID = searchRequest.RequestID,
                 Items = items,
                 Timing = $"Duration: {stopwatch.Elapsed.TotalSeconds.ToString("N3")}",
+                Version = businessData.Version,
             };
         }
 
@@ -104,5 +108,7 @@
         public IEnumerable<T> Items { get; set; }
 
         public string Timing { get; set; }
+
+        public long Version { get; set; }
     }
 }
