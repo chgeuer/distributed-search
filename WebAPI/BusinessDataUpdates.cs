@@ -18,15 +18,23 @@
             while (true)
             {
                 await Task.Delay(TimeSpan.FromSeconds(2));
+
                 var fashionType = FashionTypes.Hat;
                 var newMarkup = businessData.Value.Markup[fashionType] + 0_01m;
-                var newVersion = businessData.Value.Version + 1;
 
-                businessData = new Lazy<BusinessData>(businessData.Value.AddMarkup(
-                    version: newVersion,
-                    update: new BusinessDataUpdateMarkup(
+                var u = BusinessDataUpdate.NewMarkupUpdate(
                         fashionType: fashionType,
-                        markupPrice: newMarkup)));
+                        markupPrice: newMarkup);
+
+                // Just derialize/deserialize for fun
+                var update = await u.AsJSONStream().ReadJSON<BusinessDataUpdate>();
+
+                var newVersion = businessData.Value.Version + 1;
+                var newData = businessData.Value.Update(
+                    version: newVersion,
+                    update: update);
+
+                businessData = new Lazy<BusinessData>(newData);
 
                 await Console.Out.WriteLineAsync($"Updated markup for {fashionType} to version v{newVersion}: EUR {newMarkup / 100}");
             }

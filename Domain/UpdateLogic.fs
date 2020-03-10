@@ -5,5 +5,7 @@ open System.Runtime.CompilerServices
 [<Extension>]
 module BusinessDataExtensions =   
     [<Extension>]
-    let AddMarkup(businessData: BusinessData, version: UpdateOffset, update: BusinessDataUpdateMarkup) =
-        { businessData with Version = version ; Markup = businessData.Markup.Add(update.FashionType, update.MarkupPrice) }
+    let Update(businessData: BusinessData, version: UpdateOffset, update: BusinessDataUpdate) =
+        match update with
+        | MarkupUpdate(fashionType, markupPrice) -> { businessData with Version = version ; Markup = businessData.Markup.Add(fashionType, markupPrice) }
+        | BrandUpdate(key, value) -> { businessData with Version = version ; BrandNames = businessData.BrandNames.Add(key, value) }

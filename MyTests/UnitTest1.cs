@@ -25,20 +25,40 @@ namespace MyTests
                     Tuple.Create(FashionTypes.Hat, 0_12m),
                     Tuple.Create(FashionTypes.Throusers, 1_50m),
               }),
+              brandNames: new FSharpMap<string, string>(new[]
+              {
+                  Tuple.Create("DG", "Docker and Galbani")
+              }),
               defaultMarkup: 1_00);
 
-            var v2 = v1.AddMarkup(
+            var v2 = v1.Update(
                 version: 2,
-                new BusinessDataUpdateMarkup(
+                update: BusinessDataUpdate.NewMarkupUpdate(
                     fashionType: FashionTypes.Throusers,
                     markupPrice: 2_00m));
+
+            var v3 = v2.Update(
+                version: 3,
+                update: BusinessDataUpdate.NewBrandUpdate(
+                    brandAcronym: "BB",
+                    name: "Bruno Banano"));
 
             Assert.AreEqual(v1.Version, 1);
             Assert.AreEqual(v1.Markup[FashionTypes.Hat], 0_12m);
             Assert.AreEqual(v1.Markup[FashionTypes.Throusers], 1_50m);
+
             Assert.AreEqual(v2.Version, 2);
             Assert.AreEqual(v2.Markup[FashionTypes.Hat], 0_12m);
             Assert.AreEqual(v2.Markup[FashionTypes.Throusers], 2_00m);
+            Assert.False(v2.BrandNames.ContainsKey("BB"));
+
+            Assert.IsTrue(v1.BrandNames.ContainsKey("DG"));
+            Assert.IsTrue(v2.BrandNames.ContainsKey("DG"));
+            Assert.IsTrue(v3.BrandNames.ContainsKey("DG"));
+
+            Assert.IsFalse(v1.BrandNames.ContainsKey("BB"));
+            Assert.IsFalse(v2.BrandNames.ContainsKey("BB"));
+            Assert.IsTrue(v3.BrandNames.ContainsKey("BB"));
         }
 
         [Test]
@@ -88,6 +108,10 @@ namespace MyTests
                 markup: new FSharpMap<string, decimal>(new[] { 
                     Tuple.Create(FashionTypes.Hat, 0_12m),
                     Tuple.Create(FashionTypes.Throusers, 1_50m),
+                }),
+                brandNames: new FSharpMap<string, string>(new[]
+                {
+                    Tuple.Create("DG", "Docker and Galbani")
                 }),
                 defaultMarkup: 1_00,
                 version: 0);
