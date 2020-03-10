@@ -4,7 +4,7 @@ type UpdateOffset = int64
 
 type BusinessData =
     { Markup: Map<FashionType, decimal>
-      BrandNames: Map<string, string>
+      Brands: Map<string, string>
       DefaultMarkup: decimal
       Version: UpdateOffset }
 

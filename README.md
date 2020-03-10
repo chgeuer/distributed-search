@@ -52,3 +52,7 @@ type SizeFilter() =
     interface IBusinessLogicFilterPredicate<ProcessingContext, FashionItem> with
         member this.Matches(ctx, item) = ctx.Query.Size = item.Size
 ```
+
+## Note to self
+
+- Discriminated unions get properly serialized in .NET, so I probably don't need this one https://gist.github.com/isaacabraham/ba679f285bfd15d2f53e

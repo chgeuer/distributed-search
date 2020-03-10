@@ -1,5 +1,6 @@
 ﻿namespace Interfaces
 {
+    using System;
     using System.IO;
     using System.Text;
     using System.Threading.Tasks;
@@ -19,7 +20,12 @@
             await stream.CopyToAsync(ms);
             byte[] bytes = ms.ToArray();
             string s = bytes.ToUTF8String();
-            return JsonConvert.DeserializeObject<T>(s);
+            await Console.Out.WriteLineAsync(s);
+            var o = JsonConvert.DeserializeObject<T>(s, new JsonSerializerSettings
+            {
+                MissingMemberHandling = MissingMemberHandling.Error,
+            });
+            return o;
         }
     }
 }

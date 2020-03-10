@@ -25,7 +25,7 @@ namespace MyTests
                     Tuple.Create(FashionTypes.Hat, 0_12m),
                     Tuple.Create(FashionTypes.Throusers, 1_50m),
               }),
-              brandNames: new FSharpMap<string, string>(new[]
+              brands: new FSharpMap<string, string>(new[]
               {
                   Tuple.Create("DG", "Docker and Galbani")
               }),
@@ -50,15 +50,15 @@ namespace MyTests
             Assert.AreEqual(v2.Version, 2);
             Assert.AreEqual(v2.Markup[FashionTypes.Hat], 0_12m);
             Assert.AreEqual(v2.Markup[FashionTypes.Throusers], 2_00m);
-            Assert.False(v2.BrandNames.ContainsKey("BB"));
+            Assert.False(v2.Brands.ContainsKey("BB"));
 
-            Assert.IsTrue(v1.BrandNames.ContainsKey("DG"));
-            Assert.IsTrue(v2.BrandNames.ContainsKey("DG"));
-            Assert.IsTrue(v3.BrandNames.ContainsKey("DG"));
+            Assert.IsTrue(v1.Brands.ContainsKey("DG"));
+            Assert.IsTrue(v2.Brands.ContainsKey("DG"));
+            Assert.IsTrue(v3.Brands.ContainsKey("DG"));
 
-            Assert.IsFalse(v1.BrandNames.ContainsKey("BB"));
-            Assert.IsFalse(v2.BrandNames.ContainsKey("BB"));
-            Assert.IsTrue(v3.BrandNames.ContainsKey("BB"));
+            Assert.IsFalse(v1.Brands.ContainsKey("BB"));
+            Assert.IsFalse(v2.Brands.ContainsKey("BB"));
+            Assert.IsTrue(v3.Brands.ContainsKey("BB"));
         }
 
         [Test]
@@ -109,7 +109,7 @@ namespace MyTests
                     Tuple.Create(FashionTypes.Hat, 0_12m),
                     Tuple.Create(FashionTypes.Throusers, 1_50m),
                 }),
-                brandNames: new FSharpMap<string, string>(new[]
+                brands: new FSharpMap<string, string>(new[]
                 {
                     Tuple.Create("DG", "Docker and Galbani")
                 }),

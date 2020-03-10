@@ -17,26 +17,44 @@
         {
             while (true)
             {
-                await Task.Delay(TimeSpan.FromSeconds(2));
+                try
+                {
+                    await Task.Delay(TimeSpan.FromSeconds(2));
 
-                var fashionType = FashionTypes.Hat;
-                var newMarkup = businessData.Value.Markup[fashionType] + 0_01m;
+                    var bd = businessData.Value;
+                    var v = bd.Version;
 
-                var u = BusinessDataUpdate.NewMarkupUpdate(
-                        fashionType: fashionType,
-                        markupPrice: newMarkup);
+                    var fashionType = FashionTypes.Hat;
+                    var newMarkup = bd.Markup[fashionType] + 0_01m;
 
-                // Just derialize/deserialize for fun
-                var update = await u.AsJSONStream().ReadJSON<BusinessDataUpdate>();
+                    var u1 = BusinessDataUpdate.NewMarkupUpdate(
+                            fashionType: fashionType,
+                            markupPrice: newMarkup);
 
-                var newVersion = businessData.Value.Version + 1;
-                var newData = businessData.Value.Update(
-                    version: newVersion,
-                    update: update);
+                    var u2 = BusinessDataUpdate.NewBrandUpdate(
+                        brandAcronym: Guid.NewGuid().ToString(),
+                        name: "some new brand");
 
-                businessData = new Lazy<BusinessData>(newData);
+                    // Just derialize/deserialize for fun
+                    static Task<BusinessDataUpdate> RoundTrip(BusinessDataUpdate u) => u.AsJSONStream().ReadJSON<BusinessDataUpdate>();
 
-                await Console.Out.WriteLineAsync($"Updated markup for {fashionType} to version v{newVersion}: EUR {newMarkup / 100}");
+                    // Apply all updates
+                    var newData = bd
+                        .Update(
+                            version: v + 1,
+                            update: await RoundTrip(u1))
+                        .Update(
+                            version: v + 2,
+                            update: await RoundTrip(u2));
+
+                    businessData = new Lazy<BusinessData>(newData);
+
+                    await Console.Out.WriteLineAsync($"Updated markup for {fashionType} to version v{newData.Version}: EUR {newData.Markup[fashionType] / 100}");
+                }
+                catch (Exception ex)
+                {
+                    await Console.Error.WriteLineAsync($"Fuck: {ex.Message}");
+                }
             }
         });
 
