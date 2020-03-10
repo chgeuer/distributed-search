@@ -18,6 +18,15 @@ namespace MyTests
         [Test]
         public void TestBusinessDataUpdate()
         {
+            static Tuple<long, BusinessDataUpdate> toFsharp((long, BusinessDataUpdate) u) => Tuple.Create(u.Item1, u.Item2);
+
+            var updates = new (long, BusinessDataUpdate)[]
+                {
+                    (2, BusinessDataUpdate.NewMarkupUpdate(FashionTypes.Throusers, 2_00m)),
+                    (3, BusinessDataUpdate.NewBrandUpdate("BB", "Bruno Banano"))
+                }
+                .Select(toFsharp);
+
             var v1 = new BusinessData(
               version: 1,
               markup: new FSharpMap<string, decimal>(new[]
@@ -31,19 +40,21 @@ namespace MyTests
               }),
               defaultMarkup: 1_00);
 
-            var updates = new (long, BusinessDataUpdate)[]
-            {
-                (2, BusinessDataUpdate.NewMarkupUpdate(FashionTypes.Throusers, 2_00m)),
-                (3, BusinessDataUpdate.NewBrandUpdate("BB", "Bruno Banano"))
-            };
-
-            var v3 = updates.Aggregate(v1, (data, vu) => data.Update(vu.Item1, vu.Item2));
+            // apply all updates
+            var v2 = v1.ApplyUpdates(updates.Take(1));
+            var v3 = v1.ApplyUpdates(updates);
 
             Assert.AreEqual(v1.Version, 1);
             Assert.AreEqual(v1.Markup[FashionTypes.Hat], 0_12m);
             Assert.AreEqual(v1.Markup[FashionTypes.Throusers], 1_50m);
             Assert.IsFalse(v1.Brands.ContainsKey("BB"));
 
+            Assert.AreEqual(v2.Version, 2);
+            Assert.AreEqual(v2.Markup[FashionTypes.Hat], 0_12m);
+            Assert.AreEqual(v2.Markup[FashionTypes.Throusers], 2_00m);
+            Assert.IsFalse(v2.Brands.ContainsKey("BB"));
+
+            Assert.AreEqual(v3.Version, 3);
             Assert.AreEqual(v3.Markup[FashionTypes.Hat], 0_12m);
             Assert.AreEqual(v3.Markup[FashionTypes.Throusers], 2_00m);
             Assert.IsTrue(v3.Brands.ContainsKey("DG"));
