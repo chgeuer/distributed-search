@@ -51,14 +51,14 @@
                 blobContainerUri: new Uri($"https://{DemoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{DemoCredential.BusinessDataSnapshotContainerName}/"),
                 credential: DemoCredential.AADServicePrincipal);
 
-            Func<string, long> blobNameToOffset = n => long.TryParse(n.Replace(".json", string.Empty), out var l) ? l : -1;
-            Func<long, string> offsetToBlobName = o => $"{o}.json";
+            static long BlobNameToOffset(string n) => long.TryParse(n.Replace(".json", string.Empty), out var l) ? l : -1;
+            static string OffsetToBlobName(long o) => $"{o}.json";
 
             var blobs = snapshotContainerClient.GetBlobsAsync();
             var items = new List<long>();
             await foreach (var blob in blobs)
             {
-                items.Add(blobNameToOffset(blob.Name));
+                items.Add(BlobNameToOffset(blob.Name));
             }
 
             if (items.Count == 0)
@@ -72,7 +72,7 @@
                 return null;
             }
 
-            var blobClient = snapshotContainerClient.GetBlobClient(blobName: offsetToBlobName(offset));
+            var blobClient = snapshotContainerClient.GetBlobClient(blobName: OffsetToBlobName(offset));
             var result = await blobClient.DownloadAsync();
             return await result.Value.Content.ReadJSON<BusinessData>();
         }
