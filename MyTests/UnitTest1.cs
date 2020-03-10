@@ -31,33 +31,22 @@ namespace MyTests
               }),
               defaultMarkup: 1_00);
 
-            var v2 = v1.Update(
-                version: 2,
-                update: BusinessDataUpdate.NewMarkupUpdate(
-                    fashionType: FashionTypes.Throusers,
-                    markupPrice: 2_00m));
+            var updates = new (long, BusinessDataUpdate)[]
+            {
+                (2, BusinessDataUpdate.NewMarkupUpdate(FashionTypes.Throusers, 2_00m)),
+                (3, BusinessDataUpdate.NewBrandUpdate("BB", "Bruno Banano"))
+            };
 
-            var v3 = v2.Update(
-                version: 3,
-                update: BusinessDataUpdate.NewBrandUpdate(
-                    brandAcronym: "BB",
-                    name: "Bruno Banano"));
+            var v3 = updates.Aggregate(v1, (data, vu) => data.Update(vu.Item1, vu.Item2));
 
             Assert.AreEqual(v1.Version, 1);
             Assert.AreEqual(v1.Markup[FashionTypes.Hat], 0_12m);
             Assert.AreEqual(v1.Markup[FashionTypes.Throusers], 1_50m);
-
-            Assert.AreEqual(v2.Version, 2);
-            Assert.AreEqual(v2.Markup[FashionTypes.Hat], 0_12m);
-            Assert.AreEqual(v2.Markup[FashionTypes.Throusers], 2_00m);
-            Assert.False(v2.Brands.ContainsKey("BB"));
-
-            Assert.IsTrue(v1.Brands.ContainsKey("DG"));
-            Assert.IsTrue(v2.Brands.ContainsKey("DG"));
-            Assert.IsTrue(v3.Brands.ContainsKey("DG"));
-
             Assert.IsFalse(v1.Brands.ContainsKey("BB"));
-            Assert.IsFalse(v2.Brands.ContainsKey("BB"));
+
+            Assert.AreEqual(v3.Markup[FashionTypes.Hat], 0_12m);
+            Assert.AreEqual(v3.Markup[FashionTypes.Throusers], 2_00m);
+            Assert.IsTrue(v3.Brands.ContainsKey("DG"));
             Assert.IsTrue(v3.Brands.ContainsKey("BB"));
         }
 
