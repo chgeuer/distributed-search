@@ -11,29 +11,29 @@
 
     public static class BusinessDataUpdates
     {
-        private static readonly Task UpdateTask;
+        // This fire-and-forget task simulates the price for Hats going up by a cent each second. Inflationary 🤣
+        // In reality, this is the update feed for business and decision data
+        private static readonly Task UpdateTask = Task.Run(async () =>
+        {
+            while (true)
+            {
+                await Task.Delay(TimeSpan.FromSeconds(2));
+                var fashionType = FashionTypes.Hat;
+                var newMarkup = businessData.Value.Markup[fashionType] + 0_01m;
+                var newVersion = businessData.Value.Version + 1;
+
+                businessData = new Lazy<BusinessData>(businessData.Value.AddMarkup(
+                    version: newVersion,
+                    update: new BusinessDataUpdateMarkup(
+                        fashionType: fashionType,
+                        markupPrice: newMarkup)));
+
+                await Console.Out.WriteLineAsync($"Updated markup for {fashionType} to version v{newVersion}: EUR {newMarkup / 100}");
+            }
+        });
 
         private static Lazy<BusinessData> businessData =
             new Lazy<BusinessData>(() => FetchBusinessDataSnapshot().Result);
-
-        static BusinessDataUpdates()
-        {
-            // This fire-and-forget task simulates the price for Hats going up by a cent each second. Inflationary 🤣
-            // In reality, this is the update feed for business and decision data
-            BusinessDataUpdates.UpdateTask = Task.Run(async () =>
-            {
-                while (true)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(2));
-                    var fashionType = FashionTypes.Hat;
-                    var newMarkup = businessData.Value.Markup[fashionType] + 0_01m;
-                    var newVersion = businessData.Value.Version + 1;
-
-                    businessData = new Lazy<BusinessData>(businessData.Value.AddMarkup(newVersion, fashionType, newMarkup));
-                    await Console.Out.WriteLineAsync($"Updated markup for {fashionType} to version v{newVersion}: EUR {newMarkup / 100}");
-                }
-            });
-        }
 
         public static Func<BusinessData> GetBusinessData()
         {

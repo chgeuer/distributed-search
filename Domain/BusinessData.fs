@@ -10,3 +10,7 @@ type BusinessData =
 type ProcessingContext =
     { Query: FashionQuery 
       BusinessData: BusinessData }
+
+type BusinessDataUpdateMarkup =
+    { FashionType: FashionType
+      MarkupPrice: decimal }

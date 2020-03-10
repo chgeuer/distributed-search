@@ -29,7 +29,9 @@ namespace MyTests
 
             var v2 = v1.AddMarkup(
                 version: 2,
-                FashionTypes.Throusers, 2_00m);
+                new BusinessDataUpdateMarkup(
+                    fashionType: FashionTypes.Throusers,
+                    markupPrice: 2_00m));
 
             Assert.AreEqual(v1.Version, 1);
             Assert.AreEqual(v1.Markup[FashionTypes.Hat], 0_12m);
