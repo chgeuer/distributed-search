@@ -8,6 +8,7 @@ namespace MyTests
     using Fundamentals;
     using Interfaces;
     using Microsoft.FSharp.Collections;
+    using Newtonsoft.Json;
     using NUnit.Framework;
 
     public class Tests
@@ -16,16 +17,33 @@ namespace MyTests
         public void Setup() { }
 
         [Test]
+        public void TestFunky()
+        {
+            //static FSharpFunc<K, V> ToFSharp<K,V>(Func<K, V> func) =>
+            //    FSharpFunc<K, V>.FromConverter(new Converter<K, V>(func));
+
+            // var data = new FSharpMap<string, int>(new[] { ("hallo", 1) }.Select(TupleExtensions.ToTuple));
+            var data = JsonConvert.DeserializeObject<FSharpMap<string, int>>("{ \"hallo\": 2 }");
+            
+            var ops = new[] {
+                Update<string,int>.NewAdd(Tuple.Create("Foo", 3)),
+                Update<string,int>.NewAdd(Tuple.Create("Foo", 4)),
+                Update<string,int>.NewRemove("hallo"),
+                Update<string,int>.NewRemove("hallo"),
+            };
+            var r = data.ApplyUpdatesXX(ListModule.OfSeq(ops));
+            Console.WriteLine($"{r}");
+        }
+
+        [Test]
         public void TestBusinessDataUpdate()
         {
-            static Tuple<long, BusinessDataUpdate> toFsharp((long, BusinessDataUpdate) u) => Tuple.Create(u.Item1, u.Item2);
-
             var updates = new (long, BusinessDataUpdate)[]
                 {
                     (2, BusinessDataUpdate.NewMarkupUpdate(FashionTypes.Throusers, 2_00m)),
                     (3, BusinessDataUpdate.NewBrandUpdate("BB", "Bruno Banano"))
                 }
-                .Select(toFsharp);
+                .Select(TupleExtensions.ToTuple);
 
             var v1 = new BusinessData(
               version: 1,

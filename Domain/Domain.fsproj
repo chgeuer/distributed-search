@@ -3,10 +3,10 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="FashionData.fs" />
-    <Compile Include="BusinessData.fs" />
-    <Compile Include="BusinessLogic.fs" />
-    <Compile Include="UpdateLogic.fs" />
+    <Compile Include="DomainData.fs" />
+    <Compile Include="ConfigurationData.fs" />
+    <Compile Include="DomainLogic.fs" />
+    <Compile Include="ConfigurationLogic.fs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />

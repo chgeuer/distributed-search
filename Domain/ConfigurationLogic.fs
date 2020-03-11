@@ -18,7 +18,7 @@ module BusinessDataExtensions =
                 Brands = businessData.Brands.Add(key, value) }
 
     [<Extension>]
-    let ApplyUpdates(businessData: BusinessData, updates: IEnumerable<UpdateOffset * BusinessDataUpdate> ) : BusinessData =
+    let ApplyUpdates(businessData: BusinessData) (updates: IEnumerable<UpdateOffset * BusinessDataUpdate> ) : BusinessData =
         updates
         |> List.ofSeq
         |> List.fold
