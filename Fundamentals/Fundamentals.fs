@@ -24,14 +24,14 @@ type UpdateOperation<'k, 'v> =
 
 [<Extension>]
 module UpdateExtensions =
-    let Update (update: UpdateOperation<'k, 'v>) (map: Map<'k, 'v>): Map<'k, 'v> =
+    let ApplyUpdate (map: Map<'k, 'v>) (update: UpdateOperation<'k, 'v>) : Map<'k, 'v> =
         match update with
         | Add(key, value) -> map.Add(key, value)
         | Remove key -> map.Remove(key)
 
     [<Extension>]
     let ApplyUpdates (businessData: Map<'k, 'v>) (updates: UpdateOperation<'k, 'v> list): Map<'k, 'v> =
-        updates |> List.fold (fun map u -> Update u map) businessData
+        updates |> List.fold ApplyUpdate businessData
 
 type Update =
     { Offset: UpdateOffset
@@ -45,15 +45,16 @@ type UpdateableData =
 [<Extension>]
 module UpdateDataExtensions =
     [<Extension>]
-    let Update (data: UpdateableData) (update: Update): UpdateableData =
+    [<CompiledName("Update")>]
+    let ApplyUpdate (data: UpdateableData) (update: Update): UpdateableData =
         let map =
             if data.Data.ContainsKey(update.UpdateArea)
-            then data.Data.Item(update.UpdateArea) |> UpdateExtensions.Update update.Operation
+            then update.Operation |> UpdateExtensions.ApplyUpdate(data.Data.Item(update.UpdateArea))
             else Map.empty
         { data with
               Offset = update.Offset
               Data = data.Data.Add(update.UpdateArea, map) }
-
     [<Extension>]
     let ApplyUpdates (data: UpdateableData) (updates: Update list): UpdateableData =
-        updates |> List.fold (fun d u -> Update d u) data
+        updates |> List.fold ApplyUpdate data
+
