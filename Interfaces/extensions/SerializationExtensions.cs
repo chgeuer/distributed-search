@@ -12,7 +12,11 @@
 
         public static byte[] ToUTF8Bytes(this string str) => Encoding.UTF8.GetBytes(str);
 
-        public static Stream AsJSONStream<T>(this T t) => new MemoryStream(JsonConvert.SerializeObject(t).ToUTF8Bytes());
+        public static string AsJSON<T>(this T t) => JsonConvert.SerializeObject(t);
+
+        public static Stream AsJSONStream<T>(this T t) => new MemoryStream(t.AsJSON().ToUTF8Bytes());
+
+        public static T DeserializeJSON<T>(this string s) => JsonConvert.DeserializeObject<T>(s);
 
         public static async Task<T> ReadJSON<T>(this Stream stream)
         {
@@ -20,7 +24,6 @@
             await stream.CopyToAsync(ms);
             byte[] bytes = ms.ToArray();
             string s = bytes.ToUTF8String();
-            await Console.Out.WriteLineAsync(s);
             var o = JsonConvert.DeserializeObject<T>(s, new JsonSerializerSettings
             {
                 MissingMemberHandling = MissingMemberHandling.Error,

@@ -8,7 +8,6 @@ namespace MyTests
     using Fundamentals;
     using Interfaces;
     using Microsoft.FSharp.Collections;
-    using Newtonsoft.Json;
     using NUnit.Framework;
 
     public class Tests
@@ -17,22 +16,52 @@ namespace MyTests
         public void Setup() { }
 
         [Test]
+        public void Test2() 
+        {
+            var data = new UpdateableData(offset: 0, data: 
+                new FSharpMap<string, FSharpMap<string, string>>(Array.Empty<Tuple<string, FSharpMap<string, string>>>()));
+            Assert.AreEqual(0, data.Data.Count);
+
+            static UpdateOperation<string, string> Add(string key, string value) => UpdateOperation<string, string>.NewAdd(key, value);
+            static UpdateOperation<string, string> Remove(string key) => UpdateOperation<string, string>.NewRemove(key);
+
+            var updates = new[] {
+                new Update(offset: 20, updateArea: "brands", Add("DG", "Docker and Gabana")),
+                new Update(offset: 23, updateArea: "brands", Add("DÖ", "Diöhr")),
+                new Update(offset: 23, updateArea: "brands", Remove("DG")),
+            }.ToFSharp();
+
+            var updatedData = data.ApplyUpdates(updates);
+
+            Console.WriteLine(updatedData);
+        }
+
+        [Test]
         public void TestFunky()
         {
-            //static FSharpFunc<K, V> ToFSharp<K,V>(Func<K, V> func) =>
-            //    FSharpFunc<K, V>.FromConverter(new Converter<K, V>(func));
-
-            // var data = new FSharpMap<string, int>(new[] { ("hallo", 1) }.Select(TupleExtensions.ToTuple));
-            var data = JsonConvert.DeserializeObject<FSharpMap<string, int>>("{ \"hallo\": 2 }");
+            static UpdateOperation<string, int> Add(string key, int value) => UpdateOperation<string, int>.NewAdd(key, value);
+            static UpdateOperation<string, int> Remove(string key) => UpdateOperation<string, int>.NewRemove(key);
             
+            var input = "{ \"hallo\": 2 }";
+
             var ops = new[] {
-                Update<string,int>.NewAdd(Tuple.Create("Foo", 3)),
-                Update<string,int>.NewAdd(Tuple.Create("Foo", 4)),
-                Update<string,int>.NewRemove("hallo"),
-                Update<string,int>.NewRemove("hallo"),
-            };
-            var r = data.ApplyUpdatesXX(ListModule.OfSeq(ops));
-            Console.WriteLine($"{r}");
+                Add("Foo", 3),
+                Add("Foo", 4),
+                Remove("hallo"),
+                Add("Bar", 2),
+                Remove("hallo"),
+            }.ToFSharp();
+
+            var expected = "{\"Bar\":2,\"Foo\":4}";
+
+            var result =
+                input
+                .DeserializeJSON<FSharpMap<string, int>>()
+                .ApplyUpdates(ops);
+
+            Assert.AreEqual(expected.DeserializeJSON<FSharpMap<string, int>>(), result);
+
+            Console.WriteLine(result.AsJSON());
         }
 
         [Test]
@@ -58,9 +87,9 @@ namespace MyTests
               }),
               defaultMarkup: 1_00);
 
-            // apply all updates
-            var v2 = v1.ApplyUpdates(updates.Take(1));
-            var v3 = v1.ApplyUpdates(updates);
+            
+            var v2 = v1.ApplyUpdates(updates.Take(1)); // only apply a single update
+            var v3 = v1.ApplyUpdates(updates); // apply all updates
 
             Assert.AreEqual(v1.Version, 1);
             Assert.AreEqual(v1.Markup[FashionTypes.Hat], 0_12m);

@@ -1,34 +1,34 @@
-﻿namespace DataTypesFSharp
+namespace DataTypesFSharp
 
 type FashionType = string
 
-type FashionQuery = 
+type FashionQuery =
     { Size: int
       FashionType: FashionType }
 
 type FashionItem =
     { Size: int
       FashionType: FashionType
-      Price: decimal 
+      Price: decimal
       Description: string
-      StockKeepingUnitID : string }
+      StockKeepingUnitID: string }
 
 type SearchRequest =
-    { RequestID : string
-      ResponseTopic : string
-      Query : FashionQuery  }
+    { RequestID: string
+      ResponseTopic: string
+      Query: FashionQuery }
 
 type SearchResponsePayload =
-    { RequestID : string
-      Response : FashionItem list }
+    { RequestID: string
+      Response: FashionItem list }
 
 type SearchResponse =
-    { RequestID : string
-      ResponseBlob : string }
-      
+    { RequestID: string
+      ResponseBlob: string }
+
 module FashionTypes =
-    let TShirt : FashionType = "T-Shirt"
-    let Pullover : FashionType = "Pullover"
-    let Shoes : FashionType = "Shoes"
-    let Hat : FashionType = "Hat"
-    let Throusers : FashionType = "Throusers"
+    let TShirt: FashionType = "T-Shirt"
+    let Pullover: FashionType = "Pullover"
+    let Shoes: FashionType = "Shoes"
+    let Hat: FashionType = "Hat"
+    let Throusers: FashionType = "Throusers"

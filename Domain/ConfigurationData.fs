@@ -1,6 +1,6 @@
-﻿namespace DataTypesFSharp
+namespace DataTypesFSharp
 
-type UpdateOffset = int64
+open Fundamentals
 
 type BusinessData =
     { Markup: Map<FashionType, decimal>
@@ -9,9 +9,9 @@ type BusinessData =
       Version: UpdateOffset }
 
 type ProcessingContext =
-    { Query: FashionQuery 
+    { Query: FashionQuery
       BusinessData: BusinessData }
 
 type BusinessDataUpdate =
-   | MarkupUpdate of FashionType: FashionType * MarkupPrice: decimal
-   | BrandUpdate of BrandAcronym: string * Name: string
+    | MarkupUpdate of FashionType: FashionType * MarkupPrice: decimal
+    | BrandUpdate of BrandAcronym: string * Name: string
