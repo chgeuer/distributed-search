@@ -62,14 +62,33 @@ namespace MyTests
                 .ApplyUpdates(ops);
 
             Assert.AreEqual(expected.DeserializeJSON<FSharpMap<string, int>>(), result);
+        }
 
-            var d = new UpdateableData(
-                offset: 1, 
+        [Test]
+        public void TestGenericUpdates3()
+        {
+            static UpdateOperation<string, string> Add(string key, string value) => UpdateOperation<string, string>.NewAdd(key, value);
+            static UpdateOperation<string, string> Remove(string key) => UpdateOperation<string, string>.NewRemove(key);
+
+            var updates = new[]{
+                new Update(offset: 2, "f", Add("f3", "f4")),
+                new Update(offset: 3, "f", Remove("f1")),
+            }.ToFSharp();
+
+            var data = new UpdateableData(
+                offset: 1,
                 data: new[] {
                     ("f", new[] { ("f1", "f2") }),
                     ("a", new[] { ("a1", "a2"), ("a3", "a4") }),
                 }.ToFSharpMapOfMaps());
-            Console.WriteLine(d.AsJSON());
+
+            var postUpdate = data.ApplyUpdates(updates);
+
+            Assert.IsFalse(postUpdate.Data["f"].ContainsKey("13"));
+            Assert.IsTrue(postUpdate.Data["f"].ContainsKey("f3"));
+            Assert.AreEqual("f4", postUpdate.Data["f"]["f3"]);
+
+            Console.WriteLine(postUpdate.AsJSON());
         }
 
         [Test]
