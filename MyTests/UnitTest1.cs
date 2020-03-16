@@ -8,6 +8,7 @@ namespace MyTests
     using Fundamentals;
     using Interfaces;
     using Microsoft.FSharp.Collections;
+    using Newtonsoft.Json;
     using NUnit.Framework;
 
     public class Tests
@@ -16,7 +17,7 @@ namespace MyTests
         public void Setup() { }
 
         [Test]
-        public void Test2() 
+        public void TestGenericUpdates2() 
         {
             var data = new UpdateableData(offset: 0, data: 
                 new FSharpMap<string, FSharpMap<string, string>>(Array.Empty<Tuple<string, FSharpMap<string, string>>>()));
@@ -32,12 +33,13 @@ namespace MyTests
             }.ToFSharp();
 
             var updatedData = data.ApplyUpdates(updates);
+            Assert.AreEqual(1, updatedData.Data.Count);
 
-            Console.WriteLine(updatedData);
+            Console.WriteLine(JsonConvert.SerializeObject(updatedData));
         }
 
         [Test]
-        public void TestFunky()
+        public void TestGenericUpdates()
         {
             static UpdateOperation<string, int> Add(string key, int value) => UpdateOperation<string, int>.NewAdd(key, value);
             static UpdateOperation<string, int> Remove(string key) => UpdateOperation<string, int>.NewRemove(key);
@@ -61,18 +63,25 @@ namespace MyTests
 
             Assert.AreEqual(expected.DeserializeJSON<FSharpMap<string, int>>(), result);
 
-            Console.WriteLine(result.AsJSON());
+            var d = new UpdateableData(
+                offset: 1, 
+                data: new[] {
+                    ("f", new[] { ("f1", "f2") }),
+                    ("a", new[] { ("a1", "a2"), ("a3", "a4") }),
+                }.ToFSharpMapOfMaps());
+            Console.WriteLine(d.AsJSON());
         }
 
         [Test]
-        public void TestBusinessDataUpdate()
+        public void TestDomainSpecificUpdates()
         {
             var updates = new (long, BusinessDataUpdate)[]
                 {
                     (2, BusinessDataUpdate.NewMarkupUpdate(FashionTypes.Throusers, 2_00m)),
                     (3, BusinessDataUpdate.NewBrandUpdate("BB", "Bruno Banano"))
                 }
-                .Select(TupleExtensions.ToTuple);
+                .Select(TupleExtensions.ToTuple)
+                .ToFSharp();
 
             var v1 = new BusinessData(
               version: 1,
@@ -87,7 +96,6 @@ namespace MyTests
               }),
               defaultMarkup: 1_00);
 
-            
             var v2 = v1.ApplyUpdates(updates.Take(1)); // only apply a single update
             var v3 = v1.ApplyUpdates(updates); // apply all updates
 
