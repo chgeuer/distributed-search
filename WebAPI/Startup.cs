@@ -7,6 +7,7 @@
     using Azure.Messaging.EventHubs;
     using Azure.Messaging.EventHubs.Consumer;
     using Azure.Messaging.EventHubs.Producer;
+    using BusinessDataAggregation;
     using Credentials;
     using DataTypesFSharp;
     using Interfaces;

@@ -1,4 +1,4 @@
-﻿namespace WebAPI
+﻿namespace BusinessDataAggregation
 {
     using System;
     using System.Collections.Generic;
