@@ -61,14 +61,29 @@
         private static Lazy<BusinessData> businessData =
             new Lazy<BusinessData>(() => FetchBusinessDataSnapshot().Result);
 
-        public static Func<BusinessData> GetBusinessData()
+        public static Func<BusinessData> GetBusinessData() => () => businessData.Value;
+
+        private static async Task<(long, string)> GetLatestSnapshotID(
+            BlobContainerClient snapshotContainerClient, Func<string, (bool, long)> blobNameToOffset)
         {
-            return () =>
+            var blobs = snapshotContainerClient.GetBlobsAsync();
+            var items = new List<(long, string)>();
+            await foreach (var blob in blobs)
             {
-                var b = businessData.Value;
-                Console.Out.WriteLine($"Somebody wants business data, so we hand out version {b.Version}");
-                return b;
-            };
+                var (validated, l) = blobNameToOffset(blob.Name);
+                if (validated)
+                {
+                    var v = (l, blob.Name);
+                    items.Add(v);
+                }
+            }
+
+            if (items.Count == 0)
+            {
+                return (-1, string.Empty);
+            }
+
+            return items.OrderByDescending(_ => _.Item1).First();
         }
 
         private static async Task<BusinessData> FetchBusinessDataSnapshot()
@@ -77,28 +92,19 @@
                 blobContainerUri: new Uri($"https://{DemoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{DemoCredential.BusinessDataSnapshotContainerName}/"),
                 credential: DemoCredential.AADServicePrincipal);
 
-            static long BlobNameToOffset(string n) => long.TryParse(n.Replace(".json", string.Empty), out var l) ? l : -1;
-            static string OffsetToBlobName(long o) => $"{o}.json";
+            static (bool, long) BlobNameToOffset(string n) => long.TryParse(n.Replace(".json", string.Empty), out var l) ? (true, l) : (false, -1);
 
-            var blobs = snapshotContainerClient.GetBlobsAsync();
-            var items = new List<long>();
-            await foreach (var blob in blobs)
-            {
-                items.Add(BlobNameToOffset(blob.Name));
-            }
-
-            if (items.Count == 0)
-            {
-                return null;
-            }
-
-            var offset = items.Max();
+            var (offset, name) = await GetLatestSnapshotID(snapshotContainerClient, BlobNameToOffset);
             if (offset == -1)
             {
-                return null;
+                return new BusinessData(
+                    markup: new[] { (FashionTypes.Hat, 0_50m) }.ToFSharpMap(),
+                    brands: new[] { ("DÖ", "Diöhr") }.ToFSharpMap(),
+                    defaultMarkup: 1_00m,
+                    version: 1);
             }
 
-            var blobClient = snapshotContainerClient.GetBlobClient(blobName: OffsetToBlobName(offset));
+            var blobClient = snapshotContainerClient.GetBlobClient(blobName: name);
             var result = await blobClient.DownloadAsync();
             return await result.Value.Content.ReadJSON<BusinessData>();
         }

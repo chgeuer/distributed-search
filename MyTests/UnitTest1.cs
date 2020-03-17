@@ -8,7 +8,6 @@ namespace MyTests
     using Fundamentals;
     using Interfaces;
     using Microsoft.FSharp.Collections;
-    using Newtonsoft.Json;
     using NUnit.Framework;
 
     public class Tests
@@ -35,7 +34,7 @@ namespace MyTests
             var updatedData = data.ApplyUpdates(updates);
             Assert.AreEqual(1, updatedData.Data.Count);
 
-            Console.WriteLine(JsonConvert.SerializeObject(updatedData));
+            Console.WriteLine(updatedData.AsJSON());
         }
 
         [Test]
@@ -73,6 +72,7 @@ namespace MyTests
             var updates = new[]{
                 new Update(offset: 2, "f", Add("f3", "f4")),
                 new Update(offset: 3, "f", Remove("f1")),
+                "{\"Offset\":4,\"UpdateArea\":\"f\",\"Operation\":{\"Case\":\"Add\",\"Fields\":[\"f3\",\"f5\"]}}".DeserializeJSON<Update>(),
             }.ToFSharp();
 
             var data = new UpdateableData(
@@ -86,7 +86,7 @@ namespace MyTests
 
             Assert.IsFalse(postUpdate.Data["f"].ContainsKey("13"));
             Assert.IsTrue(postUpdate.Data["f"].ContainsKey("f3"));
-            Assert.AreEqual("f4", postUpdate.Data["f"]["f3"]);
+            Assert.AreEqual("f5", postUpdate.Data["f"]["f3"]);
 
             Console.WriteLine(postUpdate.AsJSON());
         }

@@ -51,7 +51,7 @@
 
         public static async Task SendJsonRequest<T>(this EventHubProducerClient eventHubProducerClient, T item, string requestId)
         {
-            byte[] serializedRequest = Newtonsoft.Json.JsonConvert.SerializeObject(item).ToUTF8Bytes();
+            byte[] serializedRequest = item.AsJSON().ToUTF8Bytes();
             var eventData = new EventData(eventBody: serializedRequest);
             eventData.Properties.Add("requestIDString", requestId);
             eventData.Properties.Add("currentMachineTimeUTC", DateTime.UtcNow);

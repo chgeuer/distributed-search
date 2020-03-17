@@ -3,7 +3,6 @@
     using BenchmarkDotNet.Attributes;
     using BenchmarkDotNet.Jobs;
     using BenchmarkDotNet.Running;
-    using Newtonsoft.Json;
     using StackExchange.Redis;
     using System;
     using System.Collections.Generic;
@@ -16,6 +15,7 @@
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
+    using Interfaces;
 
     #region RemoveNonSirectFlights
 
@@ -247,7 +247,7 @@
             {
                 var bytes = (byte[])redisValue;
                 var json = Encoding.UTF8.GetString(bytes);
-                return JsonConvert.DeserializeObject<Flight[]>(json);
+                return json.DeserializeJSON<Flight[]>();
             }
 
             // Create an observer to listen on a Redis channel
@@ -375,9 +375,7 @@
 
         public static async Task<long> PublishAsync<T>(this IDatabase database, RedisChannel channel, T value)
         {
-            var json = JsonConvert.SerializeObject(value);
-            var utf8Bytes = Encoding.UTF8.GetBytes(json);
-            var ms = new MemoryStream(utf8Bytes);
+            var ms = new MemoryStream(value.AsJSON().ToUTF8Bytes());
             var redisValue = RedisValue.CreateFrom(ms);
             return await database.PublishAsync(channel, redisValue, CommandFlags.PreferMaster);
         }

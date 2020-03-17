@@ -12,7 +12,6 @@
     using DataTypesFSharp;
     using Interfaces;
     using Microsoft.AspNetCore.Mvc;
-    using Newtonsoft.Json;
     using static LanguageExt.Prelude;
 
     [ApiController]
@@ -83,7 +82,7 @@
             this.responseObservable
                 .Where(eventData => eventData.GetProperty<string>("requestIDString") == Some(requestId))
                 .Select(eventData => eventData.GetBodyAsUTF8())
-                .Select(jsonStr => JsonConvert.DeserializeObject<SearchResponse>(jsonStr))
+                .Select(jsonStr => jsonStr.DeserializeJSON<SearchResponse>())
                 .Select(async r =>
                 {
                     var blobClient = this.blobContainerResponsesClient.GetBlobClient(blobName: r.ResponseBlob);
