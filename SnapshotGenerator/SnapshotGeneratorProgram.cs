@@ -8,6 +8,9 @@
     using Credentials;
     using Interfaces;
 
+    /// <summary>
+    /// This utility can run on multiple instances. In the worst case, we generate snapshots multiple times.
+    /// </summary>
     class SnapshotGeneratorProgram
     {
         static async Task Main()
@@ -27,22 +30,22 @@
             await businessDataUpdates.StartUpdateLoop();
 
             var bd = businessDataUpdates.GetBusinessData();
-            var lastUpdateWritten = DateTime.MinValue;
+            var (lastOffsetWritten, lastUpdateWritten) = (bd.Version, DateTime.MinValue);
             while (true)
             {
                 var oldBd = bd;
                 bd = businessDataUpdates.GetBusinessData();
 
-                if (!oldBd.Equals(bd))
+                if (oldBd.Version != bd.Version)
                 {
                     await Console.Out.WriteLineAsync($"{bd.AsJSON()}");
                 }
 
                 var snapshotMaxAge = TimeSpan.FromSeconds(10);
-                if (DateTime.UtcNow.Subtract(lastUpdateWritten) > snapshotMaxAge)
+                if (bd.Version != lastOffsetWritten && DateTime.UtcNow.Subtract(lastUpdateWritten) > snapshotMaxAge)
                 {
                     var snapshotName = await businessDataUpdates.WriteBusinessDataSnapshot(bd);
-                    lastUpdateWritten = DateTime.UtcNow;
+                    (lastOffsetWritten, lastUpdateWritten) = (bd.Version, DateTime.UtcNow);
                     await Console.Out.WriteLineAsync($"wrote snapshot {snapshotName}");
                 }
                 await Task.Delay(TimeSpan.FromSeconds(1));

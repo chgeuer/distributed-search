@@ -7,29 +7,38 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Azure;
+    using Azure.Core.Pipeline;
+    using Azure.Messaging.EventHubs;
     using Azure.Messaging.EventHubs.Consumer;
+    using Azure.Messaging.EventHubs.Producer;
     using Azure.Storage.Blobs;
+    using Azure.Storage.Blobs.Models;
     using DataTypesFSharp;
     using Interfaces;
+    using LanguageExt;
     using Microsoft.FSharp.Collections;
 
     public class BusinessDataProvider : IAsyncDisposable, IDisposable
     {
-        // This fire-and-forget task simulates the price for Hats going up by a cent each second. Inflationary 🤣
-        // In reality, this is the update feed for business and decision data
+        private static bool ParseOffsetFromBlobName(string n, out long offset) => long.TryParse(n.Replace(".json", string.Empty), out offset);
+
+        private static string OffsetToBlobName(long offset) => $"{offset}.json";
+
         private readonly BlobContainerClient snapshotContainerClient;
         private readonly EventHubConsumerClient eventHubConsumerClient;
+        private readonly EventHubProducerClient eventHubProducerClient;
         private bool running = false;
         private CancellationTokenSource cts;
         private BusinessData businessData;
         private long lastWrittenOffset = -1;
         private bool disposed = false;
+        private Task deletetionTask;
 
-        public BusinessDataProvider(BlobContainerClient snapshotContainerClient, EventHubConsumerClient eventHubConsumerClient)
+        public BusinessDataProvider(BlobContainerClient snapshotContainerClient, EventHubConsumerClient eventHubConsumerClient, EventHubProducerClient eventHubProducerClient = default)
         {
             this.snapshotContainerClient = snapshotContainerClient;
             this.eventHubConsumerClient = eventHubConsumerClient;
-            this.businessData = this.EmptyBusinessData();
+            this.eventHubProducerClient = eventHubProducerClient;
         }
 
         public async Task StartUpdateLoop(CancellationToken cancellationToken = default)
@@ -50,34 +59,47 @@
                     partitionId: "0",
                     startingPosition: EventPosition.FromOffset(
                         offset: this.businessData.Version,
-                        isInclusive: true),
+                        isInclusive: false),
                     cancellationToken: cancellationToken)
                 .Select(partitionEvent => partitionEvent.Data)
                 .Select(eventData => new { eventData.Offset, JsonString = eventData.GetBodyAsUTF8() })
                 .Select(x => new { x.Offset, BusinessDataUpdate = x.JsonString.DeserializeJSON<BusinessDataUpdate>() })
                 .Subscribe(
-                    onNext: o =>
+                    onNext: async o =>
                     {
+                        await Console.Out.WriteLineAsync($"Applying update {o.BusinessDataUpdate}");
+
                         // here we're only applying a single update
                         var updates = new (long, BusinessDataUpdate)[] { (o.Offset, o.BusinessDataUpdate), }
                             .Select(TupleExtensions.ToTuple)
                             .ToFSharp();
 
-                        // side effect
+                        // side effect. Here we replace one immutable object with another one.
                         this.businessData = this.businessData.ApplyUpdates(updates);
                     },
                     onError: ex => { },
                     onCompleted: () => { },
                     token: cancellationToken);
 
+            this.deletetionTask = Task.Run(() => this.DeleteOldSnapshots(maxAge: TimeSpan.FromHours(1), sleepTime: TimeSpan.FromMinutes(1), cancellationToken: this.cts.Token));
+
             await Console.Out.WriteLineAsync("Launched observer");
+        }
+
+        public async Task SendUpdate(BusinessDataUpdate update)
+        {
+            var eventData = new EventData(eventBody: update.AsJSON().ToUTF8Bytes());
+
+            using EventDataBatch batchOfOne = await this.eventHubProducerClient.CreateBatchAsync();
+            batchOfOne.TryAdd(eventData);
+            await this.eventHubProducerClient.SendAsync(batchOfOne);
         }
 
         public BusinessData GetBusinessData()
         {
             if (!this.running)
             {
-                throw new NotSupportedException($"{typeof(BusinessDataProvider).Name} instance is not yet started. Call {nameof(BusinessDataProvider.StartUpdateLoop)} first.");
+                throw new NotSupportedException($"{typeof(BusinessDataProvider).Name} instance is not yet started. Call {nameof(BusinessDataProvider.StartUpdateLoop)}() first.");
             }
 
             return this.businessData;
@@ -85,25 +107,22 @@
 
         public async Task<BusinessData> FetchBusinessDataSnapshot(CancellationToken cancellationToken)
         {
-            static (bool, long) BlobNameToOffset(string n) => long.TryParse(n.Replace(".json", string.Empty), out var l) ? (true, l) : (false, -1);
+            var someOffsetAndName = await this.GetLatestSnapshotID(cancellationToken);
+            return await someOffsetAndName.Match(
+                Some: async offsetAndName =>
+                {
+                    await Console.Out.WriteLineAsync($"Loading snapshot offset {offsetAndName.Item1} from {offsetAndName.Item2}");
 
-            var (offset, name) = await this.GetLatestSnapshotID(BlobNameToOffset, cancellationToken);
-            if (offset == -1)
-            {
-                return this.EmptyBusinessData();
-            }
-
-            await Console.Out.WriteLineAsync($"Loading snapshot offset {offset} from {name}");
-
-            var blobClient = this.snapshotContainerClient.GetBlobClient(blobName: name);
-            var result = await blobClient.DownloadAsync(cancellationToken: cancellationToken);
-            return await result.Value.Content.ReadJSON<BusinessData>();
+                    var blobClient = this.snapshotContainerClient.GetBlobClient(blobName: offsetAndName.Item2);
+                    var result = await blobClient.DownloadAsync(cancellationToken: cancellationToken);
+                    return await result.Value.Content.ReadJSON<BusinessData>();
+                },
+                None: () => Task.FromResult(this.EmptyBusinessData()));
         }
 
         public async Task<string> WriteBusinessDataSnapshot(BusinessData businessData, CancellationToken cancellationToken = default)
         {
-            // var businessData = this.GetBusinessData();
-            var blobName = $"{businessData.Version}.json";
+            var blobName = OffsetToBlobName(businessData.Version);
             var blobClient = this.snapshotContainerClient.GetBlobClient(blobName: blobName);
 
             if (businessData.Version == this.lastWrittenOffset)
@@ -122,6 +141,44 @@
             }
 
             return blobClient.Name;
+        }
+
+        public async Task DeleteOldSnapshots(TimeSpan maxAge, TimeSpan sleepTime, CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                var snapshots = await this.GetOldSnapshots(maxAge, cancellationToken);
+                foreach (var snapshot in snapshots)
+                {
+                    await Console.Out.WriteLineAsync($"Delete snapshot {snapshot.Item1} from {snapshot.Item2}");
+                    await this.snapshotContainerClient.DeleteBlobIfExistsAsync(
+                        blobName: OffsetToBlobName(snapshot.Item1),
+                        snapshotsOption: DeleteSnapshotsOption.IncludeSnapshots,
+                        cancellationToken: cancellationToken);
+                }
+
+                await Task.Delay(delay: sleepTime, cancellationToken: cancellationToken);
+            }
+        }
+
+        public async Task<IEnumerable<(long, DateTimeOffset)>> GetOldSnapshots(TimeSpan maxAge, CancellationToken cancellationToken)
+        {
+            var blobs = this.snapshotContainerClient.GetBlobsAsync(traits: BlobTraits.Metadata, cancellationToken: cancellationToken);
+            var items = new List<(long, DateTimeOffset)>();
+            await foreach (var blob in blobs)
+            {
+                if (ParseOffsetFromBlobName(blob.Name, out var offset) &&
+                    blob.Properties.LastModified.HasValue &&
+                    blob.Properties.LastModified.Value < DateTime.UtcNow.Subtract(maxAge))
+                {
+                    var v = (offset, blob.Properties.LastModified.Value);
+                    items.Add(v);
+                }
+            }
+
+            return items
+                .OrderBy(i => i.Item2)
+                .SkipLast(5);
         }
 
         public virtual ValueTask DisposeAsync()
@@ -161,14 +218,13 @@
             this.disposed = true;
         }
 
-        private async Task<(long, string)> GetLatestSnapshotID(Func<string, (bool, long)> blobNameToOffset, CancellationToken cancellationToken)
+        private async Task<Option<(long, string)>> GetLatestSnapshotID(CancellationToken cancellationToken)
         {
             var blobs = this.snapshotContainerClient.GetBlobsAsync(cancellationToken: cancellationToken);
             var items = new List<(long, string)>();
             await foreach (var blob in blobs)
             {
-                var (validated, offset) = blobNameToOffset(blob.Name);
-                if (validated)
+                if (ParseOffsetFromBlobName(blob.Name, out var offset))
                 {
                     var v = (offset, blob.Name);
                     items.Add(v);
@@ -177,15 +233,15 @@
 
             if (items.Count == 0)
             {
-                return (-1, string.Empty);
+                return Option<(long, string)>.None;
             }
 
-            return items.OrderByDescending(_ => _.Item1).First();
+            return Option<(long, string)>.Some(items.OrderByDescending(_ => _.Item1).First());
         }
 
         private BusinessData EmptyBusinessData() => new BusinessData(
-            markup: new FSharpMap<string, decimal>(new Tuple<string, decimal>[0]),
-            brands: new FSharpMap<string, string>(new Tuple<string, string>[0]),
+            markup: new FSharpMap<string, decimal>(Array.Empty<Tuple<string, decimal>>()),
+            brands: new FSharpMap<string, string>(Array.Empty<Tuple<string, string>>()),
             defaultMarkup: 0m,
             version: -1);
     }

@@ -3,11 +3,12 @@
     using System;
     using System.Threading;
     using System.Threading.Tasks;
-    using Azure.Messaging.EventHubs;
+    using Azure.Messaging.EventHubs.Consumer;
     using Azure.Messaging.EventHubs.Producer;
+    using Azure.Storage.Blobs;
+    using BusinessDataAggregation;
     using Credentials;
     using DataTypesFSharp;
-    using Interfaces;
 
     class UpdateConfigurationProgram
     {
@@ -15,12 +16,23 @@
         {
             Console.Title = "Update Configuration";
 
-            await using var eventHubProducerClient = new EventHubProducerClient(
-                fullyQualifiedNamespace: $"{DemoCredential.EventHubName}.servicebus.windows.net",
-                eventHubName: DemoCredential.EventHubTopicNameBusinessDataUpdates,
-                credential: DemoCredential.AADServicePrincipal);
-
             var cts = new CancellationTokenSource();
+
+            var businessDataUpdates = new BusinessDataProvider(
+               snapshotContainerClient: new BlobContainerClient(
+                   blobContainerUri: new Uri($"https://{DemoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{DemoCredential.BusinessDataSnapshotContainerName}/"),
+                   credential: DemoCredential.AADServicePrincipal),
+               eventHubConsumerClient: new EventHubConsumerClient(
+                   consumerGroup: EventHubConsumerClient.DefaultConsumerGroupName,
+                   fullyQualifiedNamespace: $"{DemoCredential.EventHubName}.servicebus.windows.net",
+                   eventHubName: DemoCredential.EventHubTopicNameBusinessDataUpdates,
+                   credential: DemoCredential.AADServicePrincipal),
+               eventHubProducerClient: new EventHubProducerClient(
+                   fullyQualifiedNamespace: $"{DemoCredential.EventHubName}.servicebus.windows.net",
+                   eventHubName: DemoCredential.EventHubTopicNameBusinessDataUpdates,
+                   credential: DemoCredential.AADServicePrincipal));
+
+            await businessDataUpdates.StartUpdateLoop(cts.Token);
 
             var fashionType = FashionTypes.Hat;
             while (true)
@@ -36,11 +48,7 @@
                         fashionType: FashionTypes.Hat,
                         markupPrice: newMarkup);
 
-                var eventData = new EventData(eventBody: update.AsJSON().ToUTF8Bytes());
-
-                using EventDataBatch batchOfOne = await eventHubProducerClient.CreateBatchAsync();
-                batchOfOne.TryAdd(eventData);
-                await eventHubProducerClient.SendAsync(batchOfOne);
+                await businessDataUpdates.SendUpdate(update);
 
                 await Console.Out.WriteLineAsync($"Update sent for {newMarkup}");
             }

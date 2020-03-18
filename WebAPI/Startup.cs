@@ -60,11 +60,17 @@
                     consumerGroup: EventHubConsumerClient.DefaultConsumerGroupName,
                     fullyQualifiedNamespace: $"{DemoCredential.EventHubName}.servicebus.windows.net",
                     eventHubName: DemoCredential.EventHubTopicNameBusinessDataUpdates,
+                    credential: DemoCredential.AADServicePrincipal),
+                eventHubProducerClient: new EventHubProducerClient(
+                    fullyQualifiedNamespace: $"{DemoCredential.EventHubName}.servicebus.windows.net",
+                    eventHubName: DemoCredential.EventHubTopicNameBusinessDataUpdates,
                     credential: DemoCredential.AADServicePrincipal));
 
             this.businessDataUpdates.StartUpdateLoop().Wait(); // need to start the loop before functioning
             Func<BusinessData> getBusinessData = () => this.businessDataUpdates.GetBusinessData();
             services.AddSingleton(_ => getBusinessData);
+
+            services.AddSingleton(_ => this.businessDataUpdates);
         }
 
         private static Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> CreateBusinessSteps() => () =>

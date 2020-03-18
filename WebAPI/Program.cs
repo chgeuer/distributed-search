@@ -8,7 +8,8 @@ namespace WebAPI
     {
         public static void Main(string[] args)
         {
-            Console.Title = "WebAPI";
+            Console.Title = "Web API";
+
             CreateHostBuilder(args).Build().Run();
         }
 

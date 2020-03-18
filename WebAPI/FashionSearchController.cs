@@ -60,21 +60,29 @@
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
+
+            // *** Subscribe and start processing inbound stream
             var responses =
                 this.GetResponses(requestId: searchRequest.RequestID)
                     .ApplySteps(new ProcessingContext(query, businessData), this.createBusinessLogic())
                     .TakeUntil(responseMustBeReadyBy);
 
+            // *** Send search request
             await this.sendSearchRequest(searchRequest);
-            FashionItem[] items = responses.ToEnumerable().ToArray();
+
+            // *** Aggregate all things we have when `responseMustBeReadyBy` fires
+            FashionItem[] items = responses
+                .ToEnumerable()
+                .ToArray(); // .OrderBy(GlobalOrder).Take(2000);
 
             stopwatch.Stop();
             return new SearchResponse<FashionItem>
             {
                 RequestID = searchRequest.RequestID,
                 Items = items,
-                Timing = $"Duration: {stopwatch.Elapsed.TotalSeconds.ToString("N3")}",
+                Timing = $"Duration: {stopwatch.Elapsed.TotalSeconds:N3}",
                 Version = businessData.Version,
+                BusinessData = businessData,
             };
         }
 
@@ -109,5 +117,7 @@
         public string Timing { get; set; }
 
         public long Version { get; set; }
+
+        public BusinessData BusinessData { get; set; }
     }
 }
