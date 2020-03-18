@@ -22,11 +22,15 @@
 
             var cts = new CancellationTokenSource();
 
-            var newMarkup = 0_01m;
-
+            var fashionType = FashionTypes.Hat;
             while (true)
             {
-                await Task.Delay(TimeSpan.FromSeconds(2));
+                await Console.Out.WriteAsync($"How much does a {fashionType} cost: ");
+                var input = await Console.In.ReadLineAsync();
+                if (!decimal.TryParse(input, out var newMarkup))
+                {
+                    continue;
+                }
 
                 var update = BusinessDataUpdate.NewMarkupUpdate(
                         fashionType: FashionTypes.Hat,
@@ -39,8 +43,6 @@
                 await eventHubProducerClient.SendAsync(batchOfOne);
 
                 await Console.Out.WriteLineAsync($"Update sent for {newMarkup}");
-
-                newMarkup += 0_01m;
             }
         }
     }
