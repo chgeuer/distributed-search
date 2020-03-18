@@ -7,6 +7,7 @@
     using Azure.Messaging.EventHubs;
     using Azure.Messaging.EventHubs.Consumer;
     using Azure.Messaging.EventHubs.Producer;
+    using Azure.Storage.Blobs;
     using BusinessDataAggregation;
     using Credentials;
     using DataTypesFSharp;
@@ -41,14 +42,29 @@
             });
         }
 
+        private BusinessDataProvider businessDataUpdates;
+
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
             services.AddSingleton(_ => CreateEventHubObservable());
-            services.AddSingleton(_ => BusinessDataUpdates.GetBusinessData());
             services.AddSingleton(_ => SendSearchRequest());
             services.AddSingleton(_ => CreateBusinessSteps());
+
+            this.businessDataUpdates = new BusinessDataProvider(
+                snapshotContainerClient: new BlobContainerClient(
+                    blobContainerUri: new Uri($"https://{DemoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{DemoCredential.BusinessDataSnapshotContainerName}/"),
+                    credential: DemoCredential.AADServicePrincipal),
+                eventHubConsumerClient: new EventHubConsumerClient(
+                    consumerGroup: EventHubConsumerClient.DefaultConsumerGroupName,
+                    fullyQualifiedNamespace: $"{DemoCredential.EventHubName}.servicebus.windows.net",
+                    eventHubName: DemoCredential.EventHubTopicNameBusinessDataUpdates,
+                    credential: DemoCredential.AADServicePrincipal));
+
+            this.businessDataUpdates.StartUpdateLoop().Wait(); // need to start the loop before functioning
+            Func<BusinessData> getBusinessData = () => this.businessDataUpdates.GetBusinessData();
+            services.AddSingleton(_ => getBusinessData);
         }
 
         private static Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> CreateBusinessSteps() => () =>

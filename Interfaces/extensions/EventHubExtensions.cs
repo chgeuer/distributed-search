@@ -17,20 +17,38 @@
 
     public static class EventHubExtensions
     {
-        public static object JsonConvert { get; private set; }
+        public static IObservable<PartitionEvent> CreateObservable(
+            this EventHubConsumerClient eventHubConsumerClient,
+            string partitionId,
+            EventPosition startingPosition,
+            CancellationToken cancellationToken = default)
+        {
+            return eventHubConsumerClient
+                .ReadEventsFromPartitionAsync(
+                    partitionId: partitionId,
+                    startingPosition: startingPosition,
+                    readOptions: new ReadEventOptions { },
+                    cancellationToken: cancellationToken)
+                .CreateObservable(cancellationToken);
+        }
 
         public static IObservable<PartitionEvent> CreateObservable(
             this EventHubConsumerClient eventHubConsumerClient,
             CancellationToken cancellationToken = default)
         {
+            return eventHubConsumerClient
+                .ReadEventsAsync(
+                    startReadingAtEarliestEvent: false,
+                    readOptions: new ReadEventOptions { },
+                    cancellationToken: cancellationToken)
+                .CreateObservable(cancellationToken);
+        }
+
+        public static IObservable<PartitionEvent> CreateObservable(this IAsyncEnumerable<PartitionEvent> events, CancellationToken cancellationToken = default)
+        {
             return Observable.Create<PartitionEvent>(o =>
             {
                 var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-
-                IAsyncEnumerable<PartitionEvent> events = eventHubConsumerClient.ReadEventsAsync(
-                    startReadingAtEarliestEvent: false,
-                    readOptions: new ReadEventOptions(),
-                    cancellationToken: cancellationToken);
 
                 _ = Task.Run(
                     async () =>
