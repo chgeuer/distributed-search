@@ -117,6 +117,7 @@ namespace MyTests
 
             var v2 = v1.ApplyUpdates(updates.Take(1)); // only apply a single update
             var v3 = v1.ApplyUpdates(updates); // apply all updates
+            var v3_2 = v2.ApplyUpdates(updates.Skip(1)); // apply only last update
 
             Assert.AreEqual(v1.Version, 1);
             Assert.AreEqual(v1.Markup[FashionTypes.Hat], 0_12m);
@@ -133,6 +134,8 @@ namespace MyTests
             Assert.AreEqual(v3.Markup[FashionTypes.Throusers], 2_00m);
             Assert.IsTrue(v3.Brands.ContainsKey("DG"));
             Assert.IsTrue(v3.Brands.ContainsKey("BB"));
+
+            Assert.AreEqual(v3, v3_2, "v3 == v3_2");
         }
 
         [Test]
