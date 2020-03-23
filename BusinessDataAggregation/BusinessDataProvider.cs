@@ -4,10 +4,10 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Reactive.Linq;
+    using System.Reactive.Subjects;
     using System.Threading;
     using System.Threading.Tasks;
     using Azure;
-    using Azure.Core.Pipeline;
     using Azure.Messaging.EventHubs;
     using Azure.Messaging.EventHubs.Consumer;
     using Azure.Messaging.EventHubs.Producer;
@@ -18,7 +18,7 @@
     using LanguageExt;
     using Microsoft.FSharp.Collections;
 
-    public class BusinessDataProvider : IAsyncDisposable, IDisposable
+    public class BusinessDataProvider
     {
         private static bool ParseOffsetFromBlobName(string n, out long offset) => long.TryParse(n.Replace(".json", string.Empty), out offset);
 
@@ -27,11 +27,8 @@
         private readonly BlobContainerClient snapshotContainerClient;
         private readonly EventHubConsumerClient eventHubConsumerClient;
         private readonly EventHubProducerClient eventHubProducerClient;
-        private bool running = false;
         private CancellationTokenSource cts;
-        private BusinessData businessData;
         private long lastWrittenOffset = -1;
-        private bool disposed = false;
         private Task deletetionTask;
 
         public BusinessDataProvider(BlobContainerClient snapshotContainerClient, EventHubConsumerClient eventHubConsumerClient, EventHubProducerClient eventHubProducerClient = default)
@@ -41,49 +38,40 @@
             this.eventHubProducerClient = eventHubProducerClient;
         }
 
-        public async Task StartUpdateLoop(CancellationToken cancellationToken = default)
-        {
-            if (this.running)
-            {
-                return;
-            }
+        public BusinessData BusinessData { get; private set; }
 
-            this.running = true;
+        public async Task StartUpdateProcess(CancellationToken cancellationToken = default)
+        {
+            IObservable<BusinessData> businessDataObservable = await this.CreateObservable(cancellationToken);
+            businessDataObservable.Subscribe(onNext: bd => { this.BusinessData = bd; });
+        }
+
+        public async Task<IObservable<BusinessData>> CreateObservable(CancellationToken cancellationToken = default)
+        {
+            this.deletetionTask = Task.Run(() => this.DeleteOldSnapshots(maxAge: TimeSpan.FromHours(1), sleepTime: TimeSpan.FromMinutes(1), cancellationToken: this.cts.Token));
 
             this.cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-            this.businessData = await this.FetchBusinessDataSnapshot(this.cts.Token);
+            BusinessData snapshotValue = await this.FetchBusinessDataSnapshot(this.cts.Token);
 
-            this.eventHubConsumerClient
+            IConnectableObservable<BusinessData> connectableObservable = this.eventHubConsumerClient
                 .CreateObservable(
                     partitionId: "0",
                     startingPosition: EventPosition.FromOffset(
-                        offset: this.businessData.Version,
+                        offset: snapshotValue.Version,
                         isInclusive: false),
                     cancellationToken: cancellationToken)
                 .Select(partitionEvent => partitionEvent.Data)
                 .Select(eventData => new { eventData.Offset, JsonString = eventData.GetBodyAsUTF8() })
-                .Select(x => new { x.Offset, BusinessDataUpdate = x.JsonString.DeserializeJSON<BusinessDataUpdate>() })
-                .Subscribe(
-                    onNext: async o =>
-                    {
-                        await Console.Out.WriteLineAsync($"Applying update {o.BusinessDataUpdate}");
+                .Select(x => Tuple.Create(x.Offset, x.JsonString.DeserializeJSON<BusinessDataUpdate>()))
+                .Scan(seed: snapshotValue, accumulator: (businessData, offsetAndUpdate) => businessData.ApplyUpdates(new[] { offsetAndUpdate }))
+                .StartWith(snapshotValue)
+                .Publish(initialValue: snapshotValue);
 
-                        // here we're only applying a single update
-                        var updates = new (long, BusinessDataUpdate)[] { (o.Offset, o.BusinessDataUpdate), }
-                            .Select(TupleExtensions.ToTuple)
-                            .ToFSharp();
+            _ = connectableObservable.Connect();
 
-                        // side effect. Here we replace one immutable object with another one.
-                        this.businessData = this.businessData.ApplyUpdates(updates);
-                    },
-                    onError: ex => { },
-                    onCompleted: () => { },
-                    token: cancellationToken);
-
-            this.deletetionTask = Task.Run(() => this.DeleteOldSnapshots(maxAge: TimeSpan.FromHours(1), sleepTime: TimeSpan.FromMinutes(1), cancellationToken: this.cts.Token));
-
-            await Console.Out.WriteLineAsync("Launched observer");
+            return connectableObservable
+                .AsObservable();
         }
 
         public async Task SendUpdate(BusinessDataUpdate update)
@@ -93,16 +81,6 @@
             using EventDataBatch batchOfOne = await this.eventHubProducerClient.CreateBatchAsync();
             batchOfOne.TryAdd(eventData);
             await this.eventHubProducerClient.SendAsync(batchOfOne);
-        }
-
-        public BusinessData GetBusinessData()
-        {
-            if (!this.running)
-            {
-                throw new NotSupportedException($"{typeof(BusinessDataProvider).Name} instance is not yet started. Call {nameof(BusinessDataProvider.StartUpdateLoop)}() first.");
-            }
-
-            return this.businessData;
         }
 
         public async Task<BusinessData> FetchBusinessDataSnapshot(CancellationToken cancellationToken)
@@ -179,43 +157,6 @@
             return items
                 .OrderBy(i => i.Item2)
                 .SkipLast(5);
-        }
-
-        public virtual ValueTask DisposeAsync()
-        {
-            try
-            {
-                this.Dispose();
-                return default;
-            }
-            catch (Exception exception)
-            {
-                return new ValueTask(Task.FromException(exception));
-            }
-        }
-
-        public void Dispose()
-        {
-            this.Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (this.disposed)
-            {
-                return;
-            }
-
-            if (disposing)
-            {
-                if (this.cts != null)
-                {
-                    this.cts.Cancel();
-                }
-            }
-
-            this.disposed = true;
         }
 
         private async Task<Option<(long, string)>> GetLatestSnapshotID(CancellationToken cancellationToken)

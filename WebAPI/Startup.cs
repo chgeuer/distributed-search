@@ -42,8 +42,6 @@
             });
         }
 
-        private BusinessDataProvider businessDataUpdates;
-
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
@@ -51,26 +49,7 @@
             services.AddSingleton(_ => CreateEventHubObservable());
             services.AddSingleton(_ => SendSearchRequest());
             services.AddSingleton(_ => CreateBusinessSteps());
-
-            this.businessDataUpdates = new BusinessDataProvider(
-                snapshotContainerClient: new BlobContainerClient(
-                    blobContainerUri: new Uri($"https://{DemoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{DemoCredential.BusinessDataSnapshotContainerName}/"),
-                    credential: DemoCredential.AADServicePrincipal),
-                eventHubConsumerClient: new EventHubConsumerClient(
-                    consumerGroup: EventHubConsumerClient.DefaultConsumerGroupName,
-                    fullyQualifiedNamespace: $"{DemoCredential.EventHubName}.servicebus.windows.net",
-                    eventHubName: DemoCredential.EventHubTopicNameBusinessDataUpdates,
-                    credential: DemoCredential.AADServicePrincipal),
-                eventHubProducerClient: new EventHubProducerClient(
-                    fullyQualifiedNamespace: $"{DemoCredential.EventHubName}.servicebus.windows.net",
-                    eventHubName: DemoCredential.EventHubTopicNameBusinessDataUpdates,
-                    credential: DemoCredential.AADServicePrincipal));
-
-            this.businessDataUpdates.StartUpdateLoop().Wait(); // need to start the loop before functioning
-            Func<BusinessData> getBusinessData = () => this.businessDataUpdates.GetBusinessData();
-            services.AddSingleton(_ => getBusinessData);
-
-            services.AddSingleton(_ => this.businessDataUpdates);
+            services.AddSingleton(_ => CreateBusinessData());
         }
 
         private static Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> CreateBusinessSteps() => () =>
@@ -120,6 +99,26 @@
 
             return connectable // replaySubject
                 .AsObservable();
+        }
+
+        private static Func<BusinessData> CreateBusinessData()
+        {
+            var businessDataUpdates = new BusinessDataProvider(
+                snapshotContainerClient: new BlobContainerClient(
+                    blobContainerUri: new Uri($"https://{DemoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{DemoCredential.BusinessDataSnapshotContainerName}/"),
+                    credential: DemoCredential.AADServicePrincipal),
+                eventHubConsumerClient: new EventHubConsumerClient(
+                    consumerGroup: EventHubConsumerClient.DefaultConsumerGroupName,
+                    fullyQualifiedNamespace: $"{DemoCredential.EventHubName}.servicebus.windows.net",
+                    eventHubName: DemoCredential.EventHubTopicNameBusinessDataUpdates,
+                    credential: DemoCredential.AADServicePrincipal),
+                eventHubProducerClient: new EventHubProducerClient(
+                    fullyQualifiedNamespace: $"{DemoCredential.EventHubName}.servicebus.windows.net",
+                    eventHubName: DemoCredential.EventHubTopicNameBusinessDataUpdates,
+                    credential: DemoCredential.AADServicePrincipal));
+
+            businessDataUpdates.StartUpdateProcess().Wait();
+            return () => businessDataUpdates.BusinessData;
         }
     }
 }

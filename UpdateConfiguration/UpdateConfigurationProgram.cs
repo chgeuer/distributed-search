@@ -32,7 +32,7 @@
                    eventHubName: DemoCredential.EventHubTopicNameBusinessDataUpdates,
                    credential: DemoCredential.AADServicePrincipal));
 
-            await businessDataUpdates.StartUpdateLoop(cts.Token);
+            var observable = await businessDataUpdates.CreateObservable(cts.Token);
 
             var fashionType = FashionTypes.Hat;
             while (true)

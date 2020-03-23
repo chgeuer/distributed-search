@@ -1,6 +1,8 @@
 ﻿namespace SnapshotGenerator
 {
     using System;
+    using System.Reactive.Linq;
+    using System.Threading;
     using System.Threading.Tasks;
     using Azure.Messaging.EventHubs.Consumer;
     using Azure.Storage.Blobs;
@@ -17,7 +19,7 @@
         {
             Console.Title = "Snapshot Generator";
 
-            using var businessDataUpdates = new BusinessDataProvider(
+            var businessDataUpdates = new BusinessDataProvider(
                 snapshotContainerClient: new BlobContainerClient(
                     blobContainerUri: new Uri($"https://{DemoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{DemoCredential.BusinessDataSnapshotContainerName}/"),
                     credential: DemoCredential.AADServicePrincipal),
@@ -27,29 +29,25 @@
                     eventHubName: DemoCredential.EventHubTopicNameBusinessDataUpdates,
                     credential: DemoCredential.AADServicePrincipal));
 
-            await businessDataUpdates.StartUpdateLoop();
+            var cts = new CancellationTokenSource();
+            var businessDataObservable = await businessDataUpdates.CreateObservable(cts.Token);
+            
+            businessDataObservable
+                .Sample(interval: TimeSpan.FromSeconds(5))
+                .Subscribe(
+                    onNext: async bd =>
+                    {
+                        await Console.Out.WriteLineAsync($"{bd.AsJSON()}");
+                        var snapshotName = await businessDataUpdates.WriteBusinessDataSnapshot(bd);
+                        await Console.Out.WriteLineAsync($"wrote snapshot {snapshotName}");
+                    },
+                    onError: ex => Console.Error.WriteLine($"ERROR: {ex.Message}"),
+                    onCompleted: () => Console.Out.WriteLine($"Completed"),
+                    token: cts.Token);
 
-            var bd = businessDataUpdates.GetBusinessData();
-            var (lastOffsetWritten, lastUpdateWritten) = (bd.Version, DateTime.MinValue);
-            while (true)
-            {
-                var oldBd = bd;
-                bd = businessDataUpdates.GetBusinessData();
-
-                if (oldBd.Version != bd.Version)
-                {
-                    await Console.Out.WriteLineAsync($"{bd.AsJSON()}");
-                }
-
-                var snapshotMaxAge = TimeSpan.FromSeconds(10);
-                if (bd.Version != lastOffsetWritten && DateTime.UtcNow.Subtract(lastUpdateWritten) > snapshotMaxAge)
-                {
-                    var snapshotName = await businessDataUpdates.WriteBusinessDataSnapshot(bd);
-                    (lastOffsetWritten, lastUpdateWritten) = (bd.Version, DateTime.UtcNow);
-                    await Console.Out.WriteLineAsync($"wrote snapshot {snapshotName}");
-                }
-                await Task.Delay(TimeSpan.FromSeconds(1));
-            }
+            await Console.Out.WriteAsync("Press <return> to stop snapshot generation");
+            _ = await Console.In.ReadLineAsync();
+            cts.Cancel();
         }
     }
 }

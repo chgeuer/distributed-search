@@ -18,10 +18,10 @@
     [Route("[controller]")]
     public class FashionSearchController : ControllerBase
     {
+        private readonly Func<BusinessData> getBusinessData;
         private readonly IObservable<EventData> responseObservable;
         private readonly Func<SearchRequest, Task> sendSearchRequest;
         private readonly Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> createBusinessLogic;
-        private readonly Func<BusinessData> getBusinessData;
         private readonly BlobContainerClient blobContainerResponsesClient;
 
         public FashionSearchController(
@@ -41,12 +41,14 @@
         [HttpGet]
         public async Task<SearchResponse<FashionItem>> Get(int size, string type = "Hat", int timeout = 15000)
         {
-            // snap a copy of the business data early in the process
-            var businessData = this.getBusinessData();
-
             /* curl --silent "http://localhost:5000/fashionsearch?size=54&type=Throusers&timeout=15000" | jq
              * curl --silent "http://localhost:5000/fashionsearch?size=16&type=Hat&timeout=5000" | jq
              **/
+
+            // snap a copy of the business data early in the process
+            await Console.Out.WriteLineAsync("Fetch biz data");
+            var businessData = this.getBusinessData();
+            await Console.Out.WriteLineAsync($"Got biz data {businessData.Version}");
 
             var responseMustBeReadyBy = DateTimeOffset.Now.Add(
                 this.SubtractExpectedComputeTime(
