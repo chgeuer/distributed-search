@@ -1,33 +1,33 @@
 ﻿namespace SampleProvider
 {
+    using System;
+    using System.Linq;
+    using System.Reactive.Linq;
+    using System.Threading;
+    using System.Threading.Tasks;
     using Azure.Storage.Blobs;
     using Credentials;
     using DataTypesFSharp;
     using Interfaces;
     using Messaging.AzureImpl;
     using Microsoft.FSharp.Collections;
-    using System;
-    using System.Linq;
-    using System.Reactive.Linq;
-    using System.Threading;
-    using System.Threading.Tasks;
 
     internal class SampleProviderProgram
     {
         private static async Task Main()
         {
-            Console.Title = "SampleProvider";
+            Console.Title = "Sample Provider";
 
             var blobStorageServiceClient = new BlobContainerClient(
                blobContainerUri: new Uri($"https://{DemoCredential.StorageOffloadAccountName}.blob.core.windows.net/{DemoCredential.StorageOffloadContainerNameResponses}/"),
                credential: DemoCredential.AADServicePrincipal);
 
             var requestsClient = MessagingClients.Requests<SearchRequest>();
-            var responseProducer = MessagingClients.Responses<SearchResponse>();
+            var responseProducer = MessagingClients.Responses<SearchResponse>(partitionId: "0");
 
             var cts = new CancellationTokenSource();
 
-            static string getBlobName(SearchRequest search, string requestId) => $"{requestId}/{Guid.NewGuid().ToString()}.json";
+            static string getBlobName(SearchRequest search, string requestId) => $"{requestId}/{Guid.NewGuid()}.json";
 
             requestsClient
                 .CreateObervable(SeekPosition.Tail, cts.Token)
@@ -36,9 +36,7 @@
                         {
                             var search = searchTuple.Item2;
                             var requestId = search.RequestID;
-                            Console.ForegroundColor = ConsoleColor.Yellow;
                             Console.Out.WriteLine($"{requestId}: Somebody's looking for {search.Query.FashionType}");
-                            Console.ResetColor();
 
                             var tcs = new TaskCompletionSource<bool>();
 
@@ -47,22 +45,20 @@
                                     requestID: requestId,
                                     response: ListModule.OfArray(new[] { foundFashionItem })))
                                 .Subscribe(
-                                    onNext: async (response) =>
+                                    onNext: async (responsePayload) =>
                                     {
                                         var blobName = getBlobName(search, requestId);
 
                                         var uploadInfo = await blobStorageServiceClient.UploadBlobAsync(
                                             blobName: blobName,
-                                            content: response.AsJSONStream(),
+                                            content: responsePayload.AsJSONStream(),
                                             cancellationToken: cts.Token);
 
                                         await responseProducer.SendMessage(
                                             new SearchResponse(requestID: requestId, responseBlob: blobName),
-                                            requestId: response.RequestID);
+                                            requestId: requestId);
 
-                                        Console.ForegroundColor = ConsoleColor.Blue;
-                                        await Console.Out.WriteLineAsync($"{requestId}: Sending {response.Response.Head.Description} ({uploadInfo.Value.ETag})");
-                                        Console.ResetColor();
+                                        await Console.Out.WriteLineAsync($"{requestId}: Sending {responsePayload.Response.Head.Description} ({uploadInfo.Value.ETag})");
                                     },
                                     onError: ex =>
                                     {
@@ -70,9 +66,7 @@
                                     },
                                     onCompleted: async () =>
                                     {
-                                        Console.ForegroundColor = ConsoleColor.Green;
                                         await Console.Out.WriteLineAsync($"Finished with request {requestId}");
-                                        Console.ResetColor();
                                         tcs.SetResult(true);
                                     },
                                     token: cts.Token

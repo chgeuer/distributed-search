@@ -18,6 +18,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Credentials\Credentials.csproj" />
     <ProjectReference Include="..\..\Interfaces\Interfaces.csproj" />
-    <ProjectReference Include="..\..\Messaging\AzureMessaging.csproj" />
+    <ProjectReference Include="..\..\Messaging.AzureImpl\Messaging.AzureImpl.csproj" />
   </ItemGroup>
 </Project>

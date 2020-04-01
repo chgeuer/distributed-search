@@ -8,12 +8,12 @@
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using global::Azure.Messaging.EventHubs;
-    using global::Azure.Messaging.EventHubs.Consumer;
-    using global::Azure.Messaging.EventHubs.Producer;
+    using Azure.Messaging.EventHubs;
+    using Azure.Messaging.EventHubs.Consumer;
+    using Azure.Messaging.EventHubs.Producer;
+    using Interfaces;
     using LanguageExt;
     using static LanguageExt.Prelude;
-    using Interfaces;
 
     public static class EventHubExtensions
     {
@@ -44,7 +44,7 @@
                 .CreateObservable(cancellationToken);
         }
 
-        public static IObservable<PartitionEvent> CreateObservable(this IAsyncEnumerable<PartitionEvent> events, CancellationToken cancellationToken = default)
+        internal static IObservable<PartitionEvent> CreateObservable(this IAsyncEnumerable<PartitionEvent> events, CancellationToken cancellationToken = default)
         {
             return Observable.Create<PartitionEvent>(o =>
             {

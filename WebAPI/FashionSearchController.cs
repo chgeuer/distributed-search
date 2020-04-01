@@ -6,27 +6,24 @@
     using System.Linq;
     using System.Reactive.Linq;
     using System.Threading.Tasks;
-    using Azure.Messaging.EventHubs;
     using Azure.Storage.Blobs;
     using Credentials;
     using DataTypesFSharp;
     using Interfaces;
-    using Messaging.AzureImpl;
     using Microsoft.AspNetCore.Mvc;
-    using static LanguageExt.Prelude;
 
     [ApiController]
     [Route("[controller]")]
     public class FashionSearchController : ControllerBase
     {
         private readonly Func<BusinessData> getBusinessData;
-        private readonly IObservable<EventData> responseObservable;
+        private readonly IObservable<Tuple<long, SearchResponse>> responseObservable;
         private readonly Func<SearchRequest, Task> sendSearchRequest;
         private readonly Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> createBusinessLogic;
         private readonly BlobContainerClient blobContainerResponsesClient;
 
         public FashionSearchController(
-            IObservable<EventData> responseObservable,
+            IObservable<Tuple<long, SearchResponse>> responseObservable,
             Func<SearchRequest, Task> sendSearchRequest,
             Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> createBusinessLogic,
             Func<BusinessData> getBusinessData)
@@ -90,11 +87,10 @@
 
         private IObservable<FashionItem> GetResponses(string requestId) =>
             this.responseObservable
-                .Where(eventData => eventData.GetProperty<string>("requestIDString") == Some(requestId))
-                .Select(eventData => eventData.GetBodyAsUTF8())
-                .Select(jsonStr => jsonStr.DeserializeJSON<SearchResponse>())
-                .Select(async r =>
+                .Select(async offsetAndResponse =>
                 {
+                    var r = offsetAndResponse.Item2;
+                    await Console.Out.WriteLineAsync($"Received {offsetAndResponse.Item1} {r}");
                     var blobClient = this.blobContainerResponsesClient.GetBlobClient(blobName: r.ResponseBlob);
                     var result = await blobClient.DownloadAsync();
                     var payload = await result.Value.Content.ReadJSON<SearchResponsePayload>();

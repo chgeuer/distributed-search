@@ -6,6 +6,7 @@
     <Company>Microsoft</Company>
     <RepositoryType>git</RepositoryType>
     <CodeAnalysisRuleSet>..\Properties\stylecop\StyleCop.ruleset</CodeAnalysisRuleSet>
+    <RootNamespace>Messaging.AzureImpl</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Reactive.Linq" Version="4.3.2" />

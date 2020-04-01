@@ -4,9 +4,6 @@
     using System.Collections.Generic;
     using System.Reactive.Linq;
     using System.Threading.Tasks;
-    using Azure.Messaging.EventHubs;
-    using Azure.Messaging.EventHubs.Consumer;
-    using Azure.Messaging.EventHubs.Producer;
     using Azure.Storage.Blobs;
     using BusinessDataAggregation;
     using Credentials;
@@ -77,22 +74,16 @@
             return searchRequest => requestProducer.SendMessage(searchRequest, requestId: searchRequest.RequestID);
         }
 
-        private static IObservable<EventData> CreateEventHubObservable()
+        private static IObservable<Tuple<long, SearchResponse>> CreateEventHubObservable()
         {
-            var client = new EventHubConsumerClient(
-                consumerGroup: EventHubConsumerClient.DefaultConsumerGroupName,
-                fullyQualifiedNamespace: $"{DemoCredential.EventHubName}.servicebus.windows.net",
-                eventHubName: GetCurrentComputeNodeResponseTopic(),
-                credential: DemoCredential.AADServicePrincipal);
-
             /* var replaySubject = new ReplaySubject<EventData>(window: TimeSpan.FromSeconds(15));
              */
 
-            var connectable = client
-                .CreateObservable()
-                .Select(partitionEvent => partitionEvent.Data)
+            var connectable = MessagingClients
+                .Responses<SearchResponse>(partitionId: "0")
+                .CreateObervable(SeekPosition.Tail)
                 .Publish();
-            /* .Multicast(replaySubject);*/
+                /* .Multicast(replaySubject);*/
 
             connectable.Connect();
 

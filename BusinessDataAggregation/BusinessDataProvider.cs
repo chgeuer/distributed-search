@@ -30,7 +30,7 @@
 
         public BusinessDataProvider(BlobContainerClient snapshotContainerClient)
         {
-            this.updateMessagingClient = MessagingClients.Updates<BusinessDataUpdate>();
+            this.updateMessagingClient = MessagingClients.Updates<BusinessDataUpdate>(partitionId: "0");
             this.snapshotContainerClient = snapshotContainerClient;
         }
 

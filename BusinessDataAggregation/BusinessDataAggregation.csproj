@@ -21,7 +21,6 @@
   <ItemGroup>
     <PackageReference Include="Azure.Storage.Blobs" Version="12.4.0" />
     <PackageReference Include="System.Reactive.Linq" Version="4.3.2" />
-    <PackageReference Include="Azure.Messaging.EventHubs" Version="5.0.1" />
     <PackageReference Include="Azure.Identity" Version="1.1.1" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.9.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
@@ -32,6 +31,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Domain\Domain.fsproj" />
     <ProjectReference Include="..\Interfaces\Interfaces.csproj" />
-    <ProjectReference Include="..\Messaging\AzureMessaging.csproj" />
+    <ProjectReference Include="..\Messaging.AzureImpl\Messaging.AzureImpl.csproj" />
   </ItemGroup>
 </Project>

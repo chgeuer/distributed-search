@@ -41,7 +41,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SnapshotGenerator", "Snapsh
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BusinessDataAggregation", "BusinessDataAggregation\BusinessDataAggregation.csproj", "{853D3E4C-6C51-48B7-AECC-4FC0B36BC304}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AzureMessaging", "Messaging\AzureMessaging.csproj", "{A8779DBF-E525-4832-81C3-F440A9214FE2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Messaging.AzureImpl", "Messaging.AzureImpl\Messaging.AzureImpl.csproj", "{A8779DBF-E525-4832-81C3-F440A9214FE2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
