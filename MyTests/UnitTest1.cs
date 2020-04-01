@@ -8,7 +8,15 @@ namespace MyTests
     using Fundamentals;
     using Interfaces;
     using Microsoft.FSharp.Collections;
+    using Newtonsoft.Json;
     using NUnit.Framework;
+
+    public class VersionedDictionary<T>
+    {
+        public long Offset { get; set; }
+        public Dictionary<string, T> Values { get; set; }
+        public T this[string i] { get => this.Values[i]; }
+    }
 
     public class Tests
     {
@@ -26,9 +34,11 @@ namespace MyTests
             static UpdateOperation<string, string> Remove(string key) => UpdateOperation<string, string>.NewRemove(key);
 
             var updates = new[] {
+                //new Update(offset: 15, updateArea: "currencyExchange", Add("USD-to-GBP", "1.2")),
+                //new Update(offset: 15, updateArea: "airports", Add("HLR", "{  'legalName' = 'London Heathrow'   }")),
                 new Update(offset: 20, updateArea: "brands", Add("DG", "Docker and Gabana")),
                 new Update(offset: 23, updateArea: "brands", Add("DÖ", "Diöhr")),
-                new Update(offset: 23, updateArea: "brands", Remove("DG")),
+                new Update(offset: 24, updateArea: "brands", Remove("DG")),
             }.ToFSharp();
 
             var updatedData = data.ApplyUpdates(updates);
@@ -89,6 +99,49 @@ namespace MyTests
             Assert.AreEqual("f5", postUpdate.Data["f"]["f3"]);
 
             Console.WriteLine(postUpdate.AsJSON());
+        }
+
+        [Test]
+        public void TestGenericUpdateskk()
+        {
+            static string GetSnapshotContent(string area, long offset) => 
+                (area, offset) switch
+                {
+                    // simulate blob loading
+                    ("airports", 1) => @" {
+                        ""Offset"": 1,
+                        ""Values"": {
+                            ""LHR"": {
+                                ""legalName"": ""London Heathrow"",
+                                ""coordinates"": { ""lat"": 51.470020, ""lon"": -0.454295 }
+                            },
+                            ""DUS"": {
+                                ""legalName"": ""Düsseldorf"",
+                                ""coordinates"": { ""lat"": 51.286998852, ""lon"": 6.7666636 }
+                            }
+                        }
+                    } ",
+                    ("currencyConversionRates", 1) => @" {   
+                        ""Offset"": 1,
+                        ""Values"": {
+                            ""EURGBP"": 0.92,
+                            ""GBPEUR"": 1.09
+                        }   
+                    }
+                    ",
+                    _ => throw new KeyNotFoundException()
+                };
+
+            static VersionedDictionary<T> Read<T>(string json) => (VersionedDictionary<T>)
+                JsonConvert.DeserializeObject(value: json,
+                    type: typeof(VersionedDictionary<T>));
+
+            static VersionedDictionary<T> LoadSnapshot<T>(string area, long offset) => 
+                Read<T>(GetSnapshotContent(area, offset));
+
+            Assert.AreEqual(0.92, LoadSnapshot<double>("currencyConversionRates", 1)["EURGBP"]);
+            Assert.AreEqual("London Heathrow", LoadSnapshot<Airport>("airports", 1)["LHR"].LegalName);
+            Assert.AreEqual(51.286998852, LoadSnapshot<Airport>("airports", 1)["DUS"].Coordinates.Lat);
         }
 
         [Test]

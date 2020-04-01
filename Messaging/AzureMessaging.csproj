@@ -7,20 +7,9 @@
     <RepositoryType>git</RepositoryType>
     <CodeAnalysisRuleSet>..\Properties\stylecop\StyleCop.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <WarningsAsErrors />
-    <NoWarn>1701;1702;SA1633;SA0001</NoWarn>
-  </PropertyGroup>
   <ItemGroup>
-    <AdditionalFiles Update="..\Properties\stylecop\stylecop.json" Link="Properties\stylecop.json" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Update="..\Properties\stylecop\GlobalStylecopSuppressions.cs" Link="GlobalStylecopSuppressions.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.4.0" />
     <PackageReference Include="System.Reactive.Linq" Version="4.3.2" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.4.0" />
     <PackageReference Include="Azure.Messaging.EventHubs" Version="5.0.1" />
     <PackageReference Include="Azure.Identity" Version="1.1.1" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.9.0" />
@@ -30,8 +19,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Domain\Domain.fsproj" />
+    <ProjectReference Include="..\Credentials\Credentials.csproj" />
     <ProjectReference Include="..\Interfaces\Interfaces.csproj" />
-    <ProjectReference Include="..\Messaging\AzureMessaging.csproj" />
   </ItemGroup>
 </Project>

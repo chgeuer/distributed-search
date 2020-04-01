@@ -11,6 +11,7 @@
     using Credentials;
     using DataTypesFSharp;
     using Interfaces;
+    using Messaging.AzureImpl;
     using Microsoft.AspNetCore.Mvc;
     using static LanguageExt.Prelude;
 
@@ -43,12 +44,11 @@
         {
             /* curl --silent "http://localhost:5000/fashionsearch?size=54&type=Throusers&timeout=15000" | jq
              * curl --silent "http://localhost:5000/fashionsearch?size=16&type=Hat&timeout=5000" | jq
+             * curl --silent "http://localhost:5000/fashionsearch?size=15&type=Hat&timeout=5000" | jq
              **/
 
             // snap a copy of the business data early in the process
-            await Console.Out.WriteLineAsync("Fetch biz data");
             var businessData = this.getBusinessData();
-            await Console.Out.WriteLineAsync($"Got biz data {businessData.Version}");
 
             var responseMustBeReadyBy = DateTimeOffset.Now.Add(
                 this.SubtractExpectedComputeTime(
@@ -64,7 +64,7 @@
             stopwatch.Start();
 
             // *** Subscribe and start processing inbound stream
-            var responses =
+            IObservable<FashionItem> responses =
                 this.GetResponses(requestId: searchRequest.RequestID)
                     .ApplySteps(new ProcessingContext(query, businessData), this.createBusinessLogic())
                     .TakeUntil(responseMustBeReadyBy);

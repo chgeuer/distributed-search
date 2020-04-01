@@ -17,6 +17,10 @@ module BusinessDataExtensions =
             { businessData with
                   Version = version
                   Brands = businessData.Brands.Add(key, value) }
+        | SetDefaultMarkup newDefaultPrice ->
+            { businessData with
+                  Version = version
+                  DefaultMarkup = newDefaultPrice }
 
     [<Extension>]
     let ApplyUpdates (businessData: BusinessData) (updates: IEnumerable<UpdateOffset * BusinessDataUpdate>): BusinessData =

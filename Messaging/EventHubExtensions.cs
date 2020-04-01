@@ -1,4 +1,4 @@
-﻿namespace Interfaces
+﻿namespace Messaging.AzureImpl
 {
     using System;
     using System.Collections.Generic;
@@ -8,11 +8,12 @@
     using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
-    using Azure.Messaging.EventHubs;
-    using Azure.Messaging.EventHubs.Consumer;
-    using Azure.Messaging.EventHubs.Producer;
+    using global::Azure.Messaging.EventHubs;
+    using global::Azure.Messaging.EventHubs.Consumer;
+    using global::Azure.Messaging.EventHubs.Producer;
     using LanguageExt;
     using static LanguageExt.Prelude;
+    using Interfaces;
 
     public static class EventHubExtensions
     {

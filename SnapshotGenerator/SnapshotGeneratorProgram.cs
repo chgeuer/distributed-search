@@ -4,10 +4,10 @@
     using System.Reactive.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Azure.Messaging.EventHubs.Consumer;
     using Azure.Storage.Blobs;
     using BusinessDataAggregation;
     using Credentials;
+    using DataTypesFSharp;
     using Interfaces;
 
     /// <summary>
@@ -22,15 +22,10 @@
             var businessDataUpdates = new BusinessDataProvider(
                 snapshotContainerClient: new BlobContainerClient(
                     blobContainerUri: new Uri($"https://{DemoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{DemoCredential.BusinessDataSnapshotContainerName}/"),
-                    credential: DemoCredential.AADServicePrincipal),
-                eventHubConsumerClient: new EventHubConsumerClient(
-                    consumerGroup: EventHubConsumerClient.DefaultConsumerGroupName,
-                    fullyQualifiedNamespace: $"{DemoCredential.EventHubName}.servicebus.windows.net",
-                    eventHubName: DemoCredential.EventHubTopicNameBusinessDataUpdates,
                     credential: DemoCredential.AADServicePrincipal));
 
             var cts = new CancellationTokenSource();
-            var businessDataObservable = await businessDataUpdates.CreateObservable(cts.Token);
+            IObservable<BusinessData> businessDataObservable = await businessDataUpdates.CreateObservable(cts.Token);
             
             businessDataObservable
                 .Sample(interval: TimeSpan.FromSeconds(5))

@@ -8,7 +8,7 @@ type MarkupAdder() =
             let markup =
                 match ctx.BusinessData.Markup.TryFind(item.FashionType) with
                 | Some value -> value
-                | None -> ctx.BusinessData.DefaultMarkup
+                | None        -> ctx.BusinessData.DefaultMarkup
             let newPrice = item.Price + markup
 
             { item with Price = newPrice }

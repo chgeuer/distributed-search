@@ -9,6 +9,7 @@
     using Confluent.Kafka;
     using Credentials;
     using Interfaces;
+    using Messaging.AzureImpl;
     using LanguageExt;
     using StackExchange.Redis;
     using System;

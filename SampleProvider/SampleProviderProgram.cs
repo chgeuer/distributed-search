@@ -1,11 +1,10 @@
 ﻿namespace SampleProvider
 {
-    using Azure.Messaging.EventHubs.Consumer;
-    using Azure.Messaging.EventHubs.Producer;
     using Azure.Storage.Blobs;
     using Credentials;
     using DataTypesFSharp;
     using Interfaces;
+    using Messaging.AzureImpl;
     using Microsoft.FSharp.Collections;
     using System;
     using System.Linq;
@@ -23,27 +22,19 @@
                blobContainerUri: new Uri($"https://{DemoCredential.StorageOffloadAccountName}.blob.core.windows.net/{DemoCredential.StorageOffloadContainerNameResponses}/"),
                credential: DemoCredential.AADServicePrincipal);
 
-            await using var requestsClient = new EventHubConsumerClient(
-                consumerGroup: EventHubConsumerClient.DefaultConsumerGroupName,
-                fullyQualifiedNamespace: $"{DemoCredential.EventHubName}.servicebus.windows.net",
-                eventHubName: DemoCredential.EventHubTopicNameRequests,
-                credential: DemoCredential.AADServicePrincipal);
-
-            await using var responseProducer = new EventHubProducerClient(
-                fullyQualifiedNamespace: $"{DemoCredential.EventHubName}.servicebus.windows.net",
-                eventHubName: DemoCredential.EventHubTopicNameResponses,
-                credential: DemoCredential.AADServicePrincipal);
+            var requestsClient = MessagingClients.Requests<SearchRequest>();
+            var responseProducer = MessagingClients.Responses<SearchResponse>();
 
             var cts = new CancellationTokenSource();
 
             static string getBlobName(SearchRequest search, string requestId) => $"{requestId}/{Guid.NewGuid().ToString()}.json";
 
             requestsClient
-                .CreateObservable()
-                .SelectMany(pe => pe.Data.BodyAsStream.ReadJSON<SearchRequest>())
+                .CreateObervable(SeekPosition.Tail, cts.Token)
                 .Subscribe(
-                    onNext: async search =>
+                    onNext: async searchTuple =>
                         {
+                            var search = searchTuple.Item2;
                             var requestId = search.RequestID;
                             Console.ForegroundColor = ConsoleColor.Yellow;
                             Console.Out.WriteLine($"{requestId}: Somebody's looking for {search.Query.FashionType}");
@@ -65,8 +56,8 @@
                                             content: response.AsJSONStream(),
                                             cancellationToken: cts.Token);
 
-                                        await responseProducer.SendJsonRequest(
-                                            item: new SearchResponse(requestID: requestId, responseBlob: blobName),
+                                        await responseProducer.SendMessage(
+                                            new SearchResponse(requestID: requestId, responseBlob: blobName),
                                             requestId: response.RequestID);
 
                                         Console.ForegroundColor = ConsoleColor.Blue;

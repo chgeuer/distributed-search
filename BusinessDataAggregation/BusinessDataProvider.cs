@@ -8,14 +8,12 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Azure;
-    using Azure.Messaging.EventHubs;
-    using Azure.Messaging.EventHubs.Consumer;
-    using Azure.Messaging.EventHubs.Producer;
     using Azure.Storage.Blobs;
     using Azure.Storage.Blobs.Models;
     using DataTypesFSharp;
     using Interfaces;
     using LanguageExt;
+    using Messaging.AzureImpl;
     using Microsoft.FSharp.Collections;
 
     public class BusinessDataProvider
@@ -25,17 +23,15 @@
         private static string OffsetToBlobName(long offset) => $"{offset}.json";
 
         private readonly BlobContainerClient snapshotContainerClient;
-        private readonly EventHubConsumerClient eventHubConsumerClient;
-        private readonly EventHubProducerClient eventHubProducerClient;
+        private readonly AzureMessagingClient<BusinessDataUpdate> updateMessagingClient;
         private CancellationTokenSource cts;
         private long lastWrittenOffset = -1;
         private Task deletetionTask;
 
-        public BusinessDataProvider(BlobContainerClient snapshotContainerClient, EventHubConsumerClient eventHubConsumerClient, EventHubProducerClient eventHubProducerClient = default)
+        public BusinessDataProvider(BlobContainerClient snapshotContainerClient)
         {
+            this.updateMessagingClient = MessagingClients.Updates<BusinessDataUpdate>();
             this.snapshotContainerClient = snapshotContainerClient;
-            this.eventHubConsumerClient = eventHubConsumerClient;
-            this.eventHubProducerClient = eventHubProducerClient;
         }
 
         public BusinessData BusinessData { get; private set; }
@@ -54,19 +50,14 @@
 
             BusinessData snapshotValue = await this.FetchBusinessDataSnapshot(this.cts.Token);
 
-            IConnectableObservable<BusinessData> connectableObservable = this.eventHubConsumerClient
-                .CreateObservable(
-                    partitionId: "0",
-                    startingPosition: EventPosition.FromOffset(
-                        offset: snapshotValue.Version,
-                        isInclusive: false),
-                    cancellationToken: cancellationToken)
-                .Select(partitionEvent => partitionEvent.Data)
-                .Select(eventData => new { eventData.Offset, JsonString = eventData.GetBodyAsUTF8() })
-                .Select(x => Tuple.Create(x.Offset, x.JsonString.DeserializeJSON<BusinessDataUpdate>()))
-                .Scan(seed: snapshotValue, accumulator: (businessData, offsetAndUpdate) => businessData.ApplyUpdates(new[] { offsetAndUpdate }))
-                .StartWith(snapshotValue)
-                .Publish(initialValue: snapshotValue);
+            IConnectableObservable<BusinessData> connectableObservable =
+                this.updateMessagingClient
+                    .CreateObervable(SeekPosition.FromPosition(position: snapshotValue.Version))
+                    .Scan(
+                        seed: snapshotValue,
+                        accumulator: (businessData, offsetAndUpdate) => businessData.ApplyUpdates(new[] { offsetAndUpdate }))
+                    .StartWith(snapshotValue)
+                    .Publish(initialValue: snapshotValue);
 
             _ = connectableObservable.Connect();
 
@@ -74,14 +65,8 @@
                 .AsObservable();
         }
 
-        public async Task SendUpdate(BusinessDataUpdate update)
-        {
-            var eventData = new EventData(eventBody: update.AsJSON().ToUTF8Bytes());
-
-            using EventDataBatch batchOfOne = await this.eventHubProducerClient.CreateBatchAsync();
-            batchOfOne.TryAdd(eventData);
-            await this.eventHubProducerClient.SendAsync(batchOfOne);
-        }
+        public Task SendUpdate(BusinessDataUpdate update)
+            => this.updateMessagingClient.SendMessage(update);
 
         public async Task<BusinessData> FetchBusinessDataSnapshot(CancellationToken cancellationToken)
         {

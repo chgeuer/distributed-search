@@ -3,6 +3,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="AirportDomain.fs" />
     <Compile Include="DomainData.fs" />
     <Compile Include="ConfigurationData.fs" />
     <Compile Include="DomainLogic.fs" />

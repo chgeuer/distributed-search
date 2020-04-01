@@ -12,6 +12,7 @@
     using Credentials;
     using DataTypesFSharp;
     using Interfaces;
+    using Messaging.AzureImpl;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
@@ -56,7 +57,8 @@
         {
             return new IBusinessLogicStep<ProcessingContext, FashionItem>[]
             {
-                    // new GenericFilter<ProcessingContext, FashionItem>((c,i) => c.Query.Size == i.Size),
+                    // new StatefulMixAndMatchFilter(),
+                    // new GenericFilter<ProcessingContext, FashionItem>((c, i) => c.Query.Size == i.Size),
                     // new GenericFilter<ProcessingContext, FashionItem>((c,i) => c.Query.FashionType == i.FashionType),
                     new SizeFilter(),
 
@@ -70,12 +72,9 @@
 
         private static Func<SearchRequest, Task> SendSearchRequest()
         {
-            var responseProducer = new EventHubProducerClient(
-                fullyQualifiedNamespace: $"{DemoCredential.EventHubName}.servicebus.windows.net",
-                eventHubName: DemoCredential.EventHubTopicNameRequests,
-                credential: DemoCredential.AADServicePrincipal);
+            var requestProducer = MessagingClients.Requests<SearchRequest>();
 
-            return searchRequest => responseProducer.SendJsonRequest(item: searchRequest, requestId: searchRequest.RequestID);
+            return searchRequest => requestProducer.SendMessage(searchRequest, requestId: searchRequest.RequestID);
         }
 
         private static IObservable<EventData> CreateEventHubObservable()
@@ -106,15 +105,6 @@
             var businessDataUpdates = new BusinessDataProvider(
                 snapshotContainerClient: new BlobContainerClient(
                     blobContainerUri: new Uri($"https://{DemoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{DemoCredential.BusinessDataSnapshotContainerName}/"),
-                    credential: DemoCredential.AADServicePrincipal),
-                eventHubConsumerClient: new EventHubConsumerClient(
-                    consumerGroup: EventHubConsumerClient.DefaultConsumerGroupName,
-                    fullyQualifiedNamespace: $"{DemoCredential.EventHubName}.servicebus.windows.net",
-                    eventHubName: DemoCredential.EventHubTopicNameBusinessDataUpdates,
-                    credential: DemoCredential.AADServicePrincipal),
-                eventHubProducerClient: new EventHubProducerClient(
-                    fullyQualifiedNamespace: $"{DemoCredential.EventHubName}.servicebus.windows.net",
-                    eventHubName: DemoCredential.EventHubTopicNameBusinessDataUpdates,
                     credential: DemoCredential.AADServicePrincipal));
 
             businessDataUpdates.StartUpdateProcess().Wait();

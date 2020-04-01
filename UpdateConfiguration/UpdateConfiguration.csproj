@@ -4,7 +4,6 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Azure.Messaging.EventHubs" Version="5.0.1" />
     <PackageReference Include="Azure.Identity" Version="1.1.1" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.9.0" />
   </ItemGroup>
