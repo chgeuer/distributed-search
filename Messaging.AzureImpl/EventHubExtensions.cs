@@ -67,6 +67,11 @@
             });
         }
 
+        internal static EventPosition AsEventPosition(this SeekPosition position)
+            => position.FromTail
+                ? EventPosition.Latest
+                : EventPosition.FromOffset(offset: position.Offset, isInclusive: false);
+
         public static async Task SendJsonRequest<T>(this EventHubProducerClient eventHubProducerClient, T item, string requestId)
         {
             byte[] serializedRequest = item.AsJSON().ToUTF8Bytes();
