@@ -71,7 +71,7 @@
         {
             var requestProducer = MessagingClients.Requests<SearchRequest>(partitionId: null);
 
-            return searchRequest => requestProducer.SendMessage(searchRequest, requestId: searchRequest.RequestID);
+            return searchRequest => requestProducer.SendMessageWithRequestID(searchRequest, requestId: searchRequest.RequestID);
         }
 
         private static IObservable<Message<T>> CreateEventHubObservable<T>()

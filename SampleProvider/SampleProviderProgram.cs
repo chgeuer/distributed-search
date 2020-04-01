@@ -58,7 +58,7 @@
                                             content: responsePayload.AsJSONStream(),
                                             cancellationToken: cts.Token);
 
-                                        await responseProducer.SendMessage(
+                                        await responseProducer.SendMessageWithRequestID(
                                             new SearchResponse(requestID: requestId, responseBlob: blobName),
                                             requestId: requestId);
 

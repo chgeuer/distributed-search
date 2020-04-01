@@ -12,7 +12,7 @@
     using Credentials;
     using Interfaces;
 
-    public class AzureMessagingClient<T>
+    public class AzureMessagingClient<TMessagePayload>
     {
         public readonly string RequestIdPropertyName = "requestIDString";
 
@@ -38,7 +38,7 @@
             this.partitionId = partitionId;
         }
 
-        public IObservable<Message<T>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default)
+        public IObservable<Message<TMessagePayload>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default)
         {
             IObservable<PartitionEvent> partitionEvents = this.partitionId == null
                 ? this.consumerClient.CreateObservable(cancellationToken)
@@ -46,15 +46,17 @@
 
             return partitionEvents
                 .Select(partitionEvent => partitionEvent.Data)
-                .Select(eventData => new Message<T>(
+                .Select(eventData => new Message<TMessagePayload>(
                     offset: eventData.Offset,
-                    value: eventData.GetBodyAsUTF8().DeserializeJSON<T>(),
+                    value: eventData.GetBodyAsUTF8().DeserializeJSON<TMessagePayload>(),
                     properties: eventData.Properties));
         }
 
-        public Task SendMessage(T t) => this.InnerSend(t);
+        public Task SendMessage(TMessagePayload value)
+            => this.InnerSend(value: value, handleEventData: null);
 
-        public Task SendMessage(T t, string requestId) => this.InnerSend(t, eventData => SetRequestID(eventData, requestId));
+        public Task SendMessageWithRequestID(TMessagePayload value, string requestId)
+            => this.InnerSend(value: value, handleEventData: eventData => this.SetRequestID(eventData, requestId));
 
         public string GetRequestID(IDictionary<string, object> properties)
             => properties[this.RequestIdPropertyName] as string;
@@ -62,10 +64,10 @@
         private void SetRequestID(EventData eventData, string requestId) =>
             eventData.Properties.Add(this.RequestIdPropertyName, requestId);
 
-        private async Task InnerSend(T t, Action<EventData> handleEventData = null)
+        private async Task InnerSend(TMessagePayload value, Action<EventData> handleEventData)
         {
             using EventDataBatch batchOfOne = await this.producerClient.CreateBatchAsync();
-            var eventData = new EventData(eventBody: t.AsJSON().ToUTF8Bytes());
+            var eventData = new EventData(eventBody: value.AsJSON().ToUTF8Bytes());
 
             handleEventData?.Invoke(eventData);
 
