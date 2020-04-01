@@ -99,7 +99,7 @@
                 })
                 .SelectMany(searchResponse => searchResponse.Result.Response);
 
-        private string GetResponseTopicNameForThisComputeNode() => DemoCredential.EventHubTopicNameResponses;
+        private string GetResponseTopicNameForThisComputeNode() => Startup.GetCurrentComputeNodeResponseTopic();
 
         private string CreateRequestID() => Guid.NewGuid().ToString();
 

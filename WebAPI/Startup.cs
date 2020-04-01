@@ -50,6 +50,8 @@
             services.AddSingleton(_ => CreateBusinessData());
         }
 
+        internal static string GetCurrentComputeNodeResponseTopic() => DemoCredential.EventHubTopicNameResponses;
+
         private static Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> CreateBusinessSteps() => () =>
         {
             return new IBusinessLogicStep<ProcessingContext, FashionItem>[]
@@ -65,11 +67,9 @@
             };
         };
 
-        private static string GetCurrentComputeNodeResponseTopic() => DemoCredential.EventHubTopicNameResponses;
-
         private static Func<SearchRequest, Task> SendSearchRequest()
         {
-            var requestProducer = MessagingClients.Requests<SearchRequest>();
+            var requestProducer = MessagingClients.Requests<SearchRequest>(partitionId: null);
 
             return searchRequest => requestProducer.SendMessage(searchRequest, requestId: searchRequest.RequestID);
         }
@@ -80,7 +80,9 @@
              */
 
             var connectable = MessagingClients
-                .Responses<SearchResponse>(partitionId: "0")
+                .Responses<SearchResponse>(
+                    topicName: GetCurrentComputeNodeResponseTopic(),
+                    partitionId: "0")
                 .CreateObervable(SeekPosition.Tail)
                 .Publish();
                 /* .Multicast(replaySubject);*/

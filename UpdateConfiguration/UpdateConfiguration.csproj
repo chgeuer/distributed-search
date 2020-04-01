@@ -4,10 +4,6 @@
     <OutputType>Exe</OutputType>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Azure.Identity" Version="1.1.1" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="4.9.0" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\BusinessDataAggregation\BusinessDataAggregation.csproj" />
     <ProjectReference Include="..\Credentials\Credentials.csproj" />
     <ProjectReference Include="..\Domain\Domain.fsproj" />

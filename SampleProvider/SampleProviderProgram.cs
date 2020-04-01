@@ -22,8 +22,10 @@
                blobContainerUri: new Uri($"https://{DemoCredential.StorageOffloadAccountName}.blob.core.windows.net/{DemoCredential.StorageOffloadContainerNameResponses}/"),
                credential: DemoCredential.AADServicePrincipal);
 
-            var requestsClient = MessagingClients.Requests<SearchRequest>();
-            var responseProducer = MessagingClients.Responses<SearchResponse>(partitionId: "0");
+            var requestsClient = MessagingClients.Requests<SearchRequest>(partitionId: null);
+            
+            Func<string, AzureMessagingClient<SearchResponse>> responseTopic = 
+                topicName => MessagingClients.Responses<SearchResponse>(topicName: topicName, partitionId: "0");
 
             var cts = new CancellationTokenSource();
 
@@ -36,7 +38,9 @@
                         {
                             var search = searchTuple.Item2;
                             var requestId = search.RequestID;
+                            var responseProducer = responseTopic(search.ResponseTopic);
                             Console.Out.WriteLine($"{requestId}: Somebody's looking for {search.Query.FashionType}");
+
 
                             var tcs = new TaskCompletionSource<bool>();
 
