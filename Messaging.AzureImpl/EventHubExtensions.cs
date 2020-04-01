@@ -10,14 +10,13 @@
     using System.Threading.Tasks;
     using Azure.Messaging.EventHubs;
     using Azure.Messaging.EventHubs.Consumer;
-    using Azure.Messaging.EventHubs.Producer;
     using Interfaces;
     using LanguageExt;
     using static LanguageExt.Prelude;
 
-    public static class EventHubExtensions
+    internal static class EventHubExtensions
     {
-        public static IObservable<PartitionEvent> CreateObservable(
+        internal static IObservable<PartitionEvent> CreateObservable(
             this EventHubConsumerClient eventHubConsumerClient,
             string partitionId,
             EventPosition startingPosition,
@@ -32,7 +31,7 @@
                 .CreateObservable(cancellationToken);
         }
 
-        public static IObservable<PartitionEvent> CreateObservable(
+        internal static IObservable<PartitionEvent> CreateObservable(
             this EventHubConsumerClient eventHubConsumerClient,
             CancellationToken cancellationToken = default)
         {
@@ -67,32 +66,19 @@
             });
         }
 
-        internal static EventPosition AsEventPosition(this SeekPosition position)
-            => position.FromTail
-                ? EventPosition.Latest
-                : EventPosition.FromOffset(offset: position.Offset, isInclusive: false);
-
-        public static async Task SendJsonRequest<T>(this EventHubProducerClient eventHubProducerClient, T item, string requestId)
-        {
-            byte[] serializedRequest = item.AsJSON().ToUTF8Bytes();
-            var eventData = new EventData(eventBody: serializedRequest);
-            eventData.Properties.Add("requestIDString", requestId);
-            eventData.Properties.Add("currentMachineTimeUTC", DateTime.UtcNow);
-
-            using EventDataBatch batchOfOne = await eventHubProducerClient.CreateBatchAsync();
-            batchOfOne.TryAdd(eventData);
-
-            await eventHubProducerClient.SendAsync(batchOfOne);
-        }
-
-        public static string GetBodyAsUTF8(this EventData eventData)
+        internal static string GetBodyAsUTF8(this EventData eventData)
         {
             using var ms = new MemoryStream();
             eventData.BodyAsStream.CopyTo(ms);
             return Encoding.UTF8.GetString(ms.ToArray());
         }
 
-        public static Option<T> GetProperty<T>(this EventData record, string fieldName) =>
+        internal static Option<T> GetProperty<T>(this EventData record, string fieldName) =>
             record.Properties.TryGetValue(fieldName, out object result) ? Some((T)result) : None;
+
+        internal static EventPosition AsEventPosition(this SeekPosition position)
+            => position.FromTail
+                ? EventPosition.Latest
+                : EventPosition.FromOffset(offset: position.Offset, isInclusive: false);
     }
 }

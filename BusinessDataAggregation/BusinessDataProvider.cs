@@ -55,7 +55,7 @@
                     .CreateObervable(SeekPosition.FromPosition(position: snapshotValue.Version))
                     .Scan(
                         seed: snapshotValue,
-                        accumulator: (businessData, offsetAndUpdate) => businessData.ApplyUpdates(new[] { offsetAndUpdate }))
+                        accumulator: (businessData, msg) => businessData.ApplyUpdates(new[] { Tuple.Create(msg.Offset, msg.Value) }))
                     .StartWith(snapshotValue)
                     .Publish(initialValue: snapshotValue);
 

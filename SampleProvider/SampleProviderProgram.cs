@@ -34,13 +34,13 @@
             requestsClient
                 .CreateObervable(SeekPosition.Tail, cts.Token)
                 .Subscribe(
-                    onNext: async searchTuple =>
+                    onNext: async searchRequestMessage =>
                         {
-                            var search = searchTuple.Item2;
-                            var requestId = search.RequestID;
+                            var search = searchRequestMessage.Value;
+                            var requestId = requestsClient.GetRequestID(searchRequestMessage.Properties);
+
                             var responseProducer = responseTopic(search.ResponseTopic);
                             Console.Out.WriteLine($"{requestId}: Somebody's looking for {search.Query.FashionType}");
-
 
                             var tcs = new TaskCompletionSource<bool>();
 

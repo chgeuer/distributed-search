@@ -1,6 +1,7 @@
 ﻿namespace Messaging.AzureImpl
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Reactive.Linq;
     using System.Threading;
@@ -13,21 +14,23 @@
 
     public class AzureMessagingClient<T>
     {
-        public EventHubConsumerClient ConsumerClient { get; private set; }
+        public readonly string RequestIdPropertyName = "requestIDString";
 
-        public EventHubProducerClient ProducerClient { get; private set; }
+        private readonly EventHubConsumerClient consumerClient;
 
-        private string partitionId;
+        private readonly EventHubProducerClient producerClient;
+
+        private readonly string partitionId;
 
         public AzureMessagingClient(string eventHubName, string partitionId)
         {
-            this.ConsumerClient = new EventHubConsumerClient(
+            this.consumerClient = new EventHubConsumerClient(
                 consumerGroup: EventHubConsumerClient.DefaultConsumerGroupName,
                 fullyQualifiedNamespace: $"{DemoCredential.EventHubName}.servicebus.windows.net",
                 eventHubName: eventHubName,
                 credential: DemoCredential.AADServicePrincipal);
 
-            this.ProducerClient = new EventHubProducerClient(
+            this.producerClient = new EventHubProducerClient(
                 fullyQualifiedNamespace: $"{DemoCredential.EventHubName}.servicebus.windows.net",
                 eventHubName: eventHubName,
                 credential: DemoCredential.AADServicePrincipal);
@@ -35,31 +38,39 @@
             this.partitionId = partitionId;
         }
 
-        public IObservable<Tuple<long, T>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default)
+        public IObservable<Message<T>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default)
         {
             IObservable<PartitionEvent> partitionEvents = this.partitionId == null
-                ? this.ConsumerClient.CreateObservable(cancellationToken)
-                : this.ConsumerClient.CreateObservable(this.partitionId, startingPosition.AsEventPosition(), cancellationToken);
+                ? this.consumerClient.CreateObservable(cancellationToken)
+                : this.consumerClient.CreateObservable(this.partitionId, startingPosition.AsEventPosition(), cancellationToken);
 
             return partitionEvents
                 .Select(partitionEvent => partitionEvent.Data)
-                .Select(eventData => new { eventData.Offset, JsonString = eventData.GetBodyAsUTF8() })
-                .Select(x => Tuple.Create(x.Offset, x.JsonString.DeserializeJSON<T>()));
+                .Select(eventData => new Message<T>(
+                    offset: eventData.Offset,
+                    value: eventData.GetBodyAsUTF8().DeserializeJSON<T>(),
+                    properties: eventData.Properties));
         }
 
         public Task SendMessage(T t) => this.InnerSend(t);
 
-        public Task SendMessage(T t, string requestId) => this.InnerSend(t, eventData => eventData.Properties.Add("requestIDString", requestId));
+        public Task SendMessage(T t, string requestId) => this.InnerSend(t, eventData => SetRequestID(eventData, requestId));
+
+        public string GetRequestID(IDictionary<string, object> properties)
+            => properties[this.RequestIdPropertyName] as string;
+
+        private void SetRequestID(EventData eventData, string requestId) =>
+            eventData.Properties.Add(this.RequestIdPropertyName, requestId);
 
         private async Task InnerSend(T t, Action<EventData> handleEventData = null)
         {
-            using EventDataBatch batchOfOne = await this.ProducerClient.CreateBatchAsync();
+            using EventDataBatch batchOfOne = await this.producerClient.CreateBatchAsync();
             var eventData = new EventData(eventBody: t.AsJSON().ToUTF8Bytes());
 
             handleEventData?.Invoke(eventData);
 
             batchOfOne.TryAdd(eventData);
-            await this.ProducerClient.SendAsync(batchOfOne);
+            await this.producerClient.SendAsync(batchOfOne);
         }
     }
 }

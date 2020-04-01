@@ -44,7 +44,7 @@
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddSingleton(_ => CreateEventHubObservable());
+            services.AddSingleton(_ => CreateEventHubObservable<SearchResponse>());
             services.AddSingleton(_ => SendSearchRequest());
             services.AddSingleton(_ => CreateBusinessSteps());
             services.AddSingleton(_ => CreateBusinessData());
@@ -74,13 +74,13 @@
             return searchRequest => requestProducer.SendMessage(searchRequest, requestId: searchRequest.RequestID);
         }
 
-        private static IObservable<Tuple<long, SearchResponse>> CreateEventHubObservable()
+        private static IObservable<Message<T>> CreateEventHubObservable<T>()
         {
             /* var replaySubject = new ReplaySubject<EventData>(window: TimeSpan.FromSeconds(15));
              */
 
             var connectable = MessagingClients
-                .Responses<SearchResponse>(
+                .Responses<T>(
                     topicName: GetCurrentComputeNodeResponseTopic(),
                     partitionId: "0")
                 .CreateObervable(SeekPosition.Tail)

@@ -17,13 +17,13 @@
     public class FashionSearchController : ControllerBase
     {
         private readonly Func<BusinessData> getBusinessData;
-        private readonly IObservable<Tuple<long, SearchResponse>> responseObservable;
         private readonly Func<SearchRequest, Task> sendSearchRequest;
+        private readonly IObservable<Message<SearchResponse>> responseObservable;
         private readonly Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> createBusinessLogic;
         private readonly BlobContainerClient blobContainerResponsesClient;
 
         public FashionSearchController(
-            IObservable<Tuple<long, SearchResponse>> responseObservable,
+            IObservable<Message<SearchResponse>> responseObservable,
             Func<SearchRequest, Task> sendSearchRequest,
             Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> createBusinessLogic,
             Func<BusinessData> getBusinessData)
@@ -54,7 +54,7 @@
             var query = new FashionQuery(size: size, fashionType: type);
             var searchRequest = new SearchRequest(
                 requestID: this.CreateRequestID(),
-                responseTopic: this.GetResponseTopicNameForThisComputeNode(),
+                responseTopic: Startup.GetCurrentComputeNodeResponseTopic(),
                 query: query);
 
             var stopwatch = new Stopwatch();
@@ -87,19 +87,17 @@
 
         private IObservable<FashionItem> GetResponses(string requestId) =>
             this.responseObservable
-                .Select(async offsetAndResponse =>
+                .Where(t => ((string)t.Properties["requestIDString"]) == requestId)
+                .Select(async responseMessage =>
                 {
-                    var r = offsetAndResponse.Item2;
-                    await Console.Out.WriteLineAsync($"Received {offsetAndResponse.Item1} {r}");
-                    var blobClient = this.blobContainerResponsesClient.GetBlobClient(blobName: r.ResponseBlob);
+                    var searchResponse = responseMessage.Value;
+                    var blobClient = this.blobContainerResponsesClient.GetBlobClient(blobName: searchResponse.ResponseBlob);
                     var result = await blobClient.DownloadAsync();
                     var payload = await result.Value.Content.ReadJSON<SearchResponsePayload>();
-                    await Console.Out.WriteLineAsync($"Downloaded response {payload.Response.First().Description} from {r.ResponseBlob}");
+                    await Console.Out.WriteLineAsync($"Downloaded response {payload.Response.First().Description} from {searchResponse.ResponseBlob}");
                     return payload;
                 })
                 .SelectMany(searchResponse => searchResponse.Result.Response);
-
-        private string GetResponseTopicNameForThisComputeNode() => Startup.GetCurrentComputeNodeResponseTopic();
 
         private string CreateRequestID() => Guid.NewGuid().ToString();
 
