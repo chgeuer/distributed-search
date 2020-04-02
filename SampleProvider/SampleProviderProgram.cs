@@ -5,7 +5,6 @@
     using System.Reactive.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Azure.Storage.Blobs;
     using Credentials;
     using DataTypesFSharp;
     using Interfaces;
@@ -18,14 +17,12 @@
         {
             Console.Title = "Sample Provider";
 
-            var blobStorageServiceClient = new BlobContainerClient(
-               blobContainerUri: new Uri($"https://{DemoCredential.StorageOffloadAccountName}.blob.core.windows.net/{DemoCredential.StorageOffloadContainerNameResponses}/"),
-               credential: DemoCredential.AADServicePrincipal);
-
             var requestsClient = MessagingClients.Requests<SearchRequest>(partitionId: null);
-            
-            Func<string, AzureMessagingClient<SearchResponse>> responseTopic = 
-                topicName => MessagingClients.Responses<SearchResponse>(topicName: topicName, partitionId: "0");
+
+            Func<string, AzureMessagingClientWithStorageOffload<SearchResponse, SearchResponsePayload>> responseTopic = 
+                topicName => MessagingClients.WithStorageOffload<SearchResponse, SearchResponsePayload>(
+                    topicName: topicName, partitionId: "0", accountName: DemoCredential.StorageOffloadAccountName, 
+                    containerName: DemoCredential.StorageOffloadContainerNameResponses);
 
             var cts = new CancellationTokenSource();
 
@@ -53,16 +50,14 @@
                                     {
                                         var blobName = getBlobName(search, requestId);
 
-                                        var uploadInfo = await blobStorageServiceClient.UploadBlobAsync(
+                                        await responseProducer.Send(
+                                            message: new SearchResponse(requestID: requestId, responseBlob: blobName),
+                                            payload: responsePayload,
+                                            requestId: requestId,
                                             blobName: blobName,
-                                            content: responsePayload.AsJSONStream(),
                                             cancellationToken: cts.Token);
 
-                                        await responseProducer.SendMessageWithRequestID(
-                                            new SearchResponse(requestID: requestId, responseBlob: blobName),
-                                            requestId: requestId);
-
-                                        await Console.Out.WriteLineAsync($"{requestId}: Sending {responsePayload.Response.Head.Description} ({uploadInfo.Value.ETag})");
+                                        await Console.Out.WriteLineAsync($"{requestId}: Sending {responsePayload.Response.Head.Description}");
                                     },
                                     onError: ex =>
                                     {

@@ -1,9 +1,15 @@
 ﻿namespace Messaging.AzureImpl
 {
     using Credentials;
+    using Interfaces;
 
     public static class MessagingClients
     {
+        public static AzureMessagingClient<TResponses> Updates<TResponses>(string partitionId)
+            => new AzureMessagingClient<TResponses>(
+                eventHubName: DemoCredential.EventHubTopicNameBusinessDataUpdates,
+                partitionId: partitionId);
+
         public static AzureMessagingClient<TRequests> Requests<TRequests>(string partitionId)
             => new AzureMessagingClient<TRequests>(
                 eventHubName: DemoCredential.EventHubTopicNameRequests,
@@ -14,9 +20,16 @@
                 eventHubName: topicName,
                 partitionId: partitionId);
 
-        public static AzureMessagingClient<TUpdates> Updates<TUpdates>(string partitionId)
-            => new AzureMessagingClient<TUpdates>(
-                eventHubName: DemoCredential.EventHubTopicNameBusinessDataUpdates,
-                partitionId: partitionId);
+        public static AzureMessagingClientWithStorageOffload<TMessage, TPayload> WithStorageOffload<TMessage, TPayload>(string topicName, string partitionId, string accountName, string containerName)
+            where TMessage : IMessageEnrichableWithPayloadAddress
+        {
+            return new AzureMessagingClientWithStorageOffload<TMessage, TPayload>(
+                innerClient: new AzureMessagingClient<TMessage>(
+                    eventHubName: topicName,
+                    partitionId: partitionId),
+                storageOffload: new StorageOffload(
+                    accountName: accountName,
+                    containerName: containerName));
+        }
     }
 }

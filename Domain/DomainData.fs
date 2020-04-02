@@ -22,9 +22,16 @@ type SearchResponsePayload =
     { RequestID: string
       Response: FashionItem list }
 
+open Interfaces
+
 type SearchResponse =
     { RequestID: string
       ResponseBlob: string }
+    interface IMessageEnrichableWithPayloadAddress with
+        member this.GetPayloadAddress() = 
+            this.ResponseBlob
+        member this.SetPayloadAddress(address) = 
+            { this with ResponseBlob = address } :> IMessageEnrichableWithPayloadAddress
 
 module FashionTypes =
     let TShirt: FashionType = "T-Shirt"
