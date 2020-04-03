@@ -8,6 +8,7 @@
     using BusinessDataAggregation;
     using Credentials;
     using DataTypesFSharp;
+    using Fundamentals;
     using Interfaces;
     using Messaging.AzureImpl;
     using Microsoft.AspNetCore.Builder;

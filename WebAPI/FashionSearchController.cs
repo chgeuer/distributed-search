@@ -7,6 +7,7 @@
     using System.Reactive.Linq;
     using System.Threading.Tasks;
     using DataTypesFSharp;
+    using Fundamentals;
     using Interfaces;
     using Microsoft.AspNetCore.Mvc;
 

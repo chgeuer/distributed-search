@@ -14,6 +14,19 @@ type ReplaceableOption<'a> =
 
 type UpdateOffset = int64
 
+type RequestID = string
+
+type ResponseTopicAddress = string
+
+type ProviderSearchRequest<'searchRequest> =
+    { RequestID: RequestID
+      ResponseTopic: ResponseTopicAddress
+      Query: 'searchRequest }
+
+type ProviderSearchResponse<'a> =
+    { RequestID: RequestID
+      Response: 'a list }
+
 type Configuration<'k, 'v when 'k: comparison> =
     { Offset: UpdateOffset
       Data: Map<'k, 'v> }
