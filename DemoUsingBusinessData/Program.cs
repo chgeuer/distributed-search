@@ -7,6 +7,7 @@
     using Azure.Storage.Blobs;
     using BusinessDataAggregation;
     using Credentials;
+    using DataTypesFSharp;
 
     class Program
     {
@@ -20,26 +21,31 @@
                     blobContainerUri: new Uri($"https://{DemoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{DemoCredential.BusinessDataSnapshotContainerName}/"),
                     credential: DemoCredential.AADServicePrincipal));
 
-            //await businessDataPump.StartUpdateProcess(cts.Token);
-            //while (true)
-            //{
-            //    var bd = businessDataPump.BusinessData;
-            //    await Console.Out.WriteLineAsync(string.Join(" ", 
-            //        bd.Markup.Select(
-            //            kvp => $"{kvp.Key}={kvp.Value}").ToArray()));
-            //}
+            Func<BusinessData, string> bdToStr = bd => string.Join(" ",
+                        bd.Markup.Select( kvp => $"{kvp.Key}={kvp.Value}").ToArray());
 
-            var businessDataObservable = await businessDataPump.CreateObservable(cts.Token);
-            businessDataObservable.Subscribe(onNext: async bd =>
+            bool demoObservable = true;
+            if (demoObservable)
+            {
+                // This code observes business data changes and only prints when there have been changes
+                var businessDataObservable = await businessDataPump.CreateObservable(cts.Token);
+                businessDataObservable.Subscribe(onNext: async bd =>
                 {
-                    await Console.Out.WriteLineAsync(string.Join(" ",
-                        bd.Markup.Select(
-                            kvp => $"{kvp.Key}={kvp.Value}").ToArray()));
-                },
-                token: cts.Token);
+                    await Console.Out.WriteLineAsync(bdToStr(bd));
+                }, token: cts.Token);
 
-            Console.ReadLine();
-            cts.Cancel();
+                _ = await Console.In.ReadLineAsync();
+                cts.Cancel();
+            }
+            else
+            {
+                // This code runs in an endless loop, and prints the business data (regardless whether it changed or not)
+                await businessDataPump.StartUpdateProcess(cts.Token);
+                while (true)
+                {
+                    await Console.Out.WriteLineAsync(bdToStr(businessDataPump.BusinessData));
+                }
+            }
         }
     }
 }
