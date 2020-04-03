@@ -6,26 +6,31 @@
     using System.Threading.Tasks;
     using Interfaces;
 
-    public class AzureMessagingClientWithStorageOffload<TMessage, TPayload>
-        where TMessage : IMessageEnrichableWithPayloadAddress
+    public class StorageOffloadReference
     {
-        private readonly AzureMessagingClient<TMessage> innerClient;
+        public string RequestID { get; set; }
+        public string Address { get; set; }
+    }
+
+    public class AzureMessagingClientWithStorageOffload<TPayload>
+    {
+        private readonly AzureMessagingClient<StorageOffloadReference> innerClient;
         private readonly StorageOffload storageOffload;
 
-        public AzureMessagingClientWithStorageOffload(AzureMessagingClient<TMessage> innerClient, StorageOffload storageOffload)
+        public AzureMessagingClientWithStorageOffload(AzureMessagingClient<StorageOffloadReference> innerClient, StorageOffload storageOffload)
         {
             this.innerClient = innerClient;
             this.storageOffload = storageOffload;
         }
 
-        public async Task Send(TMessage message, TPayload payload, string requestId, string blobName, CancellationToken cancellationToken = default)
+        public async Task Send(TPayload payload, string requestId, string blobName, CancellationToken cancellationToken = default)
         {
             await this.storageOffload.Upload(
                 blobName: blobName,
                 stream: payload.AsJSONStream(),
                 cancellationToken: cancellationToken);
 
-            var annotatedMessage = (TMessage)message.SetPayloadAddress(address: blobName);
+            var annotatedMessage = new StorageOffloadReference { RequestID = requestId, Address = blobName };
 
             await this.innerClient.SendMessageWithRequestID(annotatedMessage, requestId);
         }
@@ -37,10 +42,9 @@
                 .SelectMany(async message =>
                 {
                     var searchResponse = message.Value;
-                    var address = searchResponse.GetPayloadAddress();
 
                     var payload = await this.storageOffload.Download<TPayload>(
-                        blobName: address,
+                        blobName: searchResponse.Address,
                         cancellationToken: cancellationToken);
 
                     return new Message<TPayload>(

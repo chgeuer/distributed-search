@@ -2,7 +2,7 @@ namespace DataTypesFSharp
 
 type FashionType = string
 
-type FashionQuery =
+type FashionSearchRequest =
     { Size: int
       FashionType: FashionType }
 
@@ -13,25 +13,7 @@ type FashionItem =
       Description: string
       StockKeepingUnitID: string }
 
-type SearchRequest =
-    { RequestID: string
-      ResponseTopic: string
-      Query: FashionQuery }
-
-type SearchResponsePayload =
-    { RequestID: string
-      Response: FashionItem list }
-
 open Interfaces
-
-type SearchResponse =
-    { RequestID: string
-      ResponseBlob: string }
-    interface IMessageEnrichableWithPayloadAddress with
-        member this.GetPayloadAddress() = 
-            this.ResponseBlob
-        member this.SetPayloadAddress(address) = 
-            { this with ResponseBlob = address } :> IMessageEnrichableWithPayloadAddress
 
 module FashionTypes =
     let TShirt: FashionType = "T-Shirt"
@@ -39,3 +21,16 @@ module FashionTypes =
     let Shoes: FashionType = "Shoes"
     let Hat: FashionType = "Hat"
     let Throusers: FashionType = "Throusers"
+
+type RequestID = string
+
+type ResponseTopicAddress = string
+
+type ProviderSearchRequest<'searchRequest> =
+    { RequestID: RequestID
+      ResponseTopic: ResponseTopicAddress
+      Query: 'searchRequest }
+
+type ProviderSearchResponse<'a> =
+    { RequestID: RequestID
+      Response: 'a list }

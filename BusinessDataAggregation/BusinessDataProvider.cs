@@ -39,12 +39,20 @@
         public async Task StartUpdateProcess(CancellationToken cancellationToken = default)
         {
             IObservable<BusinessData> businessDataObservable = await this.CreateObservable(cancellationToken);
-            businessDataObservable.Subscribe(onNext: bd => { this.BusinessData = bd; });
+            businessDataObservable.Subscribe(
+                onNext: bd =>
+                {
+                    this.BusinessData = bd;
+                },
+                cancellationToken);
         }
 
         public async Task<IObservable<BusinessData>> CreateObservable(CancellationToken cancellationToken = default)
         {
-            this.deletetionTask = Task.Run(() => this.DeleteOldSnapshots(maxAge: TimeSpan.FromHours(1), sleepTime: TimeSpan.FromMinutes(1), cancellationToken: this.cts.Token));
+            this.deletetionTask = Task.Run(() => this.DeleteOldSnapshots(
+                maxAge: TimeSpan.FromHours(1),
+                sleepTime: TimeSpan.FromMinutes(1),
+                cancellationToken: this.cts.Token));
 
             this.cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 

@@ -6,8 +6,6 @@
     using System.Linq;
     using System.Reactive.Linq;
     using System.Threading.Tasks;
-    using Azure.Storage.Blobs;
-    using Credentials;
     using DataTypesFSharp;
     using Interfaces;
     using Microsoft.AspNetCore.Mvc;
@@ -17,23 +15,18 @@
     public class FashionSearchController : ControllerBase
     {
         private readonly Func<BusinessData> getBusinessData;
-        private readonly Func<SearchRequest, Task> sendSearchRequest;
-        private readonly IObservable<Message<SearchResponse>> responseObservable;
+        private readonly Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendSearchRequest;
+        private readonly IObservable<Message<ProviderSearchResponse<FashionItem>>> responseObservable;
         private readonly Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> createBusinessLogic;
-        private readonly BlobContainerClient blobContainerResponsesClient;
 
         public FashionSearchController(
-            IObservable<Message<SearchResponse>> responseObservable,
-            Func<SearchRequest, Task> sendSearchRequest,
+            IObservable<Message<ProviderSearchResponse<FashionItem>>> responseObservable,
+            Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendSearchRequest,
             Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> createBusinessLogic,
             Func<BusinessData> getBusinessData)
         {
             (this.responseObservable, this.sendSearchRequest, this.createBusinessLogic, this.getBusinessData) =
                 (responseObservable, sendSearchRequest, createBusinessLogic, getBusinessData);
-
-            this.blobContainerResponsesClient = new BlobContainerClient(
-                blobContainerUri: new Uri($"https://{DemoCredential.StorageOffloadAccountName}.blob.core.windows.net/{DemoCredential.StorageOffloadContainerNameResponses}/"),
-                credential: DemoCredential.AADServicePrincipal);
         }
 
         [HttpGet]
@@ -51,8 +44,8 @@
                 this.SubtractExpectedComputeTime(
                     TimeSpan.FromMilliseconds(timeout)));
 
-            var query = new FashionQuery(size: size, fashionType: type);
-            var searchRequest = new SearchRequest(
+            var query = new FashionSearchRequest(size: size, fashionType: type);
+            var searchRequest = new ProviderSearchRequest<FashionSearchRequest>(
                 requestID: this.CreateRequestID(),
                 responseTopic: Startup.GetCurrentComputeNodeResponseTopic(),
                 query: query);
@@ -72,6 +65,7 @@
             // *** Aggregate all things we have when `responseMustBeReadyBy` fires
             FashionItem[] items = responses
                 .ToEnumerable()
+                .ApplySteps(new ProcessingContext(query, businessData), this.createBusinessLogic())
                 .ToArray(); // .OrderBy(GlobalOrder).Take(2000);
 
             stopwatch.Stop();
@@ -88,16 +82,7 @@
         private IObservable<FashionItem> GetResponses(string requestId) =>
             this.responseObservable
                 .Where(t => ((string)t.Properties["requestIDString"]) == requestId)
-                .Select(async responseMessage =>
-                {
-                    var searchResponse = responseMessage.Value;
-                    var blobClient = this.blobContainerResponsesClient.GetBlobClient(blobName: searchResponse.ResponseBlob);
-                    var result = await blobClient.DownloadAsync();
-                    var payload = await result.Value.Content.ReadJSON<SearchResponsePayload>();
-                    await Console.Out.WriteLineAsync($"Downloaded response {payload.Response.First().Description} from {searchResponse.ResponseBlob}");
-                    return payload;
-                })
-                .SelectMany(searchResponse => searchResponse.Result.Response);
+                .SelectMany(searchResponse => searchResponse.Value.Response);
 
         private string CreateRequestID() => Guid.NewGuid().ToString();
 

@@ -44,7 +44,7 @@
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddSingleton(_ => CreateEventHubObservable<SearchResponse>());
+            services.AddSingleton(_ => CreateEventHubObservable<ProviderSearchResponse<FashionItem>>());
             services.AddSingleton(_ => SendSearchRequest());
             services.AddSingleton(_ => CreateBusinessSteps());
             services.AddSingleton(_ => CreateBusinessData());
@@ -67,9 +67,9 @@
             };
         };
 
-        private static Func<SearchRequest, Task> SendSearchRequest()
+        private static Func<ProviderSearchRequest<FashionSearchRequest>, Task> SendSearchRequest()
         {
-            var requestProducer = MessagingClients.Requests<SearchRequest>(partitionId: null);
+            var requestProducer = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(partitionId: null);
 
             return searchRequest => requestProducer.SendMessageWithRequestID(searchRequest, requestId: searchRequest.RequestID);
         }
@@ -80,9 +80,11 @@
              */
 
             var connectable = MessagingClients
-                .Responses<T>(
+                .WithStorageOffload<T>(
                     topicName: GetCurrentComputeNodeResponseTopic(),
-                    partitionId: "0")
+                    partitionId: "0",
+                    accountName: DemoCredential.StorageOffloadAccountName,
+                    containerName: DemoCredential.StorageOffloadContainerNameResponses)
                 .CreateObervable(SeekPosition.Tail)
                 .Publish();
                 /* .Multicast(replaySubject);*/

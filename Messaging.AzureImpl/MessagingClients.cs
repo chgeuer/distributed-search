@@ -20,11 +20,10 @@
                 eventHubName: topicName,
                 partitionId: partitionId);
 
-        public static AzureMessagingClientWithStorageOffload<TMessage, TPayload> WithStorageOffload<TMessage, TPayload>(string topicName, string partitionId, string accountName, string containerName)
-            where TMessage : IMessageEnrichableWithPayloadAddress
+        public static AzureMessagingClientWithStorageOffload<TPayload> WithStorageOffload<TPayload>(string topicName, string partitionId, string accountName, string containerName)
         {
-            return new AzureMessagingClientWithStorageOffload<TMessage, TPayload>(
-                innerClient: new AzureMessagingClient<TMessage>(
+            return new AzureMessagingClientWithStorageOffload<TPayload>(
+                innerClient: new AzureMessagingClient<StorageOffloadReference>(
                     eventHubName: topicName,
                     partitionId: partitionId),
                 storageOffload: new StorageOffload(

@@ -20,7 +20,7 @@ type BusinessData =
 //      Version: UpdateOffset }
       
 type ProcessingContext =
-    { Query: FashionQuery
+    { Query: FashionSearchRequest
       BusinessData: BusinessData }
 
 type BusinessDataUpdate =

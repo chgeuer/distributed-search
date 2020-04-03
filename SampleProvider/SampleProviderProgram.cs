@@ -17,66 +17,64 @@
         {
             Console.Title = "Sample Provider";
 
-            var requestsClient = MessagingClients.Requests<SearchRequest>(partitionId: null);
+            var requestsClient = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(partitionId: null);
 
-            Func<string, AzureMessagingClientWithStorageOffload<SearchResponse, SearchResponsePayload>> responseTopic = 
-                topicName => MessagingClients.WithStorageOffload<SearchResponse, SearchResponsePayload>(
-                    topicName: topicName, partitionId: "0", accountName: DemoCredential.StorageOffloadAccountName, 
+            AzureMessagingClientWithStorageOffload<ProviderSearchResponse<FashionItem>> responseTopic(string topicName) =>
+                MessagingClients.WithStorageOffload<ProviderSearchResponse<FashionItem>>(
+                    topicName: topicName, partitionId: "0", accountName: DemoCredential.StorageOffloadAccountName,
                     containerName: DemoCredential.StorageOffloadContainerNameResponses);
 
             var cts = new CancellationTokenSource();
 
-            static string getBlobName(SearchRequest search, string requestId) => $"{requestId}/{Guid.NewGuid()}.json";
+            static string getBlobName(ProviderSearchRequest<FashionSearchRequest> search, string requestId) => $"{requestId}/{Guid.NewGuid()}.json";
 
             requestsClient
                 .CreateObervable(SeekPosition.Tail, cts.Token)
                 .Subscribe(
                     onNext: async searchRequestMessage =>
-                        {
-                            var search = searchRequestMessage.Value;
-                            var requestId = requestsClient.GetRequestID(searchRequestMessage.Properties);
+                    {
+                        var search = searchRequestMessage.Value;
+                        var requestId = requestsClient.GetRequestID(searchRequestMessage.Properties);
 
-                            var responseProducer = responseTopic(search.ResponseTopic);
-                            Console.Out.WriteLine($"{requestId}: Somebody's looking for {search.Query.FashionType}");
+                        var responseProducer = responseTopic(search.ResponseTopic);
+                        Console.Out.WriteLine($"{requestId}: Somebody's looking for {search.Query.FashionType}");
 
-                            var tcs = new TaskCompletionSource<bool>();
+                        var tcs = new TaskCompletionSource<bool>();
 
-                            GetResponses()
-                                .Select(foundFashionItem => new SearchResponsePayload(
-                                    requestID: requestId,
-                                    response: ListModule.OfArray(new[] { foundFashionItem })))
-                                .Subscribe(
-                                    onNext: async (responsePayload) =>
-                                    {
-                                        var blobName = getBlobName(search, requestId);
+                        GetResponses()
+                            .Select(foundFashionItem => new ProviderSearchResponse<FashionItem>(
+                                requestID: requestId,
+                                response: ListModule.OfArray(new[] { foundFashionItem })))
+                            .Subscribe(
+                                onNext: async (responsePayload) =>
+                                {
+                                    var blobName = getBlobName(search, requestId);
 
-                                        await responseProducer.Send(
-                                            message: new SearchResponse(requestID: requestId, responseBlob: blobName),
-                                            payload: responsePayload,
-                                            requestId: requestId,
-                                            blobName: blobName,
-                                            cancellationToken: cts.Token);
+                                    await responseProducer.Send(
+                                        payload: responsePayload,
+                                        requestId: requestId,
+                                        blobName: blobName,
+                                        cancellationToken: cts.Token);
 
-                                        await Console.Out.WriteLineAsync($"{requestId}: Sending {responsePayload.Response.Head.Description}");
-                                    },
-                                    onError: ex =>
-                                    {
-                                        Console.Error.WriteLine($"Error with request {requestId}: {ex.Message}");
-                                    },
-                                    onCompleted: async () =>
-                                    {
-                                        await Console.Out.WriteLineAsync($"Finished with request {requestId}");
-                                        tcs.SetResult(true);
-                                    },
-                                    token: cts.Token
-                                );
+                                    await Console.Out.WriteLineAsync($"{requestId}: Sending {responsePayload.Response.Head.Description}");
+                                },
+                                onError: ex =>
+                                {
+                                    Console.Error.WriteLine($"Error with request {requestId}: {ex.Message}");
+                                },
+                                onCompleted: async () =>
+                                {
+                                    await Console.Out.WriteLineAsync($"Finished with request {requestId}");
+                                    tcs.SetResult(true);
+                                },
+                                token: cts.Token);
 
-                            _ = await tcs.Task; // only leave on onCompleted
-                        },
+                        _ = await tcs.Task; // only leave on onCompleted
+                    },
                     onError: ex => Console.Error.WriteLine($"Error with EventHub: {ex.Message}"),
                     onCompleted: () => Console.WriteLine($"Finished with EventHub"),
-
                     token: cts.Token);
+
             await Console.In.ReadLineAsync();
             cts.Cancel();
         }

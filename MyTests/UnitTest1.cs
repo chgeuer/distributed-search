@@ -246,7 +246,7 @@ namespace MyTests
                 defaultMarkup: 1_00,
                 version: 0);
 
-            var query = new FashionQuery(size: 16, fashionType: FashionTypes.Hat);
+            var query = new FashionSearchRequest(size: 16, fashionType: FashionTypes.Hat);
             var ctx2 = new ProcessingContext(query: query, businessData: businessData);
 
             var sufficientlyGoodHat = new FashionItem(size: 16, fashionType: FashionTypes.Hat, price: 12_00, description: "A nice large hat", stockKeepingUnitID: Guid.NewGuid().ToString());
