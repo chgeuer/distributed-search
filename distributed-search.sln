@@ -33,6 +33,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BusinessDataAggregation", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Messaging.AzureImpl", "Messaging.AzureImpl\Messaging.AzureImpl.csproj", "{A8779DBF-E525-4832-81C3-F440A9214FE2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemoUsingBusinessData", "DemoUsingBusinessData\DemoUsingBusinessData.csproj", "{10BB1D8A-6A6A-4268-8947-C3DF962DF0F1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +85,10 @@ Global
 		{A8779DBF-E525-4832-81C3-F440A9214FE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A8779DBF-E525-4832-81C3-F440A9214FE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A8779DBF-E525-4832-81C3-F440A9214FE2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10BB1D8A-6A6A-4268-8947-C3DF962DF0F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10BB1D8A-6A6A-4268-8947-C3DF962DF0F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10BB1D8A-6A6A-4268-8947-C3DF962DF0F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10BB1D8A-6A6A-4268-8947-C3DF962DF0F1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

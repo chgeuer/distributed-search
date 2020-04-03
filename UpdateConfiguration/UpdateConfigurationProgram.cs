@@ -13,7 +13,7 @@
         {
             Console.Title = "Update Configuration";
 
-            var businessDataUpdates = new BusinessDataProvider(
+            var businessDataUpdates = new BusinessDataPump(
                snapshotContainerClient: new BlobContainerClient(
                    blobContainerUri: new Uri($"https://{DemoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{DemoCredential.BusinessDataSnapshotContainerName}/"),
                    credential: DemoCredential.AADServicePrincipal));
@@ -21,15 +21,22 @@
             var fashionType = FashionTypes.Hat;
             while (true)
             {
-                await Console.Out.WriteAsync($"How much does a {fashionType} cost: ");
+                await Console.Out.WriteAsync($"Please enter an item and a price, separated by a space: ");
                 var input = await Console.In.ReadLineAsync();
-                if (!decimal.TryParse(input, out var newMarkup))
+                var values = input.Split(" ");
+                if (values.Length != 2)
+                {
+                    continue;
+                }
+                var item = values[0];
+
+                if (!decimal.TryParse(values[1], out var newMarkup))
                 {
                     continue;
                 }
 
                 var update = BusinessDataUpdate.NewMarkupUpdate(
-                        fashionType: FashionTypes.Hat,
+                        fashionType: item,
                         markupPrice: newMarkup);
 
                 await businessDataUpdates.SendUpdate(update);

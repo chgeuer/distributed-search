@@ -97,7 +97,7 @@
 
         private static Func<BusinessData> CreateBusinessData()
         {
-            var businessDataUpdates = new BusinessDataProvider(
+            var businessDataUpdates = new BusinessDataPump(
                 snapshotContainerClient: new BlobContainerClient(
                     blobContainerUri: new Uri($"https://{DemoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{DemoCredential.BusinessDataSnapshotContainerName}/"),
                     credential: DemoCredential.AADServicePrincipal));

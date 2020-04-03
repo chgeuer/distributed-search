@@ -19,13 +19,13 @@
         {
             Console.Title = "Snapshot Generator";
 
-            var businessDataUpdates = new BusinessDataProvider(
+            var businessDataPump = new BusinessDataPump(
                 snapshotContainerClient: new BlobContainerClient(
                     blobContainerUri: new Uri($"https://{DemoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{DemoCredential.BusinessDataSnapshotContainerName}/"),
                     credential: DemoCredential.AADServicePrincipal));
 
             var cts = new CancellationTokenSource();
-            IObservable<BusinessData> businessDataObservable = await businessDataUpdates.CreateObservable(cts.Token);
+            IObservable<BusinessData> businessDataObservable = await businessDataPump.CreateObservable(cts.Token);
             
             businessDataObservable
                 .Sample(interval: TimeSpan.FromSeconds(5))
@@ -33,7 +33,7 @@
                     onNext: async bd =>
                     {
                         await Console.Out.WriteLineAsync($"{bd.AsJSON()}");
-                        var snapshotName = await businessDataUpdates.WriteBusinessDataSnapshot(bd);
+                        var snapshotName = await businessDataPump.WriteBusinessDataSnapshot(bd);
                         await Console.Out.WriteLineAsync($"wrote snapshot {snapshotName}");
                     },
                     onError: ex => Console.Error.WriteLine($"ERROR: {ex.Message}"),
