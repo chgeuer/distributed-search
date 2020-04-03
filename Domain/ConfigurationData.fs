@@ -28,4 +28,4 @@ type BusinessDataUpdate =
     | BrandUpdate of BrandAcronym: string * Name: string
     | SetDefaultMarkup of DefaultMarkupPrice: decimal
     // | AirportNameUpdate of AirportAcronym: string * LegalName: string
-    //| AirportLocationUpdates of AirportAcronym: string  * Latitude: decimal * Longtitude: decimal
+    // | AirportLocationUpdates of AirportAcronym: string  * Latitude: decimal * Longtitude: decimal

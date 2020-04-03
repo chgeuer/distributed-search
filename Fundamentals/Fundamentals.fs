@@ -11,9 +11,9 @@ type ProviderSearchRequest<'searchRequest> =
       ResponseTopic: ResponseTopicAddress
       Query: 'searchRequest }
 
-type ProviderSearchResponse<'a> =
+type ProviderSearchResponse<'item> =
     { RequestID: RequestID
-      Response: 'a list }
+      Response: 'item list }
 
 open System.Runtime.CompilerServices
 

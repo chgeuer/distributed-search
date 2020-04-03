@@ -1,12 +1,12 @@
 ﻿namespace DemoUsingBusinessData
 {
-    using Azure.Storage.Blobs;
-    using BusinessDataAggregation;
-    using Credentials;
     using System;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure.Storage.Blobs;
+    using BusinessDataAggregation;
+    using Credentials;
 
     class Program
     {
@@ -20,15 +20,26 @@
                     blobContainerUri: new Uri($"https://{DemoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{DemoCredential.BusinessDataSnapshotContainerName}/"),
                     credential: DemoCredential.AADServicePrincipal));
 
-            await businessDataPump.StartUpdateProcess(cts.Token);
+            //await businessDataPump.StartUpdateProcess(cts.Token);
+            //while (true)
+            //{
+            //    var bd = businessDataPump.BusinessData;
+            //    await Console.Out.WriteLineAsync(string.Join(" ", 
+            //        bd.Markup.Select(
+            //            kvp => $"{kvp.Key}={kvp.Value}").ToArray()));
+            //}
 
+            var businessDataObservable = await businessDataPump.CreateObservable(cts.Token);
+            businessDataObservable.Subscribe(onNext: async bd =>
+                {
+                    await Console.Out.WriteLineAsync(string.Join(" ",
+                        bd.Markup.Select(
+                            kvp => $"{kvp.Key}={kvp.Value}").ToArray()));
+                },
+                token: cts.Token);
 
-            while (true)
-            {
-                await Console.Out.WriteLineAsync(string.Join(" ", 
-                    businessDataPump.BusinessData.Markup.Select(
-                        kvp => $"{kvp.Key}={kvp.Value}").ToArray()));
-            }
+            Console.ReadLine();
+            cts.Cancel();
         }
     }
 }
