@@ -16,18 +16,18 @@
     public class FashionSearchController : ControllerBase
     {
         private readonly Func<BusinessData> getBusinessData;
-        private readonly Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendSearchRequest;
-        private readonly IObservable<Message<ProviderSearchResponse<FashionItem>>> responseObservable;
-        private readonly Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> createBusinessLogic;
+        private readonly Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest;
+        private readonly IObservable<Message<ProviderSearchResponse<FashionItem>>> providerResponsePump;
+        private readonly Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> createPipelineSteps;
 
         public FashionSearchController(
-            IObservable<Message<ProviderSearchResponse<FashionItem>>> responseObservable,
-            Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendSearchRequest,
-            Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> createBusinessLogic,
+            IObservable<Message<ProviderSearchResponse<FashionItem>>> providerResponsePump,
+            Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest,
+            Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> createPipelineSteps,
             Func<BusinessData> getBusinessData)
         {
-            (this.responseObservable, this.sendSearchRequest, this.createBusinessLogic, this.getBusinessData) =
-                (responseObservable, sendSearchRequest, createBusinessLogic, getBusinessData);
+            (this.providerResponsePump, this.sendProviderSearchRequest, this.createPipelineSteps, this.getBusinessData) =
+                (providerResponsePump, sendProviderSearchRequest, createPipelineSteps, getBusinessData);
         }
 
         [HttpGet]
@@ -57,16 +57,16 @@
             // *** Subscribe and start processing inbound stream
             IObservable<FashionItem> responses =
                 this.GetResponses(requestId: searchRequest.RequestID)
-                    .ApplySteps(new ProcessingContext(query, businessData), this.createBusinessLogic())
+                    .ApplySteps(new ProcessingContext(query, businessData), this.createPipelineSteps())
                     .TakeUntil(responseMustBeReadyBy);
 
             // *** Send search request
-            await this.sendSearchRequest(searchRequest);
+            await this.sendProviderSearchRequest(searchRequest);
 
             // *** Aggregate all things we have when `responseMustBeReadyBy` fires
             FashionItem[] items = responses
                 .ToEnumerable()
-                .ApplySteps(new ProcessingContext(query, businessData), this.createBusinessLogic())
+                .ApplySteps(new ProcessingContext(query, businessData), this.createPipelineSteps())
                 .ToArray(); // .OrderBy(GlobalOrder).Take(2000);
 
             stopwatch.Stop();
@@ -81,7 +81,7 @@
         }
 
         private IObservable<FashionItem> GetResponses(string requestId) =>
-            this.responseObservable
+            this.providerResponsePump
                 .Where(t => ((string)t.Properties["requestIDString"]) == requestId)
                 .SelectMany(searchResponse => searchResponse.Value.Response);
 

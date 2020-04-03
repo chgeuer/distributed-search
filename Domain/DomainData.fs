@@ -19,4 +19,3 @@ module FashionTypes =
     let Shoes: FashionType = "Shoes"
     let Hat: FashionType = "Hat"
     let Throusers: FashionType = "Throusers"
-

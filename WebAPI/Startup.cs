@@ -45,15 +45,15 @@
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddSingleton(_ => CreateEventHubObservable<ProviderSearchResponse<FashionItem>>());
+            services.AddSingleton(_ => CreateProviderResponsePump<FashionItem>());
             services.AddSingleton(_ => SendSearchRequest());
-            services.AddSingleton(_ => CreateBusinessSteps());
+            services.AddSingleton(_ => CreatePipelineSteps());
             services.AddSingleton(_ => CreateBusinessData());
         }
 
         internal static string GetCurrentComputeNodeResponseTopic() => DemoCredential.EventHubTopicNameResponses;
 
-        private static Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> CreateBusinessSteps() => () =>
+        private static Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> CreatePipelineSteps() => () =>
         {
             return new IBusinessLogicStep<ProcessingContext, FashionItem>[]
             {
@@ -75,13 +75,13 @@
             return searchRequest => requestProducer.SendMessageWithRequestID(searchRequest, requestId: searchRequest.RequestID);
         }
 
-        private static IObservable<Message<T>> CreateEventHubObservable<T>()
+        private static IObservable<Message<ProviderSearchResponse<T>>> CreateProviderResponsePump<T>()
         {
             /* var replaySubject = new ReplaySubject<EventData>(window: TimeSpan.FromSeconds(15));
              */
 
             var connectable = MessagingClients
-                .WithStorageOffload<T>(
+                .WithStorageOffload<ProviderSearchResponse<T>>(
                     topicName: GetCurrentComputeNodeResponseTopic(),
                     partitionId: "0",
                     accountName: DemoCredential.StorageOffloadAccountName,

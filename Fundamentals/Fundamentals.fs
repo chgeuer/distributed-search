@@ -1,17 +1,5 @@
 namespace Fundamentals
 
-open System.Runtime.CompilerServices
-
-type ComparisonResult =
-    | NotComparable = 0
-    | NotBetterAlternative = -1
-    | BetterAlternative = 1
-
-type ReplaceableOption<'a> =
-    | None
-    | Some of 'a
-    | ReplaceEntry of OldItem: 'a * NewItem: 'a
-
 type UpdateOffset = int64
 
 type RequestID = string
@@ -26,6 +14,18 @@ type ProviderSearchRequest<'searchRequest> =
 type ProviderSearchResponse<'a> =
     { RequestID: RequestID
       Response: 'a list }
+
+open System.Runtime.CompilerServices
+
+type ComparisonResult =
+    | NotComparable = 0
+    | NotBetterAlternative = -1
+    | BetterAlternative = 1
+
+type ReplaceableOption<'a> =
+    | None
+    | Some of 'a
+    | ReplaceEntry of OldItem: 'a * NewItem: 'a
 
 type Configuration<'k, 'v when 'k: comparison> =
     { Offset: UpdateOffset

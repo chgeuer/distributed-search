@@ -10,9 +10,15 @@ module BusinessDataExtensions =
     let Update (businessData: BusinessData) (version: UpdateOffset) (update: BusinessDataUpdate): BusinessData =
         match update with
         | MarkupUpdate(fashionType, markupPrice) ->
-            { businessData with
-                  Version = version
-                  Markup = businessData.Markup.Add(fashionType, markupPrice) }
+            match markupPrice with
+            | price when price <= 0m ->
+                { businessData with
+                      Version = version
+                      Markup = businessData.Markup.Remove(fashionType) }
+            | price -> 
+                { businessData with
+                      Version = version
+                      Markup = businessData.Markup.Add(fashionType, price) }
         | BrandUpdate(key, value) ->
             { businessData with
                   Version = version
