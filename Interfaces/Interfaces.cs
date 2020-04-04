@@ -1,7 +1,7 @@
 ﻿namespace Interfaces
 {
     using System.Collections.Generic;
-    using Fundamentals;
+    using static Fundamentals.Types;
 
     public interface IBusinessLogicStep<TContext, TItem>
     {

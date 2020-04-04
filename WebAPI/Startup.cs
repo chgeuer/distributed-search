@@ -1,14 +1,12 @@
 ﻿namespace WebAPI
 {
     using System;
-    using System.Collections.Generic;
     using System.Reactive.Linq;
     using System.Threading.Tasks;
     using Azure.Storage.Blobs;
     using BusinessDataAggregation;
     using Credentials;
     using DataTypesFSharp;
-    using Fundamentals;
     using Interfaces;
     using Messaging.AzureImpl;
     using Microsoft.AspNetCore.Builder;
@@ -16,6 +14,7 @@
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using static Fundamentals.Types;
 
     public class Startup
     {

@@ -7,10 +7,10 @@
     using System.Reactive.Linq;
     using System.Threading.Tasks;
     using DataTypesFSharp;
-    using Fundamentals;
     using Interfaces;
     using Messaging.AzureImpl;
     using Microsoft.AspNetCore.Mvc;
+    using static Fundamentals.Types;
 
     [ApiController]
     [Route("[controller]")]

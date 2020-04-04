@@ -1,10 +1,9 @@
 ﻿namespace Messaging.AzureImpl
 {
+    using System.Collections.Generic;
     using Azure.Messaging.EventHubs;
     using Credentials;
-    using Fundamentals;
-    using Interfaces;
-    using System.Collections.Generic;
+    using static Fundamentals.Types;
 
     public static class MessagingClients
     {

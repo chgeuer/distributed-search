@@ -1,6 +1,6 @@
 namespace DataTypesFSharp
 
-open Fundamentals
+open Fundamentals.Types
 
 type BusinessData =
     { Markup: Map<FashionType, decimal>

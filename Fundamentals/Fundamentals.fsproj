@@ -4,5 +4,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Fundamentals.fs" />
+    <Compile Include="FundamentalsExtensions.fs" />
   </ItemGroup>
 </Project>

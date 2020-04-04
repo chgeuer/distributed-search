@@ -2,8 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Linq;
-    using Fundamentals;
+    using static Fundamentals.Types;
 
     public class GenericBetterAlternativeFilter<TContext, TItem> : IBusinessLogicFilterStatefulPredicate<TContext, TItem>
     {

@@ -5,11 +5,12 @@ namespace MyTests
     using System.Linq;
     using System.Reactive.Linq;
     using DataTypesFSharp;
-    using Fundamentals;
+    using Fundamentals.Extensions;
     using Interfaces;
     using Microsoft.FSharp.Collections;
     using Newtonsoft.Json;
     using NUnit.Framework;
+    using static Fundamentals.Types;
 
     public class VersionedDictionary<T>
     {
@@ -68,7 +69,7 @@ namespace MyTests
             var result =
                 input
                 .DeserializeJSON<FSharpMap<string, int>>()
-                .ApplyUpdates(ops);
+                .ApplyUpdateOperations(ops);
 
             Assert.AreEqual(expected.DeserializeJSON<FSharpMap<string, int>>(), result);
         }

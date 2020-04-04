@@ -9,7 +9,7 @@
     using Azure.Messaging.EventHubs.Consumer;
     using Azure.Messaging.EventHubs.Producer;
     using Credentials;
-    using Fundamentals;
+    using static Fundamentals.Types;
     using Interfaces;
     using Microsoft.FSharp.Collections;
 

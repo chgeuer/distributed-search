@@ -2,7 +2,7 @@ namespace DataTypesFSharp
 
 open System.Collections.Generic
 open System.Runtime.CompilerServices
-open Fundamentals
+open Fundamentals.Types
 
 [<Extension>]
 module BusinessDataExtensions =

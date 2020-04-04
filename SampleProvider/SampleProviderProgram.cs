@@ -7,10 +7,10 @@
     using System.Threading.Tasks;
     using Credentials;
     using DataTypesFSharp;
-    using Fundamentals;
     using Interfaces;
     using Messaging.AzureImpl;
     using Microsoft.FSharp.Collections;
+    using static Fundamentals.Types;
 
     internal class SampleProviderProgram
     {
