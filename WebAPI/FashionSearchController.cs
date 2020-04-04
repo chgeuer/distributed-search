@@ -9,6 +9,7 @@
     using DataTypesFSharp;
     using Fundamentals;
     using Interfaces;
+    using Messaging.AzureImpl;
     using Microsoft.AspNetCore.Mvc;
 
     [ApiController]
@@ -18,12 +19,12 @@
         private readonly Func<BusinessData> getBusinessData;
         private readonly Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest;
         private readonly IObservable<Message<ProviderSearchResponse<FashionItem>>> providerResponsePump;
-        private readonly Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> createPipelineSteps;
+        private readonly Func<PipelineSteps<ProcessingContext, FashionItem>> createPipelineSteps;
 
         public FashionSearchController(
             IObservable<Message<ProviderSearchResponse<FashionItem>>> providerResponsePump,
             Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest,
-            Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> createPipelineSteps,
+            Func<PipelineSteps<ProcessingContext, FashionItem>> createPipelineSteps,
             Func<BusinessData> getBusinessData)
         {
             (this.providerResponsePump, this.sendProviderSearchRequest, this.createPipelineSteps, this.getBusinessData) =
@@ -33,6 +34,8 @@
         [HttpGet]
         public async Task<SearchResponse<FashionItem>> Get(int size, string type = "Hat", int timeout = 15000)
         {
+            var searchRequest = new FashionSearchRequest(size: size, fashionType: type);
+
             /* curl --silent "http://localhost:5000/fashionsearch?size=54&type=Throusers&timeout=15000" | jq
              * curl --silent "http://localhost:5000/fashionsearch?size=16&type=Hat&timeout=5000" | jq
              * curl --silent "http://localhost:5000/fashionsearch?size=15&type=Hat&timeout=5000" | jq
@@ -45,34 +48,36 @@
                 this.SubtractExpectedComputeTime(
                     TimeSpan.FromMilliseconds(timeout)));
 
-            var query = new FashionSearchRequest(size: size, fashionType: type);
-            var searchRequest = new ProviderSearchRequest<FashionSearchRequest>(
+            var providerSearchRequest = new ProviderSearchRequest<FashionSearchRequest>(
                 requestID: this.CreateRequestID(),
                 responseTopic: Startup.GetCurrentComputeNodeResponseTopic(),
-                query: query);
+                searchRequest: searchRequest);
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
+            var pipelineSteps = this.createPipelineSteps();
+            var processingContext = new ProcessingContext(searchRequest, businessData);
+
             // *** Subscribe and start processing inbound stream
             IObservable<FashionItem> responses =
-                this.GetResponses(requestId: searchRequest.RequestID)
-                    .ApplySteps(new ProcessingContext(query, businessData), this.createPipelineSteps())
+                this.GetResponses(requestId: providerSearchRequest.RequestID)
+                    .ApplySteps(processingContext, pipelineSteps.StreamingSteps)
                     .TakeUntil(responseMustBeReadyBy);
 
             // *** Send search request
-            await this.sendProviderSearchRequest(searchRequest);
+            await this.sendProviderSearchRequest(providerSearchRequest);
 
             // *** Aggregate all things we have when `responseMustBeReadyBy` fires
             FashionItem[] items = responses
                 .ToEnumerable()
-                .ApplySteps(new ProcessingContext(query, businessData), this.createPipelineSteps())
-                .ToArray(); // .OrderBy(GlobalOrder).Take(2000);
+                .ApplySteps(processingContext, pipelineSteps.FinalSteps)
+                .ToArray();
 
             stopwatch.Stop();
             return new SearchResponse<FashionItem>
             {
-                RequestID = searchRequest.RequestID,
+                RequestID = providerSearchRequest.RequestID,
                 Items = items,
                 Timing = $"Duration: {stopwatch.Elapsed.TotalSeconds:N3}",
                 Version = businessData.Version,
@@ -82,8 +87,8 @@
 
         private IObservable<FashionItem> GetResponses(string requestId) =>
             this.providerResponsePump
-                .Where(t => ((string)t.Properties["requestIDString"]) == requestId)
-                .SelectMany(searchResponse => searchResponse.Value.Response);
+                .Where(t => t.Properties.GetRequestID() == requestId)
+                .SelectMany(providerSearchResponse => providerSearchResponse.Value.Response);
 
         private string CreateRequestID() => Guid.NewGuid().ToString();
 

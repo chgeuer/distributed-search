@@ -1,7 +1,10 @@
 ﻿namespace Messaging.AzureImpl
 {
+    using Azure.Messaging.EventHubs;
     using Credentials;
+    using Fundamentals;
     using Interfaces;
+    using System.Collections.Generic;
 
     public static class MessagingClients
     {
@@ -30,5 +33,13 @@
                     accountName: accountName,
                     containerName: containerName));
         }
+
+        public static readonly string RequestIdPropertyName = "requestIDString";
+
+        public static string GetRequestID(this IDictionary<string, object> properties)
+            => properties[RequestIdPropertyName] as string;
+
+        public static void SetRequestID(this EventData eventData, string requestId) =>
+            eventData.Properties.Add(RequestIdPropertyName, requestId);
     }
 }

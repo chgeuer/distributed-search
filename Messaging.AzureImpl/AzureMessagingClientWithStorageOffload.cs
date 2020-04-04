@@ -4,13 +4,8 @@
     using System.Reactive.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Fundamentals;
     using Interfaces;
-
-    public class StorageOffloadReference
-    {
-        public string RequestID { get; set; }
-        public string Address { get; set; }
-    }
 
     public class AzureMessagingClientWithStorageOffload<TPayload>
     {
@@ -30,9 +25,9 @@
                 stream: payload.AsJSONStream(),
                 cancellationToken: cancellationToken);
 
-            var annotatedMessage = new StorageOffloadReference { RequestID = requestId, Address = blobName };
-
-            await this.innerClient.SendMessageWithRequestID(annotatedMessage, requestId);
+            await this.innerClient.SendMessageWithRequestID(
+                value: new StorageOffloadReference(requestID: requestId, address: blobName),
+                requestId: requestId);
         }
 
         public IObservable<Message<TPayload>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default)

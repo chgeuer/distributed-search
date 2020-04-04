@@ -50,7 +50,7 @@
         public async Task<IObservable<BusinessData>> CreateObservable(CancellationToken cancellationToken = default)
         {
             this.deletetionTask = Task.Run(() => this.DeleteOldSnapshots(
-                maxAge: TimeSpan.FromHours(1),
+                maxAge: TimeSpan.FromDays(1),
                 sleepTime: TimeSpan.FromMinutes(1),
                 cancellationToken: this.cts.Token));
 

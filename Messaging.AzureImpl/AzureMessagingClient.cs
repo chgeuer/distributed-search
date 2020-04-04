@@ -1,7 +1,6 @@
 ﻿namespace Messaging.AzureImpl
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
     using System.Reactive.Linq;
     using System.Threading;
@@ -10,12 +9,12 @@
     using Azure.Messaging.EventHubs.Consumer;
     using Azure.Messaging.EventHubs.Producer;
     using Credentials;
+    using Fundamentals;
     using Interfaces;
+    using Microsoft.FSharp.Collections;
 
     public class AzureMessagingClient<TMessagePayload>
     {
-        public readonly string RequestIdPropertyName = "requestIDString";
-
         private readonly EventHubConsumerClient consumerClient;
 
         private readonly EventHubProducerClient producerClient;
@@ -49,20 +48,15 @@
                 .Select(eventData => new Message<TMessagePayload>(
                     offset: eventData.Offset,
                     value: eventData.GetBodyAsUTF8().DeserializeJSON<TMessagePayload>(),
-                    properties: eventData.Properties));
+                    properties: new FSharpMap<string, object>(eventData.Properties.Select(
+                        kvp => Tuple.Create(kvp.Key, kvp.Value)).ToArray())));
         }
 
         public Task SendMessage(TMessagePayload value)
             => this.InnerSend(value: value, handleEventData: null);
 
         public Task SendMessageWithRequestID(TMessagePayload value, string requestId)
-            => this.InnerSend(value: value, handleEventData: eventData => this.SetRequestID(eventData, requestId));
-
-        public string GetRequestID(IDictionary<string, object> properties)
-            => properties[this.RequestIdPropertyName] as string;
-
-        private void SetRequestID(EventData eventData, string requestId) =>
-            eventData.Properties.Add(this.RequestIdPropertyName, requestId);
+            => this.InnerSend(value: value, handleEventData: eventData => eventData.SetRequestID(requestId));
 
         private async Task InnerSend(TMessagePayload value, Action<EventData> handleEventData)
         {

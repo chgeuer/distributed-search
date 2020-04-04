@@ -4,16 +4,33 @@ type UpdateOffset = int64
 
 type RequestID = string
 
+type Message<'t> =
+    { Value: 't
+      Offset: UpdateOffset
+      Properties: Map<string, obj> }
+
 type ResponseTopicAddress = string
 
 type ProviderSearchRequest<'searchRequest> =
     { RequestID: RequestID
       ResponseTopic: ResponseTopicAddress
-      Query: 'searchRequest }
+      SearchRequest: 'searchRequest }
 
 type ProviderSearchResponse<'item> =
     { RequestID: RequestID
       Response: 'item list }
+
+//type IBusinessLogicStep<'context, 'item> = unit
+
+//type PipelineSteps<'context, 'item> =
+//    { StreamingSteps: IBusinessLogicStep<'context, 'item>
+//      SequentialSteps: IBusinessLogicStep<'context, 'item> }
+
+type BlobStorageAddress = string
+
+type StorageOffloadReference =
+    { RequestID: RequestID
+      Address: BlobStorageAddress }
 
 open System.Runtime.CompilerServices
 

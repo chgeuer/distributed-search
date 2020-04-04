@@ -19,6 +19,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Credentials\Credentials.csproj" />
+    <ProjectReference Include="..\Fundamentals\Fundamentals.fsproj" />
     <ProjectReference Include="..\Interfaces\Interfaces.csproj" />
   </ItemGroup>
 </Project>

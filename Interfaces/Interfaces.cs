@@ -7,6 +7,13 @@
     {
     }
 
+    public class PipelineSteps<TContext, TItem>
+    {
+        public IEnumerable<IBusinessLogicStep<TContext, TItem>> StreamingSteps { get; set; }
+
+        public IEnumerable<IBusinessLogicStep<TContext, TItem>> FinalSteps { get; set; }
+    }
+
     public interface IBusinessLogicFilterProjection<TContext, TItem> : IBusinessLogicStep<TContext, TItem>
     {
         TItem Map(TContext context, TItem item);

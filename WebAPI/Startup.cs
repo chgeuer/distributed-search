@@ -53,10 +53,12 @@
 
         internal static string GetCurrentComputeNodeResponseTopic() => DemoCredential.EventHubTopicNameResponses;
 
-        private static Func<IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>>> CreatePipelineSteps() => () =>
+        private static Func<PipelineSteps<ProcessingContext, FashionItem>> CreatePipelineSteps() => () =>
         {
-            return new IBusinessLogicStep<ProcessingContext, FashionItem>[]
+            return new PipelineSteps<ProcessingContext, FashionItem>
             {
+                StreamingSteps = new IBusinessLogicStep<ProcessingContext, FashionItem>[]
+                {
                     // new StatefulMixAndMatchFilter(),
                     // new GenericFilter<ProcessingContext, FashionItem>((c, i) => c.Query.Size == i.Size),
                     // new GenericFilter<ProcessingContext, FashionItem>((c,i) => c.Query.FashionType == i.FashionType),
@@ -65,6 +67,8 @@
                     // GenericBetterAlternativeFilter<ProcessingContext, FashionItem>.FilterCheaperPrice(fi => fi.StockKeepingUnitID, fi => fi.Price),
                     new FashionTypeFilter(),
                     new MarkupAdder(),
+                },
+                FinalSteps = Array.Empty<IBusinessLogicStep<ProcessingContext, FashionItem>>(),
             };
         };
 

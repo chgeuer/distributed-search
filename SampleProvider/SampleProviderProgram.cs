@@ -35,10 +35,10 @@
                     onNext: async searchRequestMessage =>
                     {
                         var search = searchRequestMessage.Value;
-                        var requestId = requestsClient.GetRequestID(searchRequestMessage.Properties);
+                        var requestId = searchRequestMessage.Properties.GetRequestID();
 
                         var responseProducer = responseTopic(search.ResponseTopic);
-                        Console.Out.WriteLine($"{requestId}: Somebody's looking for {search.Query.FashionType}");
+                        Console.Out.WriteLine($"{requestId}: Somebody's looking for {search.SearchRequest.FashionType}");
 
                         var tcs = new TaskCompletionSource<bool>();
 
