@@ -20,9 +20,10 @@
 
             var requestsClient = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(partitionId: null);
 
-            AzureMessagingClientWithStorageOffload<ProviderSearchResponse<FashionItem>> responseTopic(string topicName) =>
+            IMessageClient<ProviderSearchResponse<FashionItem>> responseTopic(string topicName) =>
                 MessagingClients.WithStorageOffload<ProviderSearchResponse<FashionItem>>(
-                    topicName: topicName, partitionId: "0", accountName: DemoCredential.StorageOffloadAccountName,
+                    topicName: topicName, partitionId: "0",
+                    accountName: DemoCredential.StorageOffloadAccountName,
                     containerName: DemoCredential.StorageOffloadContainerNameResponses);
 
             var cts = new CancellationTokenSource();
@@ -49,12 +50,9 @@
                             .Subscribe(
                                 onNext: async (responsePayload) =>
                                 {
-                                    var blobName = getBlobName(search, requestId);
-
-                                    await responseProducer.Send(
-                                        message: responsePayload,
+                                    await responseProducer.SendMessage(
+                                        messagePayload: responsePayload,
                                         requestId: requestId,
-                                        blobName: blobName,
                                         cancellationToken: cts.Token);
 
                                     await Console.Out.WriteLineAsync($"{requestId}: Sending {responsePayload.Response.Head.Description}");

@@ -23,8 +23,7 @@ type ProviderSearchResponse<'item> =
 type BlobStorageAddress = string
 
 type StorageOffloadReference =
-    { RequestID: RequestID
-      Address: BlobStorageAddress }
+    { Address: BlobStorageAddress }
 
 type SeekPosition =
     | FromOffset of UpdateOffset : UpdateOffset 

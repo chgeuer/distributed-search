@@ -75,7 +75,7 @@
         {
             var requestProducer = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(partitionId: null);
 
-            return searchRequest => requestProducer.SendMessageWithRequestID(searchRequest, requestId: searchRequest.RequestID);
+            return searchRequest => requestProducer.SendMessage(searchRequest, requestId: searchRequest.RequestID);
         }
 
         private static IObservable<Message<ProviderSearchResponse<T>>> CreateProviderResponsePump<T>()

@@ -24,7 +24,7 @@
         private static string OffsetToBlobName(long offset) => $"{offset}.json";
 
         private readonly BlobContainerClient snapshotContainerClient;
-        private readonly AzureMessagingClient<BusinessDataUpdate> updateMessagingClient;
+        private readonly IMessageClient<BusinessDataUpdate> updateMessagingClient;
         private CancellationTokenSource cts;
         private long lastWrittenOffset = -1;
         private Task deletetionTask;
@@ -63,7 +63,8 @@
                 this.updateMessagingClient
                     .CreateObervable(
                         startingPosition: SeekPosition.NewFromOffset(
-                            updateOffset: snapshotValue.Version))
+                            updateOffset: snapshotValue.Version),
+                        cancellationToken: this.cts.Token)
                     .Scan(
                         seed: snapshotValue,
                         accumulator: (businessData, msg) => businessData.ApplyUpdates(new[] { Tuple.Create(msg.Offset, msg.Payload) }))
@@ -76,8 +77,8 @@
                 .AsObservable();
         }
 
-        public Task SendUpdate(BusinessDataUpdate update)
-            => this.updateMessagingClient.SendMessage(update);
+        public Task SendUpdate(BusinessDataUpdate update, CancellationToken cancellationToken = default)
+            => this.updateMessagingClient.SendMessage(update, cancellationToken);
 
         public async Task<BusinessData> FetchBusinessDataSnapshot(CancellationToken cancellationToken)
         {

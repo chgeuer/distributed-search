@@ -7,10 +7,10 @@
     using Interfaces;
     using static Fundamentals.Types;
 
-    public class AzureMessagingClientWithStorageOffload<TMessagePayload>
+    public class AzureMessagingClientWithStorageOffload<TMessagePayload> : IMessageClient<TMessagePayload>
     {
-        private readonly AzureMessagingClient<StorageOffloadReference> innerClient;
         private readonly AzureStorageOffload storageOffload;
+        private readonly AzureMessagingClient<StorageOffloadReference> innerClient;
 
         public AzureMessagingClientWithStorageOffload(AzureMessagingClient<StorageOffloadReference> innerClient, AzureStorageOffload storageOffload)
         {
@@ -18,19 +18,9 @@
             this.storageOffload = storageOffload;
         }
 
-        public async Task Send(TMessagePayload message, string requestId, string blobName, CancellationToken cancellationToken = default)
-        {
-            await this.storageOffload.Upload(
-                blobName: blobName,
-                stream: message.AsJSONStream(),
-                cancellationToken: cancellationToken);
-
-            await this.innerClient.SendMessageWithRequestID(
-                value: new StorageOffloadReference(requestID: requestId, address: blobName),
-                requestId: requestId);
-        }
-
-        public IObservable<Message<TMessagePayload>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default)
+        public IObservable<Message<TMessagePayload>> CreateObervable(
+            SeekPosition startingPosition,
+            CancellationToken cancellationToken = default)
             => this.innerClient
                 .CreateObervable(
                     startingPosition: startingPosition,
@@ -46,5 +36,39 @@
                         payload: payload,
                         properties: message.Properties);
                 });
+
+        public async Task SendMessage(
+            TMessagePayload messagePayload,
+            CancellationToken cancellationToken = default)
+        {
+            var blobName = $"{Guid.NewGuid()}.json";
+
+            await this.storageOffload.Upload(
+                blobName: blobName,
+                stream: messagePayload.AsJSONStream(),
+                cancellationToken: cancellationToken);
+
+            await this.innerClient.SendMessage(
+                messagePayload: new StorageOffloadReference(address: blobName),
+                cancellationToken: cancellationToken);
+        }
+
+        public async Task SendMessage(
+            TMessagePayload messagePayload,
+            string requestId,
+            CancellationToken cancellationToken = default)
+        {
+            var blobName = $"{requestId}/{Guid.NewGuid()}.json";
+
+            await this.storageOffload.Upload(
+                blobName: blobName,
+                stream: messagePayload.AsJSONStream(),
+                cancellationToken: cancellationToken);
+
+            await this.innerClient.SendMessage(
+                messagePayload: new StorageOffloadReference(address: blobName),
+                requestId: requestId,
+                cancellationToken: cancellationToken);
+        }
     }
 }

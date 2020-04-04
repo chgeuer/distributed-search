@@ -13,7 +13,7 @@
     using Microsoft.FSharp.Collections;
     using static Fundamentals.Types;
 
-    public class AzureMessagingClient<TMessagePayload>
+    public class AzureMessagingClient<TMessagePayload> : IMessageClient<TMessagePayload>
     {
         private readonly EventHubConsumerClient consumerClient;
 
@@ -37,11 +37,16 @@
             this.partitionId = partitionId;
         }
 
-        public IObservable<Message<TMessagePayload>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default)
+        public IObservable<Message<TMessagePayload>> CreateObervable(
+            SeekPosition startingPosition,
+            CancellationToken cancellationToken = default)
         {
-            IObservable<PartitionEvent> partitionEvents = this.partitionId == null
+            IObservable<PartitionEvent> partitionEvents = string.IsNullOrEmpty(this.partitionId)
                 ? this.consumerClient.CreateObservable(cancellationToken)
-                : this.consumerClient.CreateObservable(this.partitionId, startingPosition.AsEventPosition(), cancellationToken);
+                : this.consumerClient.CreateObservable(
+                    partitionId: this.partitionId,
+                    startingPosition: startingPosition.AsEventPosition(),
+                    cancellationToken: cancellationToken);
 
             return partitionEvents
                 .Select(partitionEvent => partitionEvent.Data)
@@ -52,21 +57,34 @@
                         kvp => Tuple.Create(kvp.Key, kvp.Value)).ToArray())));
         }
 
-        public Task SendMessage(TMessagePayload value)
-            => this.InnerSend(value: value, handleEventData: null);
+        public Task SendMessage(
+            TMessagePayload messagePayload,
+            CancellationToken cancellationToken = default)
+            => this.InnerSend(
+                messagePayload: messagePayload,
+                handleEventData: null,
+                cancellationToken: cancellationToken);
 
-        public Task SendMessageWithRequestID(TMessagePayload value, string requestId)
-            => this.InnerSend(value: value, handleEventData: eventData => eventData.SetRequestID(requestId));
+        public Task SendMessage(
+            TMessagePayload messagePayload,
+            string requestId,
+            CancellationToken cancellationToken = default)
+            => this.InnerSend(
+                messagePayload: messagePayload,
+                handleEventData: eventData => eventData.SetRequestID(requestId),
+                cancellationToken: cancellationToken);
 
-        private async Task InnerSend(TMessagePayload value, Action<EventData> handleEventData)
+        private async Task InnerSend(
+            TMessagePayload messagePayload, Action<EventData> handleEventData,
+            CancellationToken cancellationToken)
         {
-            using EventDataBatch batchOfOne = await this.producerClient.CreateBatchAsync();
-            var eventData = new EventData(eventBody: value.AsJSON().ToUTF8Bytes());
+            using EventDataBatch batchOfOne = await this.producerClient.CreateBatchAsync(cancellationToken);
+            var eventData = new EventData(eventBody: messagePayload.AsJSON().ToUTF8Bytes());
 
             handleEventData?.Invoke(eventData);
 
             batchOfOne.TryAdd(eventData);
-            await this.producerClient.SendAsync(batchOfOne);
+            await this.producerClient.SendAsync(batchOfOne, cancellationToken);
         }
     }
 }
