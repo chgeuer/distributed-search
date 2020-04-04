@@ -7,17 +7,10 @@
 
     public interface IMessageClient<TMessagePayload>
     {
-        IObservable<Message<TMessagePayload>> CreateObervable(
-            SeekPosition startingPosition,
-            CancellationToken cancellationToken = default);
+        IObservable<Message<TMessagePayload>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default);
 
-        Task SendMessage(
-            TMessagePayload messagePayload,
-            CancellationToken cancellationToken = default);
+        Task SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default);
 
-        Task SendMessage(
-            TMessagePayload messagePayload,
-            string requestId,
-            CancellationToken cancellationToken = default);
+        Task SendMessage(TMessagePayload messagePayload, string requestId, CancellationToken cancellationToken = default);
     }
 }

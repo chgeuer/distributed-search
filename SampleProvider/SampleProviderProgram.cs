@@ -28,8 +28,6 @@
 
             var cts = new CancellationTokenSource();
 
-            static string getBlobName(ProviderSearchRequest<FashionSearchRequest> search, string requestId) => $"{requestId}/{Guid.NewGuid()}.json";
-
             requestsClient
                 .CreateObervable(SeekPosition.FromTail, cts.Token)
                 .Subscribe(

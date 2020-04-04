@@ -37,9 +37,7 @@
             this.partitionId = partitionId;
         }
 
-        public IObservable<Message<TMessagePayload>> CreateObervable(
-            SeekPosition startingPosition,
-            CancellationToken cancellationToken = default)
+        public IObservable<Message<TMessagePayload>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default)
         {
             IObservable<PartitionEvent> partitionEvents = string.IsNullOrEmpty(this.partitionId)
                 ? this.consumerClient.CreateObservable(cancellationToken)
@@ -57,26 +55,19 @@
                         kvp => Tuple.Create(kvp.Key, kvp.Value)).ToArray())));
         }
 
-        public Task SendMessage(
-            TMessagePayload messagePayload,
-            CancellationToken cancellationToken = default)
+        public Task SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default)
             => this.InnerSend(
                 messagePayload: messagePayload,
                 handleEventData: null,
                 cancellationToken: cancellationToken);
 
-        public Task SendMessage(
-            TMessagePayload messagePayload,
-            string requestId,
-            CancellationToken cancellationToken = default)
+        public Task SendMessage(TMessagePayload messagePayload, string requestId, CancellationToken cancellationToken = default)
             => this.InnerSend(
                 messagePayload: messagePayload,
                 handleEventData: eventData => eventData.SetRequestID(requestId),
                 cancellationToken: cancellationToken);
 
-        private async Task InnerSend(
-            TMessagePayload messagePayload, Action<EventData> handleEventData,
-            CancellationToken cancellationToken)
+        private async Task InnerSend(TMessagePayload messagePayload, Action<EventData> handleEventData, CancellationToken cancellationToken)
         {
             using EventDataBatch batchOfOne = await this.producerClient.CreateBatchAsync(cancellationToken);
             var eventData = new EventData(eventBody: messagePayload.AsJSON().ToUTF8Bytes());
