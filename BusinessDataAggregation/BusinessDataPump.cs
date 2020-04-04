@@ -66,7 +66,7 @@
                             updateOffset: snapshotValue.Version))
                     .Scan(
                         seed: snapshotValue,
-                        accumulator: (businessData, msg) => businessData.ApplyUpdates(new[] { Tuple.Create(msg.Offset, msg.Value) }))
+                        accumulator: (businessData, msg) => businessData.ApplyUpdates(new[] { Tuple.Create(msg.Offset, msg.Payload) }))
                     .StartWith(snapshotValue)
                     .Publish(initialValue: snapshotValue);
 

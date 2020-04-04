@@ -28,7 +28,7 @@
                 innerClient: new AzureMessagingClient<StorageOffloadReference>(
                     eventHubName: topicName,
                     partitionId: partitionId),
-                storageOffload: new StorageOffload(
+                storageOffload: new AzureStorageOffload(
                     accountName: accountName,
                     containerName: containerName));
         }

@@ -8,11 +8,11 @@
     using Credentials;
     using Interfaces;
 
-    public class StorageOffload
+    public class AzureStorageOffload
     {
         private readonly BlobContainerClient blobContainerClient;
 
-        public StorageOffload(string accountName, string containerName)
+        public AzureStorageOffload(string accountName, string containerName)
         {
             this.blobContainerClient = new BlobContainerClient(
                     blobContainerUri: new Uri($"https://{accountName}.blob.core.windows.net/{containerName}/"),

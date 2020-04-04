@@ -9,9 +9,9 @@
     using Azure.Messaging.EventHubs.Consumer;
     using Azure.Messaging.EventHubs.Producer;
     using Credentials;
-    using static Fundamentals.Types;
     using Interfaces;
     using Microsoft.FSharp.Collections;
+    using static Fundamentals.Types;
 
     public class AzureMessagingClient<TMessagePayload>
     {
@@ -47,7 +47,7 @@
                 .Select(partitionEvent => partitionEvent.Data)
                 .Select(eventData => new Message<TMessagePayload>(
                     offset: eventData.Offset,
-                    value: eventData.GetBodyAsUTF8().DeserializeJSON<TMessagePayload>(),
+                    payload: eventData.GetBodyAsUTF8().DeserializeJSON<TMessagePayload>(),
                     properties: new FSharpMap<string, object>(eventData.Properties.Select(
                         kvp => Tuple.Create(kvp.Key, kvp.Value)).ToArray())));
         }

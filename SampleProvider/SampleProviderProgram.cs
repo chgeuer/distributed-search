@@ -32,10 +32,10 @@
             requestsClient
                 .CreateObervable(SeekPosition.FromTail, cts.Token)
                 .Subscribe(
-                    onNext: async searchRequestMessage =>
+                    onNext: async providerSearchRequestMessage =>
                     {
-                        var search = searchRequestMessage.Value;
-                        var requestId = searchRequestMessage.Properties.GetRequestID();
+                        var search = providerSearchRequestMessage.Payload;
+                        var requestId = providerSearchRequestMessage.Properties.GetRequestID();
 
                         var responseProducer = responseTopic(search.ResponseTopic);
                         Console.Out.WriteLine($"{requestId}: Somebody's looking for {search.SearchRequest.FashionType}");
@@ -52,7 +52,7 @@
                                     var blobName = getBlobName(search, requestId);
 
                                     await responseProducer.Send(
-                                        payload: responsePayload,
+                                        message: responsePayload,
                                         requestId: requestId,
                                         blobName: blobName,
                                         cancellationToken: cts.Token);

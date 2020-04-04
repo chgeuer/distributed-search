@@ -4,8 +4,8 @@ type UpdateOffset = int64
 
 type RequestID = string
 
-type Message<'t> =
-    { Value: 't
+type Message<'payload> =
+    { Payload: 'payload
       Offset: UpdateOffset
       Properties: Map<string, obj> }
 
@@ -20,17 +20,15 @@ type ProviderSearchResponse<'item> =
     { RequestID: RequestID
       Response: 'item list }
 
-//type IBusinessLogicStep<'context, 'item> = unit
-
-//type PipelineSteps<'context, 'item> =
-//    { StreamingSteps: IBusinessLogicStep<'context, 'item>
-//      SequentialSteps: IBusinessLogicStep<'context, 'item> }
-
 type BlobStorageAddress = string
 
 type StorageOffloadReference =
     { RequestID: RequestID
       Address: BlobStorageAddress }
+
+type SeekPosition =
+    | FromOffset of UpdateOffset : UpdateOffset 
+    | FromTail
 
 //public class SeekPosition
 //{
@@ -41,9 +39,11 @@ type StorageOffloadReference =
 //    private SeekPosition() { }
 //}
 
-type SeekPosition =
-    | FromOffset of UpdateOffset : UpdateOffset 
-    | FromTail
+//type IBusinessLogicStep<'context, 'item> = unit
+
+//type PipelineSteps<'context, 'item> =
+//    { StreamingSteps: IBusinessLogicStep<'context, 'item>
+//      SequentialSteps: IBusinessLogicStep<'context, 'item> }
 
 type ComparisonResult =
     | NotComparable = 0

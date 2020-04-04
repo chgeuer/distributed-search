@@ -88,7 +88,7 @@
         private IObservable<FashionItem> GetResponses(string requestId) =>
             this.providerResponsePump
                 .Where(t => t.Properties.GetRequestID() == requestId)
-                .SelectMany(providerSearchResponse => providerSearchResponse.Value.Response);
+                .SelectMany(providerSearchResponse => providerSearchResponse.Payload.Response);
 
         private string CreateRequestID() => Guid.NewGuid().ToString();
 

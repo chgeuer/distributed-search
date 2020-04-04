@@ -7,22 +7,22 @@
     using Interfaces;
     using static Fundamentals.Types;
 
-    public class AzureMessagingClientWithStorageOffload<TPayload>
+    public class AzureMessagingClientWithStorageOffload<TMessagePayload>
     {
         private readonly AzureMessagingClient<StorageOffloadReference> innerClient;
-        private readonly StorageOffload storageOffload;
+        private readonly AzureStorageOffload storageOffload;
 
-        public AzureMessagingClientWithStorageOffload(AzureMessagingClient<StorageOffloadReference> innerClient, StorageOffload storageOffload)
+        public AzureMessagingClientWithStorageOffload(AzureMessagingClient<StorageOffloadReference> innerClient, AzureStorageOffload storageOffload)
         {
             this.innerClient = innerClient;
             this.storageOffload = storageOffload;
         }
 
-        public async Task Send(TPayload payload, string requestId, string blobName, CancellationToken cancellationToken = default)
+        public async Task Send(TMessagePayload message, string requestId, string blobName, CancellationToken cancellationToken = default)
         {
             await this.storageOffload.Upload(
                 blobName: blobName,
-                stream: payload.AsJSONStream(),
+                stream: message.AsJSONStream(),
                 cancellationToken: cancellationToken);
 
             await this.innerClient.SendMessageWithRequestID(
@@ -30,23 +30,21 @@
                 requestId: requestId);
         }
 
-        public IObservable<Message<TPayload>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default)
-        {
-            return this.innerClient
-                .CreateObervable(startingPosition: startingPosition, cancellationToken: cancellationToken)
+        public IObservable<Message<TMessagePayload>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default)
+            => this.innerClient
+                .CreateObervable(
+                    startingPosition: startingPosition,
+                    cancellationToken: cancellationToken)
                 .SelectMany(async message =>
                 {
-                    var searchResponse = message.Value;
-
-                    var payload = await this.storageOffload.Download<TPayload>(
-                        blobName: searchResponse.Address,
+                    var payload = await this.storageOffload.Download<TMessagePayload>(
+                        blobName: message.Payload.Address,
                         cancellationToken: cancellationToken);
 
-                    return new Message<TPayload>(
+                    return new Message<TMessagePayload>(
                         offset: message.Offset,
-                        value: payload,
+                        payload: payload,
                         properties: message.Properties);
                 });
-        }
     }
 }
