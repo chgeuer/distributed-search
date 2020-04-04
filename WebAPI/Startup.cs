@@ -89,7 +89,7 @@
                     partitionId: "0",
                     accountName: DemoCredential.StorageOffloadAccountName,
                     containerName: DemoCredential.StorageOffloadContainerNameResponses)
-                .CreateObervable(SeekPosition.Tail)
+                .CreateObervable(SeekPosition.FromTail)
                 .Publish();
                 /* .Multicast(replaySubject);*/
 

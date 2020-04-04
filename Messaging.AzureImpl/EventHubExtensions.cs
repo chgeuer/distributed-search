@@ -12,6 +12,7 @@
     using Azure.Messaging.EventHubs.Consumer;
     using Interfaces;
     using LanguageExt;
+    using static Fundamentals.Types;
     using static LanguageExt.Prelude;
 
     internal static class EventHubExtensions
@@ -77,8 +78,10 @@
             record.Properties.TryGetValue(fieldName, out object result) ? Some((T)result) : None;
 
         internal static EventPosition AsEventPosition(this SeekPosition position)
-            => position.FromTail
+            => position.IsFromTail
                 ? EventPosition.Latest
-                : EventPosition.FromOffset(offset: position.Offset, isInclusive: false);
-    }
+                : EventPosition.FromOffset(
+                    offset: ((SeekPosition.FromOffset)position).UpdateOffset,
+                    isInclusive: false);
+   }
 }

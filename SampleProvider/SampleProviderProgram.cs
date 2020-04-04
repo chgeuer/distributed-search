@@ -30,7 +30,7 @@
             static string getBlobName(ProviderSearchRequest<FashionSearchRequest> search, string requestId) => $"{requestId}/{Guid.NewGuid()}.json";
 
             requestsClient
-                .CreateObervable(SeekPosition.Tail, cts.Token)
+                .CreateObervable(SeekPosition.FromTail, cts.Token)
                 .Subscribe(
                     onNext: async searchRequestMessage =>
                     {

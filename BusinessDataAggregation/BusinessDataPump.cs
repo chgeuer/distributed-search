@@ -15,6 +15,7 @@
     using LanguageExt;
     using Messaging.AzureImpl;
     using Microsoft.FSharp.Collections;
+    using static Fundamentals.Types;
 
     public class BusinessDataPump
     {
@@ -60,7 +61,9 @@
 
             IConnectableObservable<BusinessData> connectableObservable =
                 this.updateMessagingClient
-                    .CreateObervable(SeekPosition.FromPosition(position: snapshotValue.Version))
+                    .CreateObervable(
+                        startingPosition: SeekPosition.NewFromOffset(
+                            updateOffset: snapshotValue.Version))
                     .Scan(
                         seed: snapshotValue,
                         accumulator: (businessData, msg) => businessData.ApplyUpdates(new[] { Tuple.Create(msg.Offset, msg.Value) }))

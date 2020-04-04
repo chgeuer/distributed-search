@@ -32,7 +32,18 @@ type StorageOffloadReference =
     { RequestID: RequestID
       Address: BlobStorageAddress }
 
-open System.Runtime.CompilerServices
+//public class SeekPosition
+//{
+//    public static SeekPosition FromPosition(long position) => new SeekPosition { FromTail = false, Offset = position };
+//    public static readonly SeekPosition Tail = new SeekPosition { FromTail = true, Offset = 0 };
+//    public bool FromTail { get; private set; }
+//    public long Offset { get; private set; }
+//    private SeekPosition() { }
+//}
+
+type SeekPosition =
+    | FromOffset of UpdateOffset : UpdateOffset 
+    | FromTail
 
 type ComparisonResult =
     | NotComparable = 0
