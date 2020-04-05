@@ -14,6 +14,8 @@
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.FSharp.Core;
+    using static BusinessLogic.Logic;
     using static Fundamentals.Types;
 
     public class Startup
@@ -54,6 +56,10 @@
 
         private static Func<PipelineSteps<ProcessingContext, FashionItem>> CreatePipelineSteps() => () =>
         {
+            var s1 = PipelineStep<ProcessingContext, FashionItem>.NewPredicate(
+                FSharpExtensions.ToFSharpFunc<Tuple<ProcessingContext, FashionItem>, bool>(
+                    t => t.Item1.Query.Size == t.Item2.Size));
+
             return new PipelineSteps<ProcessingContext, FashionItem>
             {
                 StreamingSteps = new IBusinessLogicStep<ProcessingContext, FashionItem>[]

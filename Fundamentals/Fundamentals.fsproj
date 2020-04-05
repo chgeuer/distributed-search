@@ -3,6 +3,7 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="BusinessLogic.fs" />
     <Compile Include="Fundamentals.fs" />
     <Compile Include="FundamentalsExtensions.fs" />
   </ItemGroup>

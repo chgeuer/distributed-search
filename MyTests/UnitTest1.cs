@@ -10,6 +10,7 @@ namespace MyTests
     using NUnit.Framework;
     using Fundamentals.Extensions;
     using static Fundamentals.Types;
+    using static BusinessLogic.Logic;
 
     public class VersionedDictionary<T>
     {

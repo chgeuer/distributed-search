@@ -3,6 +3,23 @@
 open System.Runtime.CompilerServices
 open Fundamentals.Types
 
+type Configuration<'k, 'v when 'k: comparison> =
+    { Offset: UpdateOffset
+      Data: Map<'k, 'v> }
+
+type UpdateOperation<'k, 'v> =
+    | Add of Key: 'k * Value: 'v
+    | Remove of Key: 'k
+
+type Update =
+    { Offset: UpdateOffset
+      UpdateArea: string
+      Operation: UpdateOperation<string, string> }
+
+type UpdateableData =
+    { Offset: UpdateOffset
+      Data: Map<string, Map<string, string>> }
+
 [<Extension>]
 module UpdateExtensions =
     let ApplyUpdateOperation (data: Map<'k, 'v>) (update: UpdateOperation<'k, 'v>) : Map<'k, 'v> =
