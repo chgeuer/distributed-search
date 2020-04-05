@@ -33,11 +33,9 @@
 
             return new MessagingClientWithStorageOffload<TPayload>(
                 innerClient: new AzureMessagingClient<StorageOffloadReference>(
-                    eventHubName: topicName,
-                    partitionId: partitionId),
+                    eventHubName: topicName, partitionId: partitionId),
                 storageOffload: new StorageOffload(
-                    upload: blobContainerClient.UploadLambda(),
-                    download: blobContainerClient.DownloadLambda()));
+                    blobContainerClient.UpAndDownloadLambdas()));
         }
 
         public static readonly string RequestIdPropertyName = "requestIDString";

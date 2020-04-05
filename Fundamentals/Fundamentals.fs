@@ -25,6 +25,15 @@ type BlobStorageAddress = string
 type StorageOffloadReference =
     { Address: BlobStorageAddress }
 
+open System
+open System.IO
+open System.Threading
+open System.Threading.Tasks
+
+type StorageOffloadFunctions =
+    { Upload: Func<string, Stream, CancellationToken, Task> 
+      Download: Func<string, CancellationToken, Task<Stream>> }
+
 type SeekPosition =
     | FromOffset of UpdateOffset : UpdateOffset 
     | FromTail

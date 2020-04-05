@@ -1,30 +1,30 @@
 ﻿namespace Interfaces
 {
-    using System;
     using System.IO;
     using System.Threading;
     using System.Threading.Tasks;
+    using static Fundamentals.Types;
 
     public class StorageOffload
     {
-        private readonly Func<string, Stream, CancellationToken, Task> upload;
-        private readonly Func<string, CancellationToken, Task<Stream>> download;
+        private readonly StorageOffloadFunctions storageOffloadFunctions;
 
-        public StorageOffload(
-            Func<string, Stream, CancellationToken, Task> upload,
-            Func<string, CancellationToken, Task<Stream>> download)
+        public StorageOffload(StorageOffloadFunctions storageOffloadFunctions)
         {
-            (this.upload, this.download) = (upload, download);
+            this.storageOffloadFunctions = storageOffloadFunctions;
         }
 
         public Task Upload(string blobName, Stream stream, CancellationToken cancellationToken)
         {
-            return this.upload(blobName, stream, cancellationToken);
+            return this.storageOffloadFunctions.Upload(
+                blobName, stream, cancellationToken);
         }
 
         public async Task<T> Download<T>(string blobName, CancellationToken cancellationToken)
         {
-            var stream = await this.download(blobName, cancellationToken);
+            var stream = await this.storageOffloadFunctions.Download(
+                blobName, cancellationToken);
+
             return await stream.ReadJSON<T>();
         }
     }
