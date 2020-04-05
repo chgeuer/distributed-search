@@ -31,7 +31,7 @@
 
         public BusinessDataPump(BlobContainerClient snapshotContainerClient)
         {
-            this.updateMessagingClient = MessagingClients.Updates<BusinessDataUpdate>(partitionId: "0");
+            this.updateMessagingClient = AzureMessagingClients.Updates<BusinessDataUpdate>(partitionId: "0");
             this.snapshotContainerClient = snapshotContainerClient;
         }
 

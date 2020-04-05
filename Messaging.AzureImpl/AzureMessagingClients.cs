@@ -1,12 +1,14 @@
 ﻿namespace Messaging.AzureImpl
 {
+    using System;
     using System.Collections.Generic;
     using Azure.Messaging.EventHubs;
+    using Azure.Storage.Blobs;
     using Credentials;
     using Interfaces;
     using static Fundamentals.Types;
 
-    public static class MessagingClients
+    public static class AzureMessagingClients
     {
         public static IMessageClient<TResponses> Updates<TResponses>(string partitionId)
             => new AzureMessagingClient<TResponses>(
@@ -25,13 +27,17 @@
 
         public static IMessageClient<TPayload> WithStorageOffload<TPayload>(string topicName, string partitionId, string accountName, string containerName)
         {
-            return new AzureMessagingClientWithStorageOffload<TPayload>(
+            var blobContainerClient = new BlobContainerClient(
+                blobContainerUri: new Uri($"https://{accountName}.blob.core.windows.net/{containerName}/"),
+                credential: DemoCredential.AADServicePrincipal);
+
+            return new MessagingClientWithStorageOffload<TPayload>(
                 innerClient: new AzureMessagingClient<StorageOffloadReference>(
                     eventHubName: topicName,
                     partitionId: partitionId),
-                storageOffload: new AzureStorageOffload(
-                    accountName: accountName,
-                    containerName: containerName));
+                storageOffload: new StorageOffload(
+                    upload: blobContainerClient.UploadLambda(),
+                    download: blobContainerClient.DownloadLambda()));
         }
 
         public static readonly string RequestIdPropertyName = "requestIDString";

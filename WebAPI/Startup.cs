@@ -79,7 +79,7 @@
 
         private static Func<ProviderSearchRequest<FashionSearchRequest>, Task> SendSearchRequest()
         {
-            var requestProducer = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(partitionId: null);
+            var requestProducer = AzureMessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(partitionId: null);
 
             return searchRequest => requestProducer.SendMessage(searchRequest, requestId: searchRequest.RequestID);
         }
@@ -89,7 +89,7 @@
             /* var replaySubject = new ReplaySubject<EventData>(window: TimeSpan.FromSeconds(15));
              */
 
-            var connectable = MessagingClients
+            var connectable = AzureMessagingClients
                 .WithStorageOffload<ProviderSearchResponse<T>>(
                     topicName: GetCurrentComputeNodeResponseTopic(),
                     partitionId: "0",

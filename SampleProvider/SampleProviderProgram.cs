@@ -18,10 +18,10 @@
         {
             Console.Title = "Sample Provider";
 
-            var requestsClient = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(partitionId: null);
+            var requestsClient = AzureMessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(partitionId: null);
 
             IMessageClient<ProviderSearchResponse<FashionItem>> responseTopic(string topicName) =>
-                MessagingClients.WithStorageOffload<ProviderSearchResponse<FashionItem>>(
+                AzureMessagingClients.WithStorageOffload<ProviderSearchResponse<FashionItem>>(
                     topicName: topicName, partitionId: "0",
                     accountName: DemoCredential.StorageOffloadAccountName,
                     containerName: DemoCredential.StorageOffloadContainerNameResponses);

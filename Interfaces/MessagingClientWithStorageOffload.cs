@@ -7,12 +7,12 @@
     using Interfaces;
     using static Fundamentals.Types;
 
-    public class AzureMessagingClientWithStorageOffload<TMessagePayload> : IMessageClient<TMessagePayload>
+    public class MessagingClientWithStorageOffload<TMessagePayload> : IMessageClient<TMessagePayload>
     {
-        private readonly AzureStorageOffload storageOffload;
-        private readonly AzureMessagingClient<StorageOffloadReference> innerClient;
+        private readonly StorageOffload storageOffload;
+        private readonly IMessageClient<StorageOffloadReference> innerClient;
 
-        public AzureMessagingClientWithStorageOffload(AzureMessagingClient<StorageOffloadReference> innerClient, AzureStorageOffload storageOffload)
+        public MessagingClientWithStorageOffload(IMessageClient<StorageOffloadReference> innerClient, StorageOffload storageOffload)
         {
             this.innerClient = innerClient;
             this.storageOffload = storageOffload;

@@ -10,12 +10,11 @@
     using System.Threading.Tasks;
     using Azure.Messaging.EventHubs;
     using Azure.Messaging.EventHubs.Consumer;
-    using Interfaces;
     using LanguageExt;
     using static Fundamentals.Types;
     using static LanguageExt.Prelude;
 
-    internal static class EventHubExtensions
+    internal static class AzureEventHubExtensions
     {
         internal static IObservable<PartitionEvent> CreateObservable(
             this EventHubConsumerClient eventHubConsumerClient,
