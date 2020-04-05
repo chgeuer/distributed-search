@@ -55,19 +55,19 @@
                         kvp => Tuple.Create(kvp.Key, kvp.Value)).ToArray())));
         }
 
-        public Task SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default)
+        public Task<long> SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default)
             => this.InnerSend(
                 messagePayload: messagePayload,
                 handleEventData: null,
                 cancellationToken: cancellationToken);
 
-        public Task SendMessage(TMessagePayload messagePayload, string requestId, CancellationToken cancellationToken = default)
+        public Task<long> SendMessage(TMessagePayload messagePayload, string requestId, CancellationToken cancellationToken = default)
             => this.InnerSend(
                 messagePayload: messagePayload,
                 handleEventData: eventData => eventData.SetRequestID(requestId),
                 cancellationToken: cancellationToken);
 
-        private async Task InnerSend(TMessagePayload messagePayload, Action<EventData> handleEventData, CancellationToken cancellationToken)
+        private async Task<long> InnerSend(TMessagePayload messagePayload, Action<EventData> handleEventData, CancellationToken cancellationToken)
         {
             using EventDataBatch batchOfOne = await this.producerClient.CreateBatchAsync(cancellationToken);
             var eventData = new EventData(eventBody: messagePayload.AsJSON().ToUTF8Bytes());
@@ -76,6 +76,9 @@
 
             batchOfOne.TryAdd(eventData);
             await this.producerClient.SendAsync(batchOfOne, cancellationToken);
+
+            // TODO Check whether eventData.Offset is set as part of SendAsync
+            return eventData.Offset;
         }
     }
 }

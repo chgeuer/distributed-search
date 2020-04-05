@@ -37,7 +37,7 @@
                         properties: message.Properties);
                 });
 
-        public async Task SendMessage(
+        public async Task<long> SendMessage(
             TMessagePayload messagePayload,
             CancellationToken cancellationToken = default)
         {
@@ -48,12 +48,12 @@
                 stream: messagePayload.AsJSONStream(),
                 cancellationToken: cancellationToken);
 
-            await this.innerClient.SendMessage(
+            return await this.innerClient.SendMessage(
                 messagePayload: new StorageOffloadReference(address: blobName),
                 cancellationToken: cancellationToken);
         }
 
-        public async Task SendMessage(
+        public async Task<long> SendMessage(
             TMessagePayload messagePayload,
             string requestId,
             CancellationToken cancellationToken = default)
@@ -65,7 +65,7 @@
                 stream: messagePayload.AsJSONStream(),
                 cancellationToken: cancellationToken);
 
-            await this.innerClient.SendMessage(
+            return await this.innerClient.SendMessage(
                 messagePayload: new StorageOffloadReference(address: blobName),
                 requestId: requestId,
                 cancellationToken: cancellationToken);
