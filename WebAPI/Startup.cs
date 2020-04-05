@@ -9,6 +9,7 @@
     using DataTypesFSharp;
     using Interfaces;
     using Messaging.AzureImpl;
+    using Messaging.KafkaImpl;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;

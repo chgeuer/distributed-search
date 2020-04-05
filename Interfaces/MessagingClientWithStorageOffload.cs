@@ -1,4 +1,4 @@
-﻿namespace Messaging.AzureImpl
+﻿namespace Interfaces
 {
     using System;
     using System.Reactive.Linq;

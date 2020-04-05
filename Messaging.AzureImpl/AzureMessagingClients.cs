@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using Azure.Messaging.EventHubs;
+    using Azure.Messaging.EventHubs.Consumer;
     using Azure.Storage.Blobs;
     using Credentials;
     using Interfaces;

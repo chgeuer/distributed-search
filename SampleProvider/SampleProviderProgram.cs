@@ -9,6 +9,7 @@
     using DataTypesFSharp;
     using Interfaces;
     using Messaging.AzureImpl;
+    using Messaging.KafkaImpl;
     using Microsoft.FSharp.Collections;
     using static Fundamentals.Types;
 

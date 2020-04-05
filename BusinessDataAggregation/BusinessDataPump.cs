@@ -14,6 +14,7 @@
     using Interfaces;
     using LanguageExt;
     using Messaging.AzureImpl;
+    using Messaging.KafkaImpl;
     using Microsoft.FSharp.Collections;
     using static Fundamentals.Types;
 

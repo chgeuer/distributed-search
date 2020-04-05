@@ -9,6 +9,9 @@
     <RootNamespace>Messaging.KafkaImpl</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="..\Messaging.AzureImpl\AzureBlobExtensions.cs" Link="AzureBlobExtensions.cs" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="System.Reactive.Linq" Version="4.3.2" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.4.0" />
     <PackageReference Include="Confluent.Kafka" Version="1.4.0" />

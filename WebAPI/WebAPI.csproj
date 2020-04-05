@@ -23,6 +23,7 @@
     <ProjectReference Include="..\Domain\Domain.fsproj" />
     <ProjectReference Include="..\Interfaces\Interfaces.csproj" />
     <ProjectReference Include="..\Messaging.AzureImpl\Messaging.AzureImpl.csproj" />
+    <ProjectReference Include="..\Messaging.KafkaImpl\Messaging.KafkaImpl.csproj" />
   </ItemGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
