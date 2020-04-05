@@ -31,3 +31,16 @@ module FashionExtensions =
     let WithPrice(fashionItem: FashionItem, newPrice: decimal) =
         // This is a simple convenience extension method so that C# devs can say fashionItem.WithPrice(newPrice: fashionItem.Price + 1_00m)
         { fashionItem with Price = newPrice }
+
+open BusinessLogic.Logic
+
+module Steps =
+    let ProperSize (ctx: ProcessingContext) (item: FashionItem) =
+        ctx.Query.Size = item.Size
+
+    let ProperFashionType (ctx: ProcessingContext) (item: FashionItem) =
+        ctx.Query.FashionType = item.FashionType
+
+    let StepCollection : PipelineSteps2<ProcessingContext, FashionItem> =
+        { StreamingSteps = [];
+          SequentialSteps = [] }

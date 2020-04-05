@@ -27,8 +27,10 @@ namespace MyTests
         [Test]
         public void TestGenericUpdates2() 
         {
-            var data = new UpdateableData(offset: 0, data: 
-                new FSharpMap<string, FSharpMap<string, string>>(Array.Empty<Tuple<string, FSharpMap<string, string>>>()));
+            var data = new UpdateableData(
+                offset: 0, 
+                data: new FSharpMap<string, FSharpMap<string, string>>(
+                    Array.Empty<Tuple<string, FSharpMap<string, string>>>()));
             Assert.AreEqual(0, data.Data.Count);
 
             static UpdateOperation<string, string> Add(string key, string value) => UpdateOperation<string, string>.NewAdd(key, value);
