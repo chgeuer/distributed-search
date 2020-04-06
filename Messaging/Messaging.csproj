@@ -5,20 +5,15 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Company>Microsoft</Company>
     <RepositoryType>git</RepositoryType>
-    <CodeAnalysisRuleSet>..\Properties\stylecop\StyleCop.ruleset</CodeAnalysisRuleSet>
-    <RootNamespace>Messaging.AzureImpl</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.Reactive.Linq" Version="4.3.2" />
-    <PackageReference Include="Azure.Messaging.EventHubs" Version="5.0.1" />
-    <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.4.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Credentials\Credentials.csproj" />
     <ProjectReference Include="..\Fundamentals\Fundamentals.fsproj" />
     <ProjectReference Include="..\Interfaces\Interfaces.csproj" />
+    <ProjectReference Include="..\Messaging.AzureImpl\Messaging.AzureImpl.csproj" />
+    <ProjectReference Include="..\Messaging.KafkaImpl\Messaging.KafkaImpl.csproj" />
   </ItemGroup>
 </Project>

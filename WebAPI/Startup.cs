@@ -8,8 +8,7 @@
     using Credentials;
     using DataTypesFSharp;
     using Interfaces;
-    using Messaging.AzureImpl;
-    using Messaging.KafkaImpl;
+    using Messaging;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
@@ -80,7 +79,7 @@
 
         private static Func<ProviderSearchRequest<FashionSearchRequest>, Task> SendSearchRequest()
         {
-            var requestProducer = AzureMessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(partitionId: null);
+            var requestProducer = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(partitionId: null);
 
             return searchRequest => requestProducer.SendMessage(searchRequest, requestId: searchRequest.RequestID);
         }
@@ -90,7 +89,7 @@
             /* var replaySubject = new ReplaySubject<EventData>(window: TimeSpan.FromSeconds(15));
              */
 
-            var connectable = AzureMessagingClients
+            var connectable = MessagingClients
                 .WithStorageOffload<ProviderSearchResponse<T>>(
                     topicName: GetCurrentComputeNodeResponseTopic(),
                     partitionId: "0",

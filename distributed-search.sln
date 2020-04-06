@@ -35,7 +35,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Messaging.AzureImpl", "Mess
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DemoUsingBusinessData", "DemoUsingBusinessData\DemoUsingBusinessData.csproj", "{10BB1D8A-6A6A-4268-8947-C3DF962DF0F1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Messaging.KafkaImpl", "Messaging.KafkaImpl\Messaging.KafkaImpl.csproj", "{5FF0FD43-2778-499D-A23B-7D8F53DD882F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Messaging.KafkaImpl", "Messaging.KafkaImpl\Messaging.KafkaImpl.csproj", "{5FF0FD43-2778-499D-A23B-7D8F53DD882F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Messaging", "Messaging\Messaging.csproj", "{464C3C5A-17FB-4219-8807-8498D89F9098}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -95,6 +97,10 @@ Global
 		{5FF0FD43-2778-499D-A23B-7D8F53DD882F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5FF0FD43-2778-499D-A23B-7D8F53DD882F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5FF0FD43-2778-499D-A23B-7D8F53DD882F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{464C3C5A-17FB-4219-8807-8498D89F9098}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{464C3C5A-17FB-4219-8807-8498D89F9098}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{464C3C5A-17FB-4219-8807-8498D89F9098}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{464C3C5A-17FB-4219-8807-8498D89F9098}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -13,8 +13,7 @@
     using DataTypesFSharp;
     using Interfaces;
     using LanguageExt;
-    using Messaging.AzureImpl;
-    using Messaging.KafkaImpl;
+    using Messaging;
     using Microsoft.FSharp.Collections;
     using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
@@ -36,7 +35,7 @@
 
         public BusinessDataPump(BlobContainerClient snapshotContainerClient)
         {
-            this.updateMessagingClient = AzureMessagingClients.Updates<BusinessDataUpdate>(partitionId: "0");
+            this.updateMessagingClient = MessagingClients.Updates<BusinessDataUpdate>(partitionId: "0");
             this.snapshotContainerClient = snapshotContainerClient;
         }
 

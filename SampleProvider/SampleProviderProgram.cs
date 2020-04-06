@@ -8,7 +8,7 @@
     using Credentials;
     using DataTypesFSharp;
     using Interfaces;
-    using Messaging.AzureImpl;
+    using Messaging;
     using Microsoft.FSharp.Collections;
     using static Fundamentals.Types;
 
@@ -18,10 +18,10 @@
         {
             Console.Title = "Sample Provider";
 
-            var requestsClient = AzureMessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(partitionId: null);
+            var requestsClient = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(partitionId: null);
 
             IMessageClient<ProviderSearchResponse<FashionItem>> responseTopic(string topicName) =>
-                AzureMessagingClients.WithStorageOffload<ProviderSearchResponse<FashionItem>>(
+                MessagingClients.WithStorageOffload<ProviderSearchResponse<FashionItem>>(
                     topicName: topicName, partitionId: "0",
                     accountName: DemoCredential.StorageOffloadAccountName,
                     containerName: DemoCredential.StorageOffloadContainerNameResponses);
