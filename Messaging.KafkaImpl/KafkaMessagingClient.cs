@@ -17,7 +17,7 @@
         private readonly IConsumer<long, byte[]> consumer;
         private readonly TopicPartition topicPartition;
 
-        public KafkaMessagingClient(string topic, string partitionId)
+        public KafkaMessagingClient(string topic, int? partitionId)
         {
             var bootstrapServers = $"{DemoCredential.EventHubName}.servicebus.windows.net:9093";
             var saslUsername = "$ConnectionString";
@@ -57,13 +57,9 @@
                 .SetValueDeserializer(Deserializers.ByteArray)
                 .Build();
 
-            if (!int.TryParse(partitionId, out int partition))
-            {
-                throw new ArgumentException(message: "Need a partition ID", paramName: nameof(partitionId));
-            }
-
-            this.topicPartition = new TopicPartition(
-                topic: topic, partition: new Partition(partition));
+            this.topicPartition = partitionId.HasValue
+                ? new TopicPartition(topic: topic, partition: new Partition(partitionId.Value))
+                : new TopicPartition(topic: topic, partition: Partition.Any);
         }
 
         public IObservable<Message<TMessagePayload>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default)

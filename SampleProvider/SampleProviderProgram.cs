@@ -18,11 +18,11 @@
         {
             Console.Title = "Sample Provider";
 
-            var requestsClient = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(partitionId: null);
+            var requestsClient = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>();
 
             IMessageClient<ProviderSearchResponse<FashionItem>> responseTopic(string topicName) =>
                 MessagingClients.WithStorageOffload<ProviderSearchResponse<FashionItem>>(
-                    topicName: topicName, partitionId: "0",
+                    topicName: topicName, partitionId: 0,
                     accountName: DemoCredential.StorageOffloadAccountName,
                     containerName: DemoCredential.StorageOffloadContainerNameResponses);
 

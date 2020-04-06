@@ -92,7 +92,7 @@
             var connectable = MessagingClients
                 .WithStorageOffload<ProviderSearchResponse<T>>(
                     topicName: GetCurrentComputeNodeResponseTopic(),
-                    partitionId: "0",
+                    partitionId: 0,
                     accountName: DemoCredential.StorageOffloadAccountName,
                     containerName: DemoCredential.StorageOffloadContainerNameResponses)
                 .CreateObervable(SeekPosition.FromTail)

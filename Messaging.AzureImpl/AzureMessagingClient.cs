@@ -18,9 +18,9 @@
 
         private readonly EventHubProducerClient producerClient;
 
-        private readonly string partitionId;
+        private readonly int? partitionId;
 
-        public AzureMessagingClient(string eventHubName, string partitionId)
+        public AzureMessagingClient(string eventHubName, int? partitionId)
         {
             this.consumerClient = new EventHubConsumerClient(
                 consumerGroup: EventHubConsumerClient.DefaultConsumerGroupName,
@@ -38,10 +38,10 @@
 
         public IObservable<Message<TMessagePayload>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default)
         {
-            IObservable<PartitionEvent> partitionEvents = string.IsNullOrEmpty(this.partitionId)
+            IObservable<PartitionEvent> partitionEvents = this.partitionId == null
                 ? this.consumerClient.CreateObservable(cancellationToken)
                 : this.consumerClient.CreateObservable(
-                    partitionId: this.partitionId,
+                    partitionId: this.partitionId.Value,
                     startingPosition: startingPosition.AsEventPosition(),
                     cancellationToken: cancellationToken);
 

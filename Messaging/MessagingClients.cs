@@ -14,16 +14,16 @@
 
         const Provider Impl = Provider.EventHub;
 
-        public static IMessageClient<T> Updates<T>(string partitionId)
+        public static IMessageClient<T> Updates<T>(int? partitionId = null)
             => Create<T>(topicName: DemoCredential.EventHubTopicNameBusinessDataUpdates, partitionId: partitionId);
 
-        public static IMessageClient<T> Requests<T>(string partitionId)
+        public static IMessageClient<T> Requests<T>(int? partitionId = null)
             => Create<T>(topicName: DemoCredential.EventHubTopicNameRequests, partitionId: partitionId);
 
-        public static IMessageClient<T> Responses<T>(string responseTopicName, string partitionId)
+        public static IMessageClient<T> Responses<T>(string responseTopicName, int partitionId)
             => Create<T>(topicName: responseTopicName, partitionId: partitionId);
 
-        public static IMessageClient<T> WithStorageOffload<T>(string topicName, string partitionId, string accountName, string containerName)
+        public static IMessageClient<T> WithStorageOffload<T>(string topicName, int? partitionId, string accountName, string containerName)
         {
             var blobContainerClient = new BlobContainerClient(
                 blobContainerUri: new Uri($"https://{accountName}.blob.core.windows.net/{containerName}/"),
@@ -34,7 +34,7 @@
                 storageOffload: new StorageOffload(blobContainerClient.UpAndDownloadLambdas()));
         }
 
-        private static IMessageClient<T> Create<T>(string topicName, string partitionId)
+        private static IMessageClient<T> Create<T>(string topicName, int? partitionId)
             => Impl == Provider.Kafka
                 ? new KafkaMessagingClient<T>(topic: topicName, partitionId: partitionId) as IMessageClient<T>
                 : new AzureMessagingClient<T>(eventHubName: topicName, partitionId: partitionId) as IMessageClient<T>;

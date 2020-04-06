@@ -17,13 +17,13 @@
     {
         internal static IObservable<PartitionEvent> CreateObservable(
             this EventHubConsumerClient eventHubConsumerClient,
-            string partitionId,
+            int partitionId,
             EventPosition startingPosition,
             CancellationToken cancellationToken = default)
         {
             return eventHubConsumerClient
                 .ReadEventsFromPartitionAsync(
-                    partitionId: partitionId,
+                    partitionId: partitionId.ToString(),
                     startingPosition: startingPosition,
                     readOptions: new ReadEventOptions { },
                     cancellationToken: cancellationToken)
