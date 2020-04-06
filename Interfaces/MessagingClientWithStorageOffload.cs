@@ -33,8 +33,8 @@
 
                     return new Message<TMessagePayload>(
                         offset: message.Offset,
-                        payload: payload,
-                        properties: message.Properties);
+                        requestID: message.RequestID,
+                        payload: payload);
                 });
 
         public async Task<long> SendMessage(

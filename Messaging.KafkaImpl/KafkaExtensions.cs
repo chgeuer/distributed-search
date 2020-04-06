@@ -6,6 +6,8 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Confluent.Kafka;
+    using Interfaces;
+    using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
 
     internal static class KafkaExtensions
@@ -75,5 +77,17 @@
                 return new CancellationDisposable(cts);
             });
         }
+
+        internal static readonly string RequestIdPropertyName = "requestIDString";
+
+        internal static FSharpOption<string> GetRequestID(this Headers headers)
+        {
+            return headers.TryGetLastBytes(RequestIdPropertyName, out var bytes)
+                ? FSharpOption<string>.Some(bytes.ToUTF8String())
+                : FSharpOption<string>.None;
+        }
+
+        internal static void SetRequestID(this Headers headers, string requestId)
+            => headers.Add(RequestIdPropertyName, requestId.ToUTF8Bytes());
     }
 }

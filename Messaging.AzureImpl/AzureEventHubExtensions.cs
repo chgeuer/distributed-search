@@ -11,6 +11,7 @@
     using Azure.Messaging.EventHubs;
     using Azure.Messaging.EventHubs.Consumer;
     using LanguageExt;
+    using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
     using static LanguageExt.Prelude;
 
@@ -82,5 +83,17 @@
                 : EventPosition.FromOffset(
                     offset: ((SeekPosition.FromOffset)position).UpdateOffset,
                     isInclusive: false);
-   }
+
+        internal static readonly string RequestIdPropertyName = "requestIDString";
+
+        internal static FSharpOption<string> GetRequestID(this IDictionary<string, object> properties)
+        {
+            return properties.ContainsKey(RequestIdPropertyName)
+                ? FSharpOption<string>.Some(properties[RequestIdPropertyName] as string)
+                : FSharpOption<string>.None;
+        }
+
+        internal static void SetRequestID(this EventData eventData, string requestId) =>
+            eventData.Properties.Add(RequestIdPropertyName, requestId);
+    }
 }

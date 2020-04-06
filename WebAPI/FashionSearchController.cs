@@ -10,6 +10,7 @@
     using Interfaces;
     using Messaging.AzureImpl;
     using Microsoft.AspNetCore.Mvc;
+    using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
 
     [ApiController]
@@ -87,7 +88,7 @@
 
         private IObservable<FashionItem> GetResponses(string requestId) =>
             this.providerResponsePump
-                .Where(t => t.Properties.GetRequestID() == requestId)
+                .Where(t => t.RequestID == FSharpOption<string>.Some(requestId))
                 .SelectMany(providerSearchResponse => providerSearchResponse.Payload.Response);
 
         private string CreateRequestID() => Guid.NewGuid().ToString();

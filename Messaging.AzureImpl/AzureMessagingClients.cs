@@ -38,13 +38,5 @@
                 storageOffload: new StorageOffload(
                     blobContainerClient.UpAndDownloadLambdas()));
         }
-
-        public static readonly string RequestIdPropertyName = "requestIDString";
-
-        public static string GetRequestID(this IDictionary<string, object> properties)
-            => properties[RequestIdPropertyName] as string;
-
-        public static void SetRequestID(this EventData eventData, string requestId) =>
-            eventData.Properties.Add(RequestIdPropertyName, requestId);
     }
 }

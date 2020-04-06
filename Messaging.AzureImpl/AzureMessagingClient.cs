@@ -10,7 +10,6 @@
     using Azure.Messaging.EventHubs.Producer;
     using Credentials;
     using Interfaces;
-    using Microsoft.FSharp.Collections;
     using static Fundamentals.Types;
 
     public class AzureMessagingClient<TMessagePayload> : IMessageClient<TMessagePayload>
@@ -50,9 +49,8 @@
                 .Select(partitionEvent => partitionEvent.Data)
                 .Select(eventData => new Message<TMessagePayload>(
                     offset: eventData.Offset,
-                    payload: eventData.GetBodyAsUTF8().DeserializeJSON<TMessagePayload>(),
-                    properties: new FSharpMap<string, object>(eventData.Properties.Select(
-                        kvp => Tuple.Create(kvp.Key, kvp.Value)).ToArray())));
+                    requestID: eventData.Properties.GetRequestID(),
+                    payload: eventData.GetBodyAsUTF8().DeserializeJSON<TMessagePayload>()));
         }
 
         public Task<long> SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default)

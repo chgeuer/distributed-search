@@ -3,7 +3,6 @@
     using System;
     using Messaging.AzureImpl;
     using Azure.Storage.Blobs;
-    using Confluent.Kafka;
     using Credentials;
     using Interfaces;
     using static Fundamentals.Types;
@@ -37,20 +36,5 @@
                 storageOffload: new StorageOffload(
                     blobContainerClient.UpAndDownloadLambdas()));
         }
-
-        internal static readonly string RequestIdPropertyName = "requestIDString";
-
-        internal static string GetRequestID(this Headers headers)
-        {
-            if (headers.TryGetLastBytes(RequestIdPropertyName, out var bytes))
-            {
-                return bytes.ToUTF8String();
-            }
-
-            return string.Empty;
-        }
-
-        internal static void SetRequestID(this Headers headers, string requestId)
-            => headers.Add(RequestIdPropertyName, requestId.ToUTF8Bytes());
     }
 }

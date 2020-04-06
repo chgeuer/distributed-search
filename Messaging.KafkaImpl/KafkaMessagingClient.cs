@@ -75,10 +75,8 @@
                     cancellationToken: cancellationToken)
                 .Select(consumeResult => new Message<TMessagePayload>(
                     offset: consumeResult.Offset.Value,
-                    payload: consumeResult.Message.Value.AsJSON().DeserializeJSON<TMessagePayload>(),
-                    properties: new FSharpMap<string, object>(
-                        consumeResult.Message.Headers.Select(i =>
-                            Tuple.Create(i.Key, (object)i.GetValueBytes())))));
+                    requestID: consumeResult.Message.Headers.GetRequestID(),
+                    payload: consumeResult.Message.Value.AsJSON().DeserializeJSON<TMessagePayload>()));
 
         public async Task<long> SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default)
         {

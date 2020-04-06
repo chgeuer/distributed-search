@@ -5,9 +5,9 @@ type UpdateOffset = int64
 type RequestID = string
 
 type Message<'payload> =
-    { Payload: 'payload
-      Offset: UpdateOffset
-      Properties: Map<string, obj> }
+    { Offset: UpdateOffset
+      RequestID: RequestID option
+      Payload: 'payload }
 
 type ResponseTopicAddress = string
 

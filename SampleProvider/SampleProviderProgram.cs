@@ -11,6 +11,7 @@
     using Messaging.AzureImpl;
     using Messaging.KafkaImpl;
     using Microsoft.FSharp.Collections;
+    using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
 
     internal class SampleProviderProgram
@@ -35,7 +36,7 @@
                     onNext: async providerSearchRequestMessage =>
                     {
                         var search = providerSearchRequestMessage.Payload;
-                        var requestId = providerSearchRequestMessage.Properties.GetRequestID();
+                        var requestId = providerSearchRequestMessage.RequestID;
 
                         var responseProducer = responseTopic(search.ResponseTopic);
                         Console.Out.WriteLine($"{requestId}: Somebody's looking for {search.SearchRequest.FashionType}");
@@ -44,14 +45,14 @@
 
                         GetResponses()
                             .Select(foundFashionItem => new ProviderSearchResponse<FashionItem>(
-                                requestID: requestId,
+                                requestID: requestId.Value,
                                 response: ListModule.OfArray(new[] { foundFashionItem })))
                             .Subscribe(
                                 onNext: async (responsePayload) =>
                                 {
                                     await responseProducer.SendMessage(
                                         messagePayload: responsePayload,
-                                        requestId: requestId,
+                                        requestId: requestId.Value,
                                         cancellationToken: cts.Token);
 
                                     await Console.Out.WriteLineAsync($"{requestId}: Sending {responsePayload.Response.Head.Description}");
