@@ -16,18 +16,22 @@
     using Messaging.AzureImpl;
     using Messaging.KafkaImpl;
     using Microsoft.FSharp.Collections;
+    using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
 
     public class BusinessDataPump
     {
-        private static bool ParseOffsetFromBlobName(string n, out long offset) => long.TryParse(n.Replace(".json", string.Empty), out offset);
+        private static FSharpOption<UpdateOffset> ParseOffsetFromBlobName(string n)
+             => long.TryParse(n.Replace(".json", string.Empty), out long offset)
+                ? FSharpOption<UpdateOffset>.Some(UpdateOffset.NewUpdateOffset(offset))
+                : FSharpOption<UpdateOffset>.None;
 
-        private static string OffsetToBlobName(long offset) => $"{offset}.json";
+        private static string OffsetToBlobName(UpdateOffset offset) => $"{offset.Item}.json";
 
         private readonly BlobContainerClient snapshotContainerClient;
         private readonly IMessageClient<BusinessDataUpdate> updateMessagingClient;
         private CancellationTokenSource cts;
-        private long lastWrittenOffset = -1;
+        private UpdateOffset lastWrittenOffset = UpdateOffset.NewUpdateOffset(-1);
         private Task deletetionTask;
 
         public BusinessDataPump(BlobContainerClient snapshotContainerClient)
@@ -63,8 +67,7 @@
             IConnectableObservable<BusinessData> connectableObservable =
                 this.updateMessagingClient
                     .CreateObervable(
-                        startingPosition: SeekPosition.NewFromOffset(
-                            updateOffset: snapshotValue.Version),
+                        startingPosition: SeekPosition.NewFromOffset(updateOffset: snapshotValue.Version),
                         cancellationToken: this.cts.Token)
                     .Scan(
                         seed: snapshotValue,
@@ -137,17 +140,19 @@
             }
         }
 
-        public async Task<IEnumerable<(long, DateTimeOffset)>> GetOldSnapshots(TimeSpan maxAge, CancellationToken cancellationToken)
+        public async Task<IEnumerable<(UpdateOffset, DateTimeOffset)>> GetOldSnapshots(TimeSpan maxAge, CancellationToken cancellationToken)
         {
             var blobs = this.snapshotContainerClient.GetBlobsAsync(traits: BlobTraits.Metadata, cancellationToken: cancellationToken);
-            var items = new List<(long, DateTimeOffset)>();
+            var items = new List<(UpdateOffset, DateTimeOffset)>();
             await foreach (var blob in blobs)
             {
-                if (ParseOffsetFromBlobName(blob.Name, out var offset) &&
+                var someUpdateOffset = ParseOffsetFromBlobName(blob.Name);
+
+                if (FSharpOption<UpdateOffset>.get_IsSome(someUpdateOffset) &&
                     blob.Properties.LastModified.HasValue &&
                     blob.Properties.LastModified.Value < DateTime.UtcNow.Subtract(maxAge))
                 {
-                    var v = (offset, blob.Properties.LastModified.Value);
+                    var v = (someUpdateOffset.Value, blob.Properties.LastModified.Value);
                     items.Add(v);
                 }
             }
@@ -157,31 +162,33 @@
                 .SkipLast(5);
         }
 
-        private async Task<Option<(long, string)>> GetLatestSnapshotID(CancellationToken cancellationToken)
+        private async Task<Option<(UpdateOffset, string)>> GetLatestSnapshotID(CancellationToken cancellationToken)
         {
             var blobs = this.snapshotContainerClient.GetBlobsAsync(cancellationToken: cancellationToken);
-            var items = new List<(long, string)>();
+            var items = new List<(UpdateOffset, string)>();
             await foreach (var blob in blobs)
             {
-                if (ParseOffsetFromBlobName(blob.Name, out var offset))
+                var someUpdateOffset = ParseOffsetFromBlobName(blob.Name);
+
+                if (FSharpOption<UpdateOffset>.get_IsSome(someUpdateOffset))
                 {
-                    var v = (offset, blob.Name);
+                    var v = (someUpdateOffset.Value, blob.Name);
                     items.Add(v);
                 }
             }
 
             if (items.Count == 0)
             {
-                return Option<(long, string)>.None;
+                return Option<(UpdateOffset, string)>.None;
             }
 
-            return Option<(long, string)>.Some(items.OrderByDescending(_ => _.Item1).First());
+            return Option<(UpdateOffset, string)>.Some(items.OrderByDescending(_ => _.Item1).First());
         }
 
         private BusinessData EmptyBusinessData() => new BusinessData(
             markup: new FSharpMap<string, decimal>(Array.Empty<Tuple<string, decimal>>()),
             brands: new FSharpMap<string, string>(Array.Empty<Tuple<string, string>>()),
             defaultMarkup: 0m,
-            version: -1);
+            version: UpdateOffset.NewUpdateOffset(-1));
     }
 }

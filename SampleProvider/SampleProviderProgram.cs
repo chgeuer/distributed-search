@@ -9,9 +9,7 @@
     using DataTypesFSharp;
     using Interfaces;
     using Messaging.AzureImpl;
-    using Messaging.KafkaImpl;
     using Microsoft.FSharp.Collections;
-    using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
 
     internal class SampleProviderProgram

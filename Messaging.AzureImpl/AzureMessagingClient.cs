@@ -48,24 +48,24 @@
             return partitionEvents
                 .Select(partitionEvent => partitionEvent.Data)
                 .Select(eventData => new Message<TMessagePayload>(
-                    offset: eventData.Offset,
+                    offset: UpdateOffset.NewUpdateOffset(eventData.Offset),
                     requestID: eventData.Properties.GetRequestID(),
                     payload: eventData.GetBodyAsUTF8().DeserializeJSON<TMessagePayload>()));
         }
 
-        public Task<long> SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default)
+        public Task<UpdateOffset> SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default)
             => this.InnerSend(
                 messagePayload: messagePayload,
                 handleEventData: null,
                 cancellationToken: cancellationToken);
 
-        public Task<long> SendMessage(TMessagePayload messagePayload, string requestId, CancellationToken cancellationToken = default)
+        public Task<UpdateOffset> SendMessage(TMessagePayload messagePayload, string requestId, CancellationToken cancellationToken = default)
             => this.InnerSend(
                 messagePayload: messagePayload,
                 handleEventData: eventData => eventData.SetRequestID(requestId),
                 cancellationToken: cancellationToken);
 
-        private async Task<long> InnerSend(TMessagePayload messagePayload, Action<EventData> handleEventData, CancellationToken cancellationToken)
+        private async Task<UpdateOffset> InnerSend(TMessagePayload messagePayload, Action<EventData> handleEventData, CancellationToken cancellationToken)
         {
             using EventDataBatch batchOfOne = await this.producerClient.CreateBatchAsync(cancellationToken);
             var eventData = new EventData(eventBody: messagePayload.AsJSON().ToUTF8Bytes());
@@ -76,7 +76,7 @@
             await this.producerClient.SendAsync(batchOfOne, cancellationToken);
 
             // TODO Check whether eventData.Offset is set as part of SendAsync
-            return eventData.Offset;
+            return UpdateOffset.NewUpdateOffset(eventData.Offset);
         }
     }
 }

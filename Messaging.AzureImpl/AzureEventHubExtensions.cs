@@ -10,10 +10,8 @@
     using System.Threading.Tasks;
     using Azure.Messaging.EventHubs;
     using Azure.Messaging.EventHubs.Consumer;
-    using LanguageExt;
     using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
-    using static LanguageExt.Prelude;
 
     internal static class AzureEventHubExtensions
     {
@@ -74,14 +72,11 @@
             return Encoding.UTF8.GetString(ms.ToArray());
         }
 
-        internal static Option<T> GetProperty<T>(this EventData record, string fieldName) =>
-            record.Properties.TryGetValue(fieldName, out object result) ? Some((T)result) : None;
-
         internal static EventPosition AsEventPosition(this SeekPosition position)
             => position.IsFromTail
                 ? EventPosition.Latest
                 : EventPosition.FromOffset(
-                    offset: ((SeekPosition.FromOffset)position).UpdateOffset,
+                    offset: ((SeekPosition.FromOffset)position).UpdateOffset.Item,
                     isInclusive: false);
 
         internal static readonly string RequestIdPropertyName = "requestIDString";

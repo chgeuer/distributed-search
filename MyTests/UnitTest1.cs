@@ -11,6 +11,7 @@ namespace MyTests
     using Fundamentals.Extensions;
     using static Fundamentals.Types;
     using static BusinessLogic.Logic;
+    using Microsoft.FSharp.Core;
 
     public class VersionedDictionary<T>
     {
@@ -28,7 +29,7 @@ namespace MyTests
         public void TestGenericUpdates2() 
         {
             var data = new UpdateableData(
-                offset: 0, 
+                offset: UpdateOffset.NewUpdateOffset(0),
                 data: new FSharpMap<string, FSharpMap<string, string>>(
                     Array.Empty<Tuple<string, FSharpMap<string, string>>>()));
             Assert.AreEqual(0, data.Data.Count);
@@ -37,11 +38,11 @@ namespace MyTests
             static UpdateOperation<string, string> Remove(string key) => UpdateOperation<string, string>.NewRemove(key);
 
             var updates = new[] {
-                //new Update(offset: 15, updateArea: "currencyExchange", Add("USD-to-GBP", "1.2")),
-                //new Update(offset: 15, updateArea: "airports", Add("HLR", "{  'legalName' = 'London Heathrow'   }")),
-                new Update(offset: 20, updateArea: "brands", Add("DG", "Docker and Gabana")),
-                new Update(offset: 23, updateArea: "brands", Add("DÖ", "Diöhr")),
-                new Update(offset: 24, updateArea: "brands", Remove("DG")),
+                //new Update(offset: UpdateOffset.NewUpdateOffset(15), updateArea: "currencyExchange", Add("USD-to-GBP", "1.2")),
+                //new Update(offset: UpdateOffset.NewUpdateOffset(15), updateArea: "airports", Add("HLR", "{  'legalName' = 'London Heathrow'   }")),
+                new Update(offset: UpdateOffset.NewUpdateOffset(20), updateArea: "brands", Add("DG", "Docker and Gabana")),
+                new Update(offset: UpdateOffset.NewUpdateOffset(23), updateArea: "brands", Add("DÖ", "Diöhr")),
+                new Update(offset: UpdateOffset.NewUpdateOffset(24), updateArea: "brands", Remove("DG")),
             }.ToFSharp();
 
             var updatedData = data.ApplyUpdates(updates);
@@ -83,13 +84,13 @@ namespace MyTests
             static UpdateOperation<string, string> Remove(string key) => UpdateOperation<string, string>.NewRemove(key);
 
             var updates = new[]{
-                new Update(offset: 2, "f", Add("f3", "f4")),
-                new Update(offset: 3, "f", Remove("f1")),
+                new Update(offset: UpdateOffset.NewUpdateOffset(2), "f", Add("f3", "f4")),
+                new Update(offset: UpdateOffset.NewUpdateOffset(3), "f", Remove("f1")),
                 "{\"Offset\":4,\"UpdateArea\":\"f\",\"Operation\":{\"Case\":\"Add\",\"Fields\":[\"f3\",\"f5\"]}}".DeserializeJSON<Update>(),
             }.ToFSharp();
 
             var data = new UpdateableData(
-                offset: 1,
+                offset: UpdateOffset.NewUpdateOffset(1),
                 data: new[] {
                     ("f", new[] { ("f1", "f2") }),
                     ("a", new[] { ("a1", "a2"), ("a3", "a4") }),
@@ -150,16 +151,16 @@ namespace MyTests
         [Test]
         public void TestDomainSpecificUpdates()
         {
-            var updates = new (long, BusinessDataUpdate)[]
+            var updates = new (UpdateOffset, BusinessDataUpdate)[]
                 {
-                    (2, BusinessDataUpdate.NewMarkupUpdate(FashionTypes.Throusers, 2_00m)),
-                    (3, BusinessDataUpdate.NewBrandUpdate("BB", "Bruno Banano"))
+                    (UpdateOffset.NewUpdateOffset(2), BusinessDataUpdate.NewMarkupUpdate(FashionTypes.Throusers, 2_00m)),
+                    (UpdateOffset.NewUpdateOffset(3), BusinessDataUpdate.NewBrandUpdate("BB", "Bruno Banano"))
                 }
                 .Select(TupleExtensions.ToTuple)
                 .ToFSharp();
 
             var v1 = new BusinessData(
-              version: 1,
+              version: UpdateOffset.NewUpdateOffset(1),
               markup: new FSharpMap<string, decimal>(new[]
               {
                     Tuple.Create(FashionTypes.Hat, 0_12m),
@@ -247,7 +248,7 @@ namespace MyTests
                     Tuple.Create("DG", "Docker and Galbani")
                 }),
                 defaultMarkup: 1_00,
-                version: 0);
+                version: UpdateOffset.NewUpdateOffset(1));
 
             var query = new FashionSearchRequest(size: 16, fashionType: FashionTypes.Hat);
             var ctx2 = new ProcessingContext(query: query, businessData: businessData);

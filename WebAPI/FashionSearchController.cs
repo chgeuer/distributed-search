@@ -8,7 +8,6 @@
     using System.Threading.Tasks;
     using DataTypesFSharp;
     using Interfaces;
-    using Messaging.AzureImpl;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
@@ -81,7 +80,7 @@
                 RequestID = providerSearchRequest.RequestID,
                 Items = items,
                 Timing = $"Duration: {stopwatch.Elapsed.TotalSeconds:N3}",
-                Version = businessData.Version,
+                Version = businessData.Version.Item,
                 BusinessData = businessData,
             };
         }

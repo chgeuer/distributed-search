@@ -1,10 +1,10 @@
 ﻿namespace Messaging.KafkaImpl
 {
     using System;
-    using Messaging.AzureImpl;
     using Azure.Storage.Blobs;
     using Credentials;
     using Interfaces;
+    using Messaging.AzureImpl;
     using static Fundamentals.Types;
 
     public static class KafkaMessagingClients
@@ -32,7 +32,8 @@
 
             return new MessagingClientWithStorageOffload<TPayload>(
                 innerClient: new KafkaMessagingClient<StorageOffloadReference>(
-                    topic: topicName, partitionId: partitionId),
+                    topic: topicName,
+                    partitionId: partitionId),
                 storageOffload: new StorageOffload(
                     blobContainerClient.UpAndDownloadLambdas()));
         }

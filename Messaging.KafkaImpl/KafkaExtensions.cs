@@ -24,7 +24,7 @@
             }
             else
             {
-                long offset = ((SeekPosition.FromOffset)startingPosition).UpdateOffset;
+                long offset = ((SeekPosition.FromOffset)startingPosition).UpdateOffset.Item;
                 consumer.Assign(new TopicPartitionOffset(
                     tp: topicPartition,
                     offset: new Offset(offset)));

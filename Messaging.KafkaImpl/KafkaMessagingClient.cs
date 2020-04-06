@@ -9,7 +9,6 @@
     using Credentials;
     using Interfaces;
     using LanguageExt;
-    using Microsoft.FSharp.Collections;
     using static Fundamentals.Types;
 
     public class KafkaMessagingClient<TMessagePayload> : IMessageClient<TMessagePayload>
@@ -74,11 +73,11 @@
                     startingPosition: startingPosition,
                     cancellationToken: cancellationToken)
                 .Select(consumeResult => new Message<TMessagePayload>(
-                    offset: consumeResult.Offset.Value,
+                    offset: UpdateOffset.NewUpdateOffset(consumeResult.Offset.Value),
                     requestID: consumeResult.Message.Headers.GetRequestID(),
                     payload: consumeResult.Message.Value.AsJSON().DeserializeJSON<TMessagePayload>()));
 
-        public async Task<long> SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default)
+        public async Task<UpdateOffset> SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default)
         {
             var report = await this.producer.ProduceAsync(
                 topic: this.topicPartition.Topic,
@@ -88,10 +87,10 @@
                     Value = messagePayload.AsJSON().ToUTF8Bytes(),
                 });
 
-            return report.Offset.Value;
+            return UpdateOffset.NewUpdateOffset(report.Offset.Value);
         }
 
-        public async Task<long> SendMessage(TMessagePayload messagePayload, string requestId, CancellationToken cancellationToken = default)
+        public async Task<UpdateOffset> SendMessage(TMessagePayload messagePayload, string requestId, CancellationToken cancellationToken = default)
         {
             var kafkaMessage = new Message<long, byte[]>
             {
@@ -106,7 +105,7 @@
                 topic: this.topicPartition.Topic,
                 message: kafkaMessage);
 
-            return report.Offset.Value;
+            return UpdateOffset.NewUpdateOffset(report.Offset.Value);
         }
     }
 }

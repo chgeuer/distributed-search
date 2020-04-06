@@ -1,6 +1,6 @@
 module Fundamentals.Types
 
-type UpdateOffset = int64
+type UpdateOffset = UpdateOffset of int64
 
 type RequestID = string
 
@@ -35,7 +35,7 @@ type StorageOffloadFunctions =
       Download: Func<string, CancellationToken, Task<Stream>> }
 
 type SeekPosition =
-    | FromOffset of UpdateOffset : UpdateOffset 
+    | FromOffset of UpdateOffset: UpdateOffset 
     | FromTail
 
 //public class SeekPosition

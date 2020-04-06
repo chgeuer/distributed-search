@@ -9,8 +9,8 @@
     {
         IObservable<Message<TMessagePayload>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default);
 
-        Task<long> SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default);
+        Task<UpdateOffset> SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default);
 
-        Task<long> SendMessage(TMessagePayload messagePayload, string requestId, CancellationToken cancellationToken = default);
+        Task<UpdateOffset> SendMessage(TMessagePayload messagePayload, string requestId, CancellationToken cancellationToken = default);
     }
 }

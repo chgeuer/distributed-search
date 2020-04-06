@@ -4,7 +4,6 @@
     using System.Reactive.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Interfaces;
     using static Fundamentals.Types;
 
     public class MessagingClientWithStorageOffload<TMessagePayload> : IMessageClient<TMessagePayload>
@@ -37,7 +36,7 @@
                         payload: payload);
                 });
 
-        public async Task<long> SendMessage(
+        public async Task<UpdateOffset> SendMessage(
             TMessagePayload messagePayload,
             CancellationToken cancellationToken = default)
         {
@@ -53,7 +52,7 @@
                 cancellationToken: cancellationToken);
         }
 
-        public async Task<long> SendMessage(
+        public async Task<UpdateOffset> SendMessage(
             TMessagePayload messagePayload,
             string requestId,
             CancellationToken cancellationToken = default)

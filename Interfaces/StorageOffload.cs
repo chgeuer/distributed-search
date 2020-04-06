@@ -15,10 +15,7 @@
         }
 
         public Task Upload(string blobName, Stream stream, CancellationToken cancellationToken)
-        {
-            return this.storageOffloadFunctions.Upload(
-                blobName, stream, cancellationToken);
-        }
+            => this.storageOffloadFunctions.Upload(blobName, stream, cancellationToken);
 
         public async Task<T> Download<T>(string blobName, CancellationToken cancellationToken)
         {
