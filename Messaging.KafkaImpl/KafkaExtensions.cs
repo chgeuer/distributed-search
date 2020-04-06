@@ -18,12 +18,9 @@
             SeekPosition startingPosition,
             CancellationToken cancellationToken)
         {
-            Console.Out.WriteLine($"1 Create observable topic \"{topicPartition.Topic}\" partition \"{topicPartition.Partition}\" startingPosition {startingPosition}");
-
             if (startingPosition.IsFromOffset)
             {
                 long offset = ((SeekPosition.FromOffset)startingPosition).UpdateOffset.Item;
-                Console.Out.WriteLine($"1 Seek \"{topicPartition.Topic}\" partition \"{topicPartition.Partition}\" offset {offset}");
                 consumer.Assign(new TopicPartitionOffset(
                     tp: topicPartition,
                     offset: new Offset(offset)));
@@ -33,43 +30,13 @@
             {
                 var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-                _ = Task.Factory.StartNew(
+                _ = Task.Run(
                     () =>
                     {
-                        Console.WriteLine($"1 Starting Loop \"{topicPartition.Topic}\"");
+                        consumer.Subscribe(topic: topicPartition.Topic);
                         while (!cts.Token.IsCancellationRequested)
                         {
                             var msg = consumer.Consume(cts.Token);
-                            Console.WriteLine($"1 Retrieved {msg.Offset.Value}");
-                            o.OnNext(msg);
-
-                            cts.Token.ThrowIfCancellationRequested();
-                        }
-
-                        o.OnCompleted();
-                    },
-                    cts.Token);
-
-                return new CancellationDisposable(cts);
-            });
-        }
-
-        internal static IObservable<ConsumeResult<TKey, TValue>> CreateObservable<TKey, TValue>(this IConsumer<TKey, TValue> consumer, CancellationToken cancellationToken = default)
-        {
-            Console.Out.WriteLine($"Create observable topic \"{consumer.ConsumerGroupMetadata}\"");
-
-            return Observable.Create<ConsumeResult<TKey, TValue>>(o =>
-            {
-                var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-
-                _ = Task.Factory.StartNew(
-                    () =>
-                    {
-                        Console.WriteLine($"2 Starting Loop");
-                        while (!cts.Token.IsCancellationRequested)
-                        {
-                            var msg = consumer.Consume(cts.Token);
-                            Console.WriteLine($"2 Retrieved {msg.Offset.Value}");
                             o.OnNext(msg);
 
                             cts.Token.ThrowIfCancellationRequested();

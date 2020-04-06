@@ -95,10 +95,6 @@
                     accountName: DemoCredential.StorageOffloadAccountName,
                     containerName: DemoCredential.StorageOffloadContainerNameResponses)
                 .CreateObervable(SeekPosition.FromTail)
-                .Do(async m =>
-                {
-                    await Console.Out.WriteLineAsync($"Received response for {m.RequestID.Value}");
-                })
                 .Publish();
                 /* .Multicast(replaySubject);*/
 
