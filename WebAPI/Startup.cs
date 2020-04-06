@@ -14,7 +14,6 @@
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using Microsoft.FSharp.Core;
     using static BusinessLogic.Logic;
     using static Fundamentals.Types;
 
@@ -52,7 +51,8 @@
             services.AddSingleton(_ => CreateBusinessData());
         }
 
-        internal static string GetCurrentComputeNodeResponseTopic() => DemoCredential.EventHubTopicNameResponses;
+        internal static ResponseTopicAddress GetCurrentComputeNodeResponseTopic()
+            => new ResponseTopicAddress(topicName: DemoCredential.EventHubTopicNameResponses, partitionId: 0);
 
         private static Func<PipelineSteps<ProcessingContext, FashionItem>> CreatePipelineSteps() => () =>
         {
@@ -91,11 +91,14 @@
 
             var connectable = MessagingClients
                 .WithStorageOffload<ProviderSearchResponse<T>>(
-                    topicName: GetCurrentComputeNodeResponseTopic(),
-                    partitionId: 0,
+                    responseTopicAddress: GetCurrentComputeNodeResponseTopic(),
                     accountName: DemoCredential.StorageOffloadAccountName,
                     containerName: DemoCredential.StorageOffloadContainerNameResponses)
                 .CreateObervable(SeekPosition.FromTail)
+                .Do(async m =>
+                {
+                    await Console.Out.WriteLineAsync($"Received response for {m.RequestID.Value}");
+                })
                 .Publish();
                 /* .Multicast(replaySubject);*/
 

@@ -5,6 +5,7 @@
     using System.Reactive.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure;
     using Credentials;
     using DataTypesFSharp;
     using Interfaces;
@@ -20,12 +21,6 @@
 
             var requestsClient = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>();
 
-            IMessageClient<ProviderSearchResponse<FashionItem>> responseTopic(string topicName) =>
-                MessagingClients.WithStorageOffload<ProviderSearchResponse<FashionItem>>(
-                    topicName: topicName, partitionId: 0,
-                    accountName: DemoCredential.StorageOffloadAccountName,
-                    containerName: DemoCredential.StorageOffloadContainerNameResponses);
-
             var cts = new CancellationTokenSource();
 
             requestsClient
@@ -36,7 +31,11 @@
                         var search = providerSearchRequestMessage.Payload;
                         var requestId = providerSearchRequestMessage.RequestID;
 
-                        var responseProducer = responseTopic(search.ResponseTopic);
+                        var responseProducer = MessagingClients.WithStorageOffload<ProviderSearchResponse<FashionItem>>(
+                            responseTopicAddress: search.ResponseTopic,
+                            accountName: DemoCredential.StorageOffloadAccountName,
+                            containerName: DemoCredential.StorageOffloadContainerNameResponses);
+
                         Console.Out.WriteLine($"{requestId}: Somebody's looking for {search.SearchRequest.FashionType}");
 
                         var tcs = new TaskCompletionSource<bool>();

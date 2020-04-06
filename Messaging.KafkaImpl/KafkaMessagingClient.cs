@@ -9,6 +9,7 @@
     using Credentials;
     using Interfaces;
     using LanguageExt;
+    using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
 
     public class KafkaMessagingClient<TMessagePayload> : IMessageClient<TMessagePayload>
@@ -17,7 +18,7 @@
         private readonly IConsumer<long, byte[]> consumer;
         private readonly TopicPartition topicPartition;
 
-        public KafkaMessagingClient(string topic, int? partitionId)
+        public KafkaMessagingClient(ResponseTopicAddress responseTopicAddress)
         {
             var bootstrapServers = $"{DemoCredential.EventHubName}.servicebus.windows.net:9093";
             var saslUsername = "$ConnectionString";
@@ -57,9 +58,13 @@
                 .SetValueDeserializer(Deserializers.ByteArray)
                 .Build();
 
-            this.topicPartition = partitionId.HasValue
-                ? new TopicPartition(topic: topic, partition: new Partition(partitionId.Value))
-                : new TopicPartition(topic: topic, partition: Partition.Any);
+            var partition = FSharpOption<int>.get_IsSome(responseTopicAddress.PartitionId)
+                ? new Partition(responseTopicAddress.PartitionId.Value)
+                : Partition.Any;
+
+            this.topicPartition = new TopicPartition(
+                    topic: responseTopicAddress.TopicName,
+                    partition: partition);
         }
 
         public IObservable<Message<TMessagePayload>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default)
