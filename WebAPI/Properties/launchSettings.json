@@ -20,7 +20,7 @@
     "WebAPI": {
       "commandName": "Project",
       "launchBrowser": true,
-      "launchUrl": "fashionsearch?type=Hat&size=16&timeout=5000",
+      "launchUrl": "fashionsearch?type=Hat&size=16&timeout=500",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

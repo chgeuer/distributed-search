@@ -12,34 +12,35 @@
 
     internal static class KafkaExtensions
     {
-        internal static IObservable<ConsumeResult<long, byte[]>> CreateObservable(
-            this IConsumer<long, byte[]> consumer,
+        internal static IObservable<ConsumeResult<TKey, TValue>> CreateObservable<TKey, TValue>(
+            this IConsumer<TKey, TValue> consumer,
             TopicPartition topicPartition,
             SeekPosition startingPosition,
             CancellationToken cancellationToken)
         {
-            if (!startingPosition.IsFromOffset)
-            {
-                consumer.Assign(topicPartition);
-            }
-            else
+            Console.Out.WriteLine($"1 Create observable topic \"{topicPartition.Topic}\" partition \"{topicPartition.Partition}\" startingPosition {startingPosition}");
+
+            if (startingPosition.IsFromOffset)
             {
                 long offset = ((SeekPosition.FromOffset)startingPosition).UpdateOffset.Item;
+                Console.Out.WriteLine($"1 Seek \"{topicPartition.Topic}\" partition \"{topicPartition.Partition}\" offset {offset}");
                 consumer.Assign(new TopicPartitionOffset(
                     tp: topicPartition,
                     offset: new Offset(offset)));
             }
 
-            return Observable.Create<ConsumeResult<long, byte[]>>(o =>
+            return Observable.Create<ConsumeResult<TKey, TValue>>(o =>
             {
                 var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-                _ = Task.Run(
+                _ = Task.Factory.StartNew(
                     () =>
                     {
+                        Console.WriteLine($"1 Starting Loop \"{topicPartition.Topic}\"");
                         while (!cts.Token.IsCancellationRequested)
                         {
                             var msg = consumer.Consume(cts.Token);
+                            Console.WriteLine($"1 Retrieved {msg.Offset.Value}");
                             o.OnNext(msg);
 
                             cts.Token.ThrowIfCancellationRequested();
@@ -53,18 +54,22 @@
             });
         }
 
-        internal static IObservable<ConsumeResult<long, byte[]>> CreateObservable(this IConsumer<long, byte[]> consumer, CancellationToken cancellationToken = default)
+        internal static IObservable<ConsumeResult<TKey, TValue>> CreateObservable<TKey, TValue>(this IConsumer<TKey, TValue> consumer, CancellationToken cancellationToken = default)
         {
-            return Observable.Create<ConsumeResult<long, byte[]>>(o =>
+            Console.Out.WriteLine($"Create observable topic \"{consumer.ConsumerGroupMetadata}\"");
+
+            return Observable.Create<ConsumeResult<TKey, TValue>>(o =>
             {
                 var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-                _ = Task.Run(
+                _ = Task.Factory.StartNew(
                     () =>
                     {
+                        Console.WriteLine($"2 Starting Loop");
                         while (!cts.Token.IsCancellationRequested)
                         {
                             var msg = consumer.Consume(cts.Token);
+                            Console.WriteLine($"2 Retrieved {msg.Offset.Value}");
                             o.OnNext(msg);
 
                             cts.Token.ThrowIfCancellationRequested();

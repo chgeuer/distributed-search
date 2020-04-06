@@ -12,7 +12,7 @@
     {
         internal enum Provider { Kafka, EventHub }
 
-        const Provider Impl = Provider.EventHub;
+        const Provider Impl = Provider.Kafka;
 
         public static IMessageClient<T> Updates<T>(int? partitionId = null)
             => Create<T>(new ResponseTopicAddress(

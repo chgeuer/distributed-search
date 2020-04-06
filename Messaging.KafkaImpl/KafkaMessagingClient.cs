@@ -14,12 +14,14 @@
 
     public class KafkaMessagingClient<TMessagePayload> : IMessageClient<TMessagePayload>
     {
-        private readonly IProducer<long, byte[]> producer;
-        private readonly IConsumer<long, byte[]> consumer;
+        private readonly IProducer<Null, byte[]> producer;
+        private readonly IConsumer<Null, byte[]> consumer;
         private readonly TopicPartition topicPartition;
 
         public KafkaMessagingClient(ResponseTopicAddress responseTopicAddress)
         {
+            Console.WriteLine($"KafkaMessagingClient<{typeof(TMessagePayload).FullName}>({responseTopicAddress.TopicName}#{responseTopicAddress.PartitionId})");
+
             var bootstrapServers = $"{DemoCredential.EventHubName}.servicebus.windows.net:9093";
             var saslUsername = "$ConnectionString";
             var saslPassword = DemoCredential.EventHubConnectionString;
@@ -27,7 +29,7 @@
             var saslMechanism = SaslMechanism.Plain;
             var groupId = "$Default";
 
-            this.producer = new ProducerBuilder<long, byte[]>(new ProducerConfig
+            this.producer = new ProducerBuilder<Null, byte[]>(new ProducerConfig
                 {
                     BootstrapServers = bootstrapServers,
                     SecurityProtocol = securityProtocol,
@@ -38,11 +40,11 @@
                     // SslCaLocation = cacertlocation,
                     // Debug = "security,broker,protocol", //Uncomment for librdkafka debugging information
                 })
-                .SetKeySerializer(Serializers.Int64)
+                .SetKeySerializer(Serializers.Null)
                 .SetValueSerializer(Serializers.ByteArray)
                 .Build();
 
-            this.consumer = new ConsumerBuilder<long, byte[]>(new ConsumerConfig
+            this.consumer = new ConsumerBuilder<Null, byte[]>(new ConsumerConfig
                 {
                     BootstrapServers = bootstrapServers,
                     SecurityProtocol = securityProtocol,
@@ -54,7 +56,7 @@
                     // SslCaLocation = cacertlocation,
                     // Debug = "security,broker,protocol", //Uncomment for librdkafka debugging information
                 })
-                .SetKeyDeserializer(Deserializers.Int64)
+                .SetKeyDeserializer(Deserializers.Null)
                 .SetValueDeserializer(Deserializers.ByteArray)
                 .Build();
 
@@ -82,20 +84,22 @@
         {
             var report = await this.producer.ProduceAsync(
                 topic: this.topicPartition.Topic,
-                message: new Message<long, byte[]>
+                message: new Message<Null, byte[]>
                 {
-                    Key = DateTime.UtcNow.Ticks,
+                    Key = null,
                     Value = messagePayload.AsJSON().ToUTF8Bytes(),
                 });
+
+            await Console.Out.WriteLineAsync($"Kafka: SendMessage({messagePayload.GetType().FullName} partition {report.Partition.Value} offset {report.Offset.Value})");
 
             return UpdateOffset.NewUpdateOffset(report.Offset.Value);
         }
 
         public async Task<UpdateOffset> SendMessage(TMessagePayload messagePayload, string requestId, CancellationToken cancellationToken = default)
         {
-            var kafkaMessage = new Message<long, byte[]>
+            var kafkaMessage = new Message<Null, byte[]>
             {
-                Key = DateTime.UtcNow.Ticks,
+                Key = null,
                 Value = messagePayload.AsJSON().ToUTF8Bytes(),
                 Headers = new Headers(),
             };
@@ -105,6 +109,8 @@
             var report = await this.producer.ProduceAsync(
                 topic: this.topicPartition.Topic,
                 message: kafkaMessage);
+
+            await Console.Out.WriteLineAsync($"Kafka: SendMessage({messagePayload.GetType().FullName} requestId {requestId} partition {report.Partition.Value} offset {report.Offset.Value})");
 
             return UpdateOffset.NewUpdateOffset(report.Offset.Value);
         }
