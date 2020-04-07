@@ -1,11 +1,11 @@
 ﻿namespace SampleProvider
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Reactive.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Azure;
     using Credentials;
     using DataTypesFSharp;
     using Interfaces;
@@ -23,6 +23,23 @@
 
             var cts = new CancellationTokenSource();
 
+            var clients = new Dictionary<ResponseTopicAddress, IMessageClient<ProviderSearchResponse<FashionItem>>>();
+            IMessageClient<ProviderSearchResponse<FashionItem>> getMessageClient(ResponseTopicAddress rta)
+            {
+                lock (clients)
+                {
+                    if (!clients.ContainsKey(rta))
+                    {
+                        var client = MessagingClients.WithStorageOffload<ProviderSearchResponse<FashionItem>>(
+                                responseTopicAddress: rta,
+                                accountName: DemoCredential.StorageOffloadAccountName,
+                                containerName: DemoCredential.StorageOffloadContainerNameResponses);
+                        clients.Add(rta, client);
+                    }
+                }
+                return clients[rta];
+            }
+
             requestsClient
                 .CreateObervable(SeekPosition.FromTail, cts.Token)
                 .Subscribe(
@@ -31,12 +48,9 @@
                         var search = providerSearchRequestMessage.Payload;
                         var requestId = providerSearchRequestMessage.RequestID;
 
-                        var responseProducer = MessagingClients.WithStorageOffload<ProviderSearchResponse<FashionItem>>(
-                            responseTopicAddress: search.ResponseTopic,
-                            accountName: DemoCredential.StorageOffloadAccountName,
-                            containerName: DemoCredential.StorageOffloadContainerNameResponses);
+                        var responseProducer = getMessageClient(search.ResponseTopic);
 
-                        Console.Out.WriteLine($"{requestId}: Somebody's looking for {search.SearchRequest.FashionType}");
+                        // await Console.Out.WriteLineAsync($"{requestId}: Somebody's looking for {search.SearchRequest.FashionType}");
 
                         var tcs = new TaskCompletionSource<bool>();
 
@@ -52,7 +66,7 @@
                                         requestId: requestId.Value,
                                         cancellationToken: cts.Token);
 
-                                    await Console.Out.WriteLineAsync($"{requestId}: Sending {responsePayload.Response.Head.Description}");
+                                    // await Console.Out.WriteLineAsync($"{requestId}: Sending {responsePayload.Response.Head.Description}");
                                 },
                                 onError: ex =>
                                 {
@@ -84,11 +98,11 @@
             var someDifferentHat = new FashionItem(size: 16, fashionType: FashionTypes.Hat, price: 12_00, description: "A different large hat", stockKeepingUnitID: Guid.NewGuid().ToString());
 
             return
-                sufficientlyGoodHat.EmitIn(TimeSpan.FromSeconds(1))
-                .And(someThrouser).In(TimeSpan.FromSeconds(2))
-                .And(aHatButTooSmall).In(TimeSpan.FromSeconds(11))
-                .And(someDifferentHat).In(TimeSpan.FromSeconds(1))
-                .And(sufficientlyGoodHatButTooExpensive).In(TimeSpan.FromSeconds(1));
+                sufficientlyGoodHat.EmitIn(TimeSpan.FromSeconds(0.8))
+                .And(someThrouser).In(TimeSpan.FromSeconds(0.9))
+                .And(aHatButTooSmall).In(TimeSpan.FromSeconds(1))
+                .And(someDifferentHat).In(TimeSpan.FromSeconds(1.1))
+                .And(sufficientlyGoodHatButTooExpensive).In(TimeSpan.FromSeconds(1.2));
         }
     }
 }

@@ -2,6 +2,7 @@
 {
     using System;
     using System.Linq;
+    using System.Reactive.Disposables;
     using System.Reactive.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -12,7 +13,7 @@
     using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
 
-    public class KafkaMessagingClient<TMessagePayload> : IMessageClient<TMessagePayload>
+    internal class KafkaMessagingClient<TMessagePayload> : IMessageClient<TMessagePayload>
     {
         private readonly IProducer<Null, string> producer;
         private readonly IConsumer<Ignore, string> consumer;
@@ -60,7 +61,8 @@
                 .SetValueDeserializer(Deserializers.Utf8)
                 .Build();
 
-            var partition = FSharpOption<int>.get_IsSome(responseTopicAddress.PartitionId)
+            bool useSpecificPartition = FSharpOption<int>.get_IsSome(responseTopicAddress.PartitionId);
+            var partition = useSpecificPartition
                 ? new Partition(responseTopicAddress.PartitionId.Value)
                 : Partition.Any;
 
@@ -69,29 +71,8 @@
                     partition: partition);
         }
 
-        public IObservable<Message<TMessagePayload>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default)
-            => this.consumer
-                .CreateObservable(
-                    topicPartition: this.topicPartition,
-                    startingPosition: startingPosition,
-                    cancellationToken: cancellationToken)
-                .Select(consumeResult => new Message<TMessagePayload>(
-                    offset: UpdateOffset.NewUpdateOffset(consumeResult.Offset.Value),
-                    requestID: consumeResult.Message.Headers.GetRequestID(),
-                    payload: consumeResult.Message.Value.DeserializeJSON<TMessagePayload>()));
-
-        public async Task<UpdateOffset> SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default)
-        {
-            var report = await this.producer.ProduceAsync(
-                topic: this.topicPartition.Topic,
-                message: new Message<Null, string>
-                {
-                    Key = null,
-                    Value = messagePayload.AsJSON(),
-                });
-
-            return UpdateOffset.NewUpdateOffset(report.Offset.Value);
-        }
+        public Task<UpdateOffset> SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default)
+            => this.SendMessage(messagePayload: messagePayload, requestId: null, cancellationToken);
 
         public async Task<UpdateOffset> SendMessage(TMessagePayload messagePayload, string requestId, CancellationToken cancellationToken = default)
         {
@@ -102,13 +83,91 @@
                 Headers = new Headers(),
             };
 
-            kafkaMessage.Headers.SetRequestID(requestId);
+            if (!string.IsNullOrEmpty(requestId))
+            {
+                SetRequestID(kafkaMessage.Headers, requestId);
+            }
 
             var report = await this.producer.ProduceAsync(
-                topic: this.topicPartition.Topic,
+                topicPartition: this.topicPartition,
                 message: kafkaMessage);
+
+            await Console.Out.WriteLineAsync($"TX {report.Topic}#{report.Partition.Value}#{report.Offset.Value} {messagePayload}");
 
             return UpdateOffset.NewUpdateOffset(report.Offset.Value);
         }
+
+        public IObservable<Message<TMessagePayload>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default)
+        {
+            return CreateObservable(
+                    consumer: this.consumer,
+                    tp: this.topicPartition,
+                    startingPosition: startingPosition,
+                    cancellationToken: cancellationToken)
+                .Select(consumeResult => new Message<TMessagePayload>(
+                    offset: UpdateOffset.NewUpdateOffset(consumeResult.Offset.Value),
+                    requestID: GetRequestID(consumeResult.Message.Headers),
+                    payload: consumeResult.Message.Value.DeserializeJSON<TMessagePayload>()));
+        }
+
+        private static IObservable<ConsumeResult<TKey, TValue>> CreateObservable<TKey, TValue>(
+            IConsumer<TKey, TValue> consumer,
+            TopicPartition tp,
+            SeekPosition startingPosition,
+            CancellationToken cancellationToken)
+        {
+            return Observable.Create<ConsumeResult<TKey, TValue>>(o =>
+            {
+                var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+                _ = Task.Run(
+                    () =>
+                    {
+                        Offset offset = startingPosition switch
+                        {
+                            SeekPosition.FromOffset o => new Offset(o.UpdateOffset.Item),
+                            _ => Offset.End,
+                        };
+                        var tpo = new TopicPartitionOffset(tp, offset);
+
+                        if (tpo.Partition.Value == -1 && tpo.Offset.Value == -1)
+                        {
+                            consumer.Subscribe(topic: tp.Topic);
+                        }
+                        else
+                        {
+                            Console.Out.WriteLine($"consumerAssign(topic={tpo.Topic} partition={tpo.Partition.Value} offset={tpo.Offset.Value})");
+                            consumer.Assign(tpo);
+                        }
+
+                        while (!cts.Token.IsCancellationRequested)
+                        {
+                            var msg = consumer.Consume(cts.Token);
+
+                            Console.WriteLine($"RX {msg.Topic}#{msg.Partition.Value}#{msg.Offset.Value}: {msg.Message.Value}");
+
+                            o.OnNext(msg);
+                            cts.Token.ThrowIfCancellationRequested();
+                        }
+
+                        o.OnCompleted();
+                    },
+                    cts.Token);
+
+                return new CancellationDisposable(cts);
+            });
+        }
+
+        private static readonly string RequestIdPropertyName = "requestIDString";
+
+        private static FSharpOption<string> GetRequestID(Headers headers)
+        {
+            return headers.TryGetLastBytes(RequestIdPropertyName, out var bytes)
+                ? FSharpOption<string>.Some(bytes.ToUTF8String())
+                : FSharpOption<string>.None;
+        }
+
+        private static void SetRequestID(Headers headers, string requestId)
+            => headers.Add(RequestIdPropertyName, requestId.ToUTF8Bytes());
     }
 }

@@ -51,10 +51,7 @@
             services.AddSingleton(_ => CreateBusinessData());
         }
 
-        internal static ResponseTopicAddress GetCurrentComputeNodeResponseTopic()
-            => new ResponseTopicAddress(topicName: DemoCredential.EventHubTopicNameResponses, partitionId: 0);
-
-        private static Func<PipelineSteps<ProcessingContext, FashionItem>> CreatePipelineSteps() => () =>
+        internal static Func<PipelineSteps<ProcessingContext, FashionItem>> CreatePipelineSteps() => () =>
         {
             var s1 = PipelineStep<ProcessingContext, FashionItem>.NewPredicate(
                 FSharpExtensions.ToFSharpFunc<Tuple<ProcessingContext, FashionItem>, bool>(
@@ -77,24 +74,30 @@
             };
         };
 
-        private static Func<ProviderSearchRequest<FashionSearchRequest>, Task> SendSearchRequest()
+        internal static Func<ProviderSearchRequest<FashionSearchRequest>, Task> SendSearchRequest()
         {
             var requestProducer = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(partitionId: null);
 
             return searchRequest => requestProducer.SendMessage(searchRequest, requestId: searchRequest.RequestID);
         }
 
-        private static IObservable<Message<ProviderSearchResponse<T>>> CreateProviderResponsePump<T>()
-        {
-            /* var replaySubject = new ReplaySubject<EventData>(window: TimeSpan.FromSeconds(15));
-             */
+        internal static ResponseTopicAddress GetCurrentComputeNodeResponseTopic()
+            => new ResponseTopicAddress(topicName: DemoCredential.EventHubTopicNameResponses, partitionId: 1);
 
-            var connectable = MessagingClients
+        internal static IObservable<Message<ProviderSearchResponse<T>>> CreateProviderResponsePump<T>()
+        {
+            var messagingClient = MessagingClients
                 .WithStorageOffload<ProviderSearchResponse<T>>(
                     responseTopicAddress: GetCurrentComputeNodeResponseTopic(),
                     accountName: DemoCredential.StorageOffloadAccountName,
-                    containerName: DemoCredential.StorageOffloadContainerNameResponses)
+                    containerName: DemoCredential.StorageOffloadContainerNameResponses);
+
+            /* var replaySubject = new ReplaySubject<EventData>(window: TimeSpan.FromSeconds(15));
+             */
+            var connectable =
+                messagingClient
                 .CreateObervable(SeekPosition.FromTail)
+                .Do(onNext: m => Console.WriteLine($"XXXXXXXX {m.Offset}"))
                 .Publish();
                 /* .Multicast(replaySubject);*/
 
@@ -104,7 +107,7 @@
                 .AsObservable();
         }
 
-        private static Func<BusinessData> CreateBusinessData()
+        internal static Func<BusinessData> CreateBusinessData()
         {
             var businessDataUpdates = new BusinessDataPump(
                 snapshotContainerClient: new BlobContainerClient(

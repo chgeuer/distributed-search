@@ -4,16 +4,11 @@
     using Azure.Storage.Blobs;
     using Credentials;
     using Interfaces;
-    using Messaging.AzureImpl;
     using Messaging.KafkaImpl;
     using static Fundamentals.Types;
 
     public static class MessagingClients
     {
-        internal enum Provider { Kafka, EventHub }
-
-        const Provider Impl = Provider.Kafka;
-
         public static IMessageClient<T> Updates<T>(int? partitionId = null)
             => Create<T>(new ResponseTopicAddress(
                 topicName: DemoCredential.EventHubTopicNameBusinessDataUpdates,
@@ -38,11 +33,6 @@
                 storageOffload: new StorageOffload(blobContainerClient.UpAndDownloadLambdas()));
         }
 
-        private static IMessageClient<T> Create<T>(ResponseTopicAddress responseTopicAddress)
-            => Impl == Provider.Kafka
-                ? new KafkaMessagingClient<T>(responseTopicAddress: responseTopicAddress) as IMessageClient<T>
-                : new AzureMessagingClient<T>(responseTopicAddress: responseTopicAddress) as IMessageClient<T>;
-
         private static StorageOffloadFunctions UpAndDownloadLambdas(
            this BlobContainerClient containerClient)
            => new StorageOffloadFunctions(
@@ -53,5 +43,8 @@
                    var result = await blobClient.DownloadAsync(cancellationToken: cancellationToken);
                    return result.Value.Content;
                });
+
+        private static IMessageClient<T> Create<T>(ResponseTopicAddress responseTopicAddress)
+            => new KafkaMessagingClient<T>(responseTopicAddress: responseTopicAddress) as IMessageClient<T>;
     }
 }

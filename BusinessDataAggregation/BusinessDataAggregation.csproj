@@ -29,6 +29,6 @@
   <ItemGroup>
     <ProjectReference Include="..\Domain\Domain.fsproj" />
     <ProjectReference Include="..\Interfaces\Interfaces.csproj" />
-    <ProjectReference Include="..\Messaging\Messaging.csproj" />
+    <ProjectReference Include="..\Messaging.KafkaImpl\Messaging.KafkaImpl.csproj" />
   </ItemGroup>
 </Project>
