@@ -9,13 +9,13 @@ type Message<'payload> =
       RequestID: RequestID option
       Payload: 'payload }
 
-type ResponseTopicAddress = 
+type TopicPartitionID =
     { TopicName: string
       PartitionId: int option }
 
 type ProviderSearchRequest<'searchRequest> =
     { RequestID: RequestID
-      ResponseTopic: ResponseTopicAddress
+      ResponseTopic: TopicPartitionID
       SearchRequest: 'searchRequest }
 
 type ProviderSearchResponse<'item> =

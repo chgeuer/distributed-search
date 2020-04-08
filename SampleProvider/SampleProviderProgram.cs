@@ -23,21 +23,21 @@
 
             var cts = new CancellationTokenSource();
 
-            var clients = new Dictionary<ResponseTopicAddress, IMessageClient<ProviderSearchResponse<FashionItem>>>();
-            IMessageClient<ProviderSearchResponse<FashionItem>> getMessageClient(ResponseTopicAddress rta)
+            var clients = new Dictionary<TopicPartitionID, IMessageClient<ProviderSearchResponse<FashionItem>>>();
+            IMessageClient<ProviderSearchResponse<FashionItem>> getMessageClient(TopicPartitionID tpid)
             {
                 lock (clients)
                 {
-                    if (!clients.ContainsKey(rta))
+                    if (!clients.ContainsKey(tpid))
                     {
                         var client = MessagingClients.WithStorageOffload<ProviderSearchResponse<FashionItem>>(
-                                responseTopicAddress: rta,
+                                topicPartitionID: tpid,
                                 accountName: DemoCredential.StorageOffloadAccountName,
                                 containerName: DemoCredential.StorageOffloadContainerNameResponses);
-                        clients.Add(rta, client);
+                        clients.Add(tpid, client);
                     }
                 }
-                return clients[rta];
+                return clients[tpid];
             }
 
             requestsClient

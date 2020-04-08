@@ -85,10 +85,13 @@
             };
         }
 
-        private IObservable<FashionItem> GetResponses(string requestId) =>
-            this.providerResponsePump
-                .Where(t => t.RequestID == FSharpOption<string>.Some(requestId))
+        private IObservable<FashionItem> GetResponses(string requestId)
+        {
+            return this.providerResponsePump
+                .Where(t => FSharpOption<string>.get_IsSome(t.RequestID)
+                    && requestId == t.RequestID.Value)
                 .SelectMany(providerSearchResponse => providerSearchResponse.Payload.Response);
+        }
 
         private string CreateRequestID() => Guid.NewGuid().ToString();
 

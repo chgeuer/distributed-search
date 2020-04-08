@@ -19,7 +19,7 @@
         private readonly IConsumer<Ignore, string> consumer;
         private readonly TopicPartition topicPartition;
 
-        public KafkaMessagingClient(ResponseTopicAddress responseTopicAddress)
+        public KafkaMessagingClient(TopicPartitionID topicPartitionID)
         {
             var bootstrapServers = $"{DemoCredential.EventHubName}.servicebus.windows.net:9093";
             var saslUsername = "$ConnectionString";
@@ -61,13 +61,13 @@
                 .SetValueDeserializer(Deserializers.Utf8)
                 .Build();
 
-            bool useSpecificPartition = FSharpOption<int>.get_IsSome(responseTopicAddress.PartitionId);
+            bool useSpecificPartition = FSharpOption<int>.get_IsSome(topicPartitionID.PartitionId);
             var partition = useSpecificPartition
-                ? new Partition(responseTopicAddress.PartitionId.Value)
+                ? new Partition(topicPartitionID.PartitionId.Value)
                 : Partition.Any;
 
             this.topicPartition = new TopicPartition(
-                    topic: responseTopicAddress.TopicName,
+                    topic: topicPartitionID.TopicName,
                     partition: partition);
         }
 
@@ -92,8 +92,7 @@
                 topicPartition: this.topicPartition,
                 message: kafkaMessage);
 
-            await Console.Out.WriteLineAsync($"TX {report.Topic}#{report.Partition.Value}#{report.Offset.Value} {messagePayload}");
-
+            // await Console.Out.WriteLineAsync($"TX {report.Topic}#{report.Partition.Value}#{report.Offset.Value} {messagePayload}");
             return UpdateOffset.NewUpdateOffset(report.Offset.Value);
         }
 
@@ -136,7 +135,7 @@
                         }
                         else
                         {
-                            Console.Out.WriteLine($"consumerAssign(topic={tpo.Topic} partition={tpo.Partition.Value} offset={tpo.Offset.Value})");
+                            // Console.Out.WriteLine($"consumerAssign(topic={tpo.Topic} partition={tpo.Partition.Value} offset={tpo.Offset.Value})");
                             consumer.Assign(tpo);
                         }
 
@@ -144,8 +143,7 @@
                         {
                             var msg = consumer.Consume(cts.Token);
 
-                            Console.WriteLine($"RX {msg.Topic}#{msg.Partition.Value}#{msg.Offset.Value}: {msg.Message.Value}");
-
+                            // Console.WriteLine($"RX {msg.Topic}#{msg.Partition.Value}#{msg.Offset.Value}: {msg.Message.Value}");
                             o.OnNext(msg);
                             cts.Token.ThrowIfCancellationRequested();
                         }

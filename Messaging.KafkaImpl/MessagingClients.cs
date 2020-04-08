@@ -10,26 +10,26 @@
     public static class MessagingClients
     {
         public static IMessageClient<T> Updates<T>(int? partitionId = null)
-            => Create<T>(new ResponseTopicAddress(
+            => Create<T>(new TopicPartitionID(
                 topicName: DemoCredential.EventHubTopicNameBusinessDataUpdates,
                 partitionId: partitionId));
 
         public static IMessageClient<T> Requests<T>(int? partitionId = null)
-            => Create<T>(new ResponseTopicAddress(
+            => Create<T>(new TopicPartitionID(
                 topicName: DemoCredential.EventHubTopicNameRequests,
                 partitionId: partitionId));
 
         public static IMessageClient<T> Responses<T>(string responseTopicName, int partitionId)
-            => Create<T>(new ResponseTopicAddress(topicName: responseTopicName, partitionId: partitionId));
+            => Create<T>(new TopicPartitionID(topicName: responseTopicName, partitionId: partitionId));
 
-        public static IMessageClient<T> WithStorageOffload<T>(ResponseTopicAddress responseTopicAddress, string accountName, string containerName)
+        public static IMessageClient<T> WithStorageOffload<T>(TopicPartitionID topicPartitionID, string accountName, string containerName)
         {
             var blobContainerClient = new BlobContainerClient(
                 blobContainerUri: new Uri($"https://{accountName}.blob.core.windows.net/{containerName}/"),
                 credential: DemoCredential.AADServicePrincipal);
 
             return new MessagingClientWithStorageOffload<T>(
-                innerClient: Create<StorageOffloadReference>(responseTopicAddress: responseTopicAddress),
+                innerClient: Create<StorageOffloadReference>(topicPartitionID: topicPartitionID),
                 storageOffload: new StorageOffload(blobContainerClient.UpAndDownloadLambdas()));
         }
 
@@ -44,7 +44,7 @@
                    return result.Value.Content;
                });
 
-        private static IMessageClient<T> Create<T>(ResponseTopicAddress responseTopicAddress)
-            => new KafkaMessagingClient<T>(responseTopicAddress: responseTopicAddress) as IMessageClient<T>;
+        private static IMessageClient<T> Create<T>(TopicPartitionID topicPartitionID)
+            => new KafkaMessagingClient<T>(topicPartitionID: topicPartitionID) as IMessageClient<T>;
     }
 }

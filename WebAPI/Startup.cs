@@ -2,6 +2,7 @@
 {
     using System;
     using System.Reactive.Linq;
+    using System.Reactive.Subjects;
     using System.Threading.Tasks;
     using Azure.Storage.Blobs;
     using BusinessDataAggregation;
@@ -45,10 +46,14 @@
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-            services.AddSingleton(_ => CreateProviderResponsePump<FashionItem>());
-            services.AddSingleton(_ => SendSearchRequest());
+
+            var responseDataPump = CreateProviderResponsePump<FashionItem>(
+                topicPartitionID: GetCurrentComputeNodeResponseTopic());
+            services.AddSingleton(_ => responseDataPump);
+
+            services.AddSingleton(_ => SendProviderSearchRequest());
             services.AddSingleton(_ => CreatePipelineSteps());
-            services.AddSingleton(_ => CreateBusinessData());
+            services.AddSingleton(_ => GetCurrentBusinessData());
         }
 
         internal static Func<PipelineSteps<ProcessingContext, FashionItem>> CreatePipelineSteps() => () =>
@@ -74,32 +79,30 @@
             };
         };
 
-        internal static Func<ProviderSearchRequest<FashionSearchRequest>, Task> SendSearchRequest()
+        internal static Func<ProviderSearchRequest<FashionSearchRequest>, Task> SendProviderSearchRequest()
         {
             var requestProducer = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(partitionId: null);
 
             return searchRequest => requestProducer.SendMessage(searchRequest, requestId: searchRequest.RequestID);
         }
 
-        internal static ResponseTopicAddress GetCurrentComputeNodeResponseTopic()
-            => new ResponseTopicAddress(topicName: DemoCredential.EventHubTopicNameResponses, partitionId: 1);
+        internal static TopicPartitionID GetCurrentComputeNodeResponseTopic()
+            => new TopicPartitionID(topicName: DemoCredential.EventHubTopicNameResponses, partitionId: 1);
 
-        internal static IObservable<Message<ProviderSearchResponse<T>>> CreateProviderResponsePump<T>()
+        internal static IObservable<Message<ProviderSearchResponse<T>>> CreateProviderResponsePump<T>(TopicPartitionID topicPartitionID)
         {
             var messagingClient = MessagingClients
                 .WithStorageOffload<ProviderSearchResponse<T>>(
-                    responseTopicAddress: GetCurrentComputeNodeResponseTopic(),
+                    topicPartitionID: topicPartitionID,
                     accountName: DemoCredential.StorageOffloadAccountName,
                     containerName: DemoCredential.StorageOffloadContainerNameResponses);
 
-            /* var replaySubject = new ReplaySubject<EventData>(window: TimeSpan.FromSeconds(15));
-             */
+            // var replaySubject = new ReplaySubject<Message<ProviderSearchResponse<T>>>(window: TimeSpan.FromSeconds(15));
+            // .Multicast(replaySubject); /* .Publish(); */
             var connectable =
                 messagingClient
                 .CreateObervable(SeekPosition.FromTail)
-                .Do(onNext: m => Console.WriteLine($"XXXXXXXX {m.Offset}"))
                 .Publish();
-                /* .Multicast(replaySubject);*/
 
             connectable.Connect();
 
@@ -107,7 +110,7 @@
                 .AsObservable();
         }
 
-        internal static Func<BusinessData> CreateBusinessData()
+        internal static Func<BusinessData> GetCurrentBusinessData()
         {
             var businessDataUpdates = new BusinessDataPump(
                 snapshotContainerClient: new BlobContainerClient(
