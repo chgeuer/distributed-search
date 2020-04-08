@@ -12,6 +12,8 @@
     using LanguageExt;
     using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
+    using ConfluentKafkaOffset = Confluent.Kafka.Offset;
+    using Offset = Fundamentals.Types.Offset;
 
     internal class KafkaMessagingClient<TMessagePayload> : IMessageClient<TMessagePayload>
     {
@@ -71,10 +73,10 @@
                     partition: partition);
         }
 
-        public Task<UpdateOffset> SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default)
+        public Task<Offset> SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default)
             => this.SendMessage(messagePayload: messagePayload, requestId: null, cancellationToken);
 
-        public async Task<UpdateOffset> SendMessage(TMessagePayload messagePayload, string requestId, CancellationToken cancellationToken = default)
+        public async Task<Offset> SendMessage(TMessagePayload messagePayload, string requestId, CancellationToken cancellationToken = default)
         {
             var kafkaMessage = new Message<Null, string>
             {
@@ -93,7 +95,7 @@
                 message: kafkaMessage);
 
             // await Console.Out.WriteLineAsync($"TX {report.Topic}#{report.Partition.Value}#{report.Offset.Value} {messagePayload}");
-            return UpdateOffset.NewUpdateOffset(report.Offset.Value);
+            return Offset.NewOffset(report.Offset.Value);
         }
 
         public IObservable<Message<TMessagePayload>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default)
@@ -104,7 +106,7 @@
                     startingPosition: startingPosition,
                     cancellationToken: cancellationToken)
                 .Select(consumeResult => new Message<TMessagePayload>(
-                    offset: UpdateOffset.NewUpdateOffset(consumeResult.Offset.Value),
+                    offset: Offset.NewOffset(consumeResult.Offset.Value),
                     requestID: GetRequestID(consumeResult.Message.Headers),
                     payload: consumeResult.Message.Value.DeserializeJSON<TMessagePayload>()));
         }
@@ -122,12 +124,12 @@
                 _ = Task.Run(
                     () =>
                     {
-                        Offset offset = startingPosition switch
+                        ConfluentKafkaOffset confluentKafkaOffset = startingPosition switch
                         {
-                            SeekPosition.FromOffset o => new Offset(o.UpdateOffset.Item),
-                            _ => Offset.End,
+                            SeekPosition.FromOffset o => new ConfluentKafkaOffset(o.Offset.Item),
+                            _ => ConfluentKafkaOffset.End,
                         };
-                        var tpo = new TopicPartitionOffset(tp, offset);
+                        var tpo = new TopicPartitionOffset(tp, confluentKafkaOffset);
 
                         if (tpo.Partition.Value == -1 && tpo.Offset.Value == -1)
                         {

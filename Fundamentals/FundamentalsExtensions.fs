@@ -4,7 +4,7 @@ open System.Runtime.CompilerServices
 open Fundamentals.Types
 
 type Configuration<'k, 'v when 'k: comparison> =
-    { Offset: UpdateOffset
+    { Offset: Offset
       Data: Map<'k, 'v> }
 
 type UpdateOperation<'k, 'v> =
@@ -12,12 +12,12 @@ type UpdateOperation<'k, 'v> =
     | Remove of Key: 'k
 
 type Update =
-    { Offset: UpdateOffset
+    { Offset: Offset
       UpdateArea: string
       Operation: UpdateOperation<string, string> }
 
 type UpdateableData =
-    { Offset: UpdateOffset
+    { Offset: Offset
       Data: Map<string, Map<string, string>> }
 
 [<Extension>]

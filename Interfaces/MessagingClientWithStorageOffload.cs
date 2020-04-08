@@ -36,7 +36,7 @@
                         payload: payload);
                 });
 
-        public async Task<UpdateOffset> SendMessage(
+        public async Task<Offset> SendMessage(
             TMessagePayload messagePayload,
             CancellationToken cancellationToken = default)
         {
@@ -52,7 +52,7 @@
                 cancellationToken: cancellationToken);
         }
 
-        public async Task<UpdateOffset> SendMessage(
+        public async Task<Offset> SendMessage(
             TMessagePayload messagePayload,
             string requestId,
             CancellationToken cancellationToken = default)

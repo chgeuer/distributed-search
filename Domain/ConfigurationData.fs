@@ -6,7 +6,7 @@ type BusinessData =
     { Markup: Map<FashionType, decimal>
       Brands: Map<string, string>
       DefaultMarkup: decimal
-      Version: UpdateOffset }
+      Version: Offset }
 
 //type MarkupBusinessData =
 //    { Markup: Map<FashionType, decimal>

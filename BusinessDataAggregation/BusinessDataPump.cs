@@ -20,17 +20,17 @@
 
     public class BusinessDataPump
     {
-        private static FSharpOption<UpdateOffset> ParseOffsetFromBlobName(string n)
+        private static FSharpOption<Offset> ParseOffsetFromBlobName(string n)
              => long.TryParse(n.Replace(".json", string.Empty), out long offset)
-                ? FSharpOption<UpdateOffset>.Some(UpdateOffset.NewUpdateOffset(offset))
-                : FSharpOption<UpdateOffset>.None;
+                ? FSharpOption<Offset>.Some(Offset.NewOffset(offset))
+                : FSharpOption<Offset>.None;
 
-        private static string OffsetToBlobName(UpdateOffset offset) => $"{offset.Item}.json";
+        private static string OffsetToBlobName(Offset offset) => $"{offset.Item}.json";
 
         private readonly BlobContainerClient snapshotContainerClient;
         private readonly IMessageClient<BusinessDataUpdate> updateMessagingClient;
         private CancellationTokenSource cts;
-        private UpdateOffset lastWrittenOffset = UpdateOffset.NewUpdateOffset(-1);
+        private Offset lastWrittenOffset = Offset.NewOffset(-1);
         private Task deletetionTask;
 
         public BusinessDataPump(BlobContainerClient snapshotContainerClient)
@@ -66,7 +66,7 @@
             IConnectableObservable<BusinessData> connectableObservable =
                 this.updateMessagingClient
                     .CreateObervable(
-                        startingPosition: SeekPosition.NewFromOffset(updateOffset: snapshotValue.Version),
+                        startingPosition: SeekPosition.NewFromOffset(offset: snapshotValue.Version),
                         cancellationToken: this.cts.Token)
                     .Scan(
                         seed: snapshotValue,
@@ -139,15 +139,15 @@
             }
         }
 
-        public async Task<IEnumerable<(UpdateOffset, DateTimeOffset)>> GetOldSnapshots(TimeSpan maxAge, CancellationToken cancellationToken)
+        public async Task<IEnumerable<(Offset, DateTimeOffset)>> GetOldSnapshots(TimeSpan maxAge, CancellationToken cancellationToken)
         {
             var blobs = this.snapshotContainerClient.GetBlobsAsync(traits: BlobTraits.Metadata, cancellationToken: cancellationToken);
-            var items = new List<(UpdateOffset, DateTimeOffset)>();
+            var items = new List<(Offset, DateTimeOffset)>();
             await foreach (var blob in blobs)
             {
                 var someUpdateOffset = ParseOffsetFromBlobName(blob.Name);
 
-                if (FSharpOption<UpdateOffset>.get_IsSome(someUpdateOffset) &&
+                if (FSharpOption<Offset>.get_IsSome(someUpdateOffset) &&
                     blob.Properties.LastModified.HasValue &&
                     blob.Properties.LastModified.Value < DateTime.UtcNow.Subtract(maxAge))
                 {
@@ -161,15 +161,15 @@
                 .SkipLast(5);
         }
 
-        private async Task<Option<(UpdateOffset, string)>> GetLatestSnapshotID(CancellationToken cancellationToken)
+        private async Task<Option<(Offset, string)>> GetLatestSnapshotID(CancellationToken cancellationToken)
         {
             var blobs = this.snapshotContainerClient.GetBlobsAsync(cancellationToken: cancellationToken);
-            var items = new List<(UpdateOffset, string)>();
+            var items = new List<(Offset, string)>();
             await foreach (var blob in blobs)
             {
                 var someUpdateOffset = ParseOffsetFromBlobName(blob.Name);
 
-                if (FSharpOption<UpdateOffset>.get_IsSome(someUpdateOffset))
+                if (FSharpOption<Offset>.get_IsSome(someUpdateOffset))
                 {
                     var v = (someUpdateOffset.Value, blob.Name);
                     items.Add(v);
@@ -178,16 +178,16 @@
 
             if (items.Count == 0)
             {
-                return Option<(UpdateOffset, string)>.None;
+                return Option<(Offset, string)>.None;
             }
 
-            return Option<(UpdateOffset, string)>.Some(items.OrderByDescending(_ => _.Item1).First());
+            return Option<(Offset, string)>.Some(items.OrderByDescending(_ => _.Item1).First());
         }
 
         private BusinessData EmptyBusinessData() => new BusinessData(
             markup: new FSharpMap<string, decimal>(Array.Empty<Tuple<string, decimal>>()),
             brands: new FSharpMap<string, string>(Array.Empty<Tuple<string, string>>()),
             defaultMarkup: 0m,
-            version: UpdateOffset.NewUpdateOffset(-1));
+            version: Offset.NewOffset(-1));
     }
 }

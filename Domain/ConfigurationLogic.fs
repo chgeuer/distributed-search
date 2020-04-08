@@ -7,7 +7,7 @@ open Fundamentals.Types
 [<Extension>]
 module BusinessDataExtensions =
     [<Extension>]
-    let Update (businessData: BusinessData) (version: UpdateOffset) (update: BusinessDataUpdate): BusinessData =
+    let Update (businessData: BusinessData) (version: Offset) (update: BusinessDataUpdate): BusinessData =
         match update with
         | MarkupUpdate(fashionType, markupPrice) ->
             match markupPrice with
@@ -29,7 +29,7 @@ module BusinessDataExtensions =
                   DefaultMarkup = newDefaultPrice }
 
     [<Extension>]
-    let ApplyUpdates (businessData: BusinessData) (updates: IEnumerable<UpdateOffset * BusinessDataUpdate>): BusinessData =
+    let ApplyUpdates (businessData: BusinessData) (updates: IEnumerable<Offset * BusinessDataUpdate>): BusinessData =
         updates
         |> List.ofSeq
         |> List.fold (fun d (o, u) -> Update d o u) businessData
