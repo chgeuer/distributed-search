@@ -6,7 +6,8 @@
     using System.Linq;
     using System.Reactive.Linq;
     using System.Threading.Tasks;
-    using DataTypesFSharp;
+    using Fashion.BusinessData;
+    using Fashion.Domain;
     using Interfaces;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.FSharp.Core;

@@ -1,4 +1,7 @@
-namespace DataTypesFSharp
+namespace Fashion.Domain.Logic
+
+open Fashion.Domain
+open Fashion.BusinessData
 
 open Interfaces
 

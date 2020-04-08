@@ -7,7 +7,7 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Credentials;
-    using DataTypesFSharp;
+    using Fashion.Domain;
     using Interfaces;
     using Messaging;
     using Microsoft.FSharp.Collections;

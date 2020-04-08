@@ -2,12 +2,13 @@
 {
     using System;
     using System.Reactive.Linq;
-    using System.Reactive.Subjects;
     using System.Threading.Tasks;
     using Azure.Storage.Blobs;
     using BusinessDataAggregation;
     using Credentials;
-    using DataTypesFSharp;
+    using Fashion.BusinessData;
+    using Fashion.Domain;
+    using Fashion.Domain.Logic;
     using Interfaces;
     using Messaging;
     using Microsoft.AspNetCore.Builder;

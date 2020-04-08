@@ -3,10 +3,10 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="DomainData.fs" />
-    <Compile Include="ConfigurationData.fs" />
-    <Compile Include="DomainLogic.fs" />
-    <Compile Include="ConfigurationLogic.fs" />
+    <Compile Include="FashionDomainData.fs" />
+    <Compile Include="FashionBusinessData.fs" />
+    <Compile Include="DomainDomainLogic.fs" />
+    <Compile Include="FashionBusinessDataLogic.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Fundamentals\Fundamentals.fsproj" />

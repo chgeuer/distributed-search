@@ -10,7 +10,8 @@
     using Azure;
     using Azure.Storage.Blobs;
     using Azure.Storage.Blobs.Models;
-    using DataTypesFSharp;
+    using Fashion.BusinessData;
+    using Fashion.BusinessData.Logic;
     using Interfaces;
     using LanguageExt;
     using Messaging;

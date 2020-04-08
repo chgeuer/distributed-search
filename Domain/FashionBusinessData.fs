@@ -1,5 +1,6 @@
-namespace DataTypesFSharp
+namespace Fashion.BusinessData
 
+open Fashion.Domain
 open Fundamentals.Types
 
 type BusinessData =

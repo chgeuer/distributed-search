@@ -5,7 +5,8 @@
     using Azure.Storage.Blobs;
     using BusinessDataAggregation;
     using Credentials;
-    using DataTypesFSharp;
+    using Fashion.BusinessData;
+    using Fashion.Domain;
 
     class UpdateConfigurationProgram
     {

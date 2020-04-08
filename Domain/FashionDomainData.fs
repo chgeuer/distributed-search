@@ -1,4 +1,4 @@
-namespace DataTypesFSharp
+namespace Fashion.Domain
 
 type FashionType = string
 

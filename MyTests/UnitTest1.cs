@@ -4,14 +4,16 @@ namespace MyTests
     using System.Collections.Generic;
     using System.Linq;
     using System.Reactive.Linq;
-    using DataTypesFSharp;
     using Interfaces;
     using Microsoft.FSharp.Collections;
     using NUnit.Framework;
     using Fundamentals.Extensions;
     using static Fundamentals.Types;
     using static BusinessLogic.Logic;
-    using Microsoft.FSharp.Core;
+    using Fashion.BusinessData;
+    using Fashion.BusinessData.Logic;
+    using Fashion.Domain;
+    using Fashion.Domain.Logic;
 
     public class VersionedDictionary<T>
     {

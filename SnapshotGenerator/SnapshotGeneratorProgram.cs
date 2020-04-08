@@ -7,7 +7,7 @@
     using Azure.Storage.Blobs;
     using BusinessDataAggregation;
     using Credentials;
-    using DataTypesFSharp;
+    using Fashion.BusinessData;
     using Interfaces;
 
     /// <summary>

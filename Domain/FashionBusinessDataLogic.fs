@@ -1,8 +1,12 @@
-namespace DataTypesFSharp
+namespace Fashion.BusinessData.Logic
+
+open Fashion.Domain
+open Fashion.BusinessData
 
 open System.Collections.Generic
 open System.Runtime.CompilerServices
 open Fundamentals.Types
+
 
 [<Extension>]
 module BusinessDataExtensions =
