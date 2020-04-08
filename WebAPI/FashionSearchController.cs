@@ -21,8 +21,10 @@
         private readonly Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest;
         private readonly IObservable<Message<ProviderSearchResponse<FashionItem>>> providerResponsePump;
         private readonly Func<PipelineSteps<ProcessingContext, FashionItem>> createPipelineSteps;
+        private readonly IDistributedSearchConfiguration demoCredential;
 
         public FashionSearchController(
+            IDistributedSearchConfiguration demoCredential,
             IObservable<Message<ProviderSearchResponse<FashionItem>>> providerResponsePump,
             Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest,
             Func<PipelineSteps<ProcessingContext, FashionItem>> createPipelineSteps,
@@ -30,6 +32,7 @@
         {
             (this.providerResponsePump, this.sendProviderSearchRequest, this.createPipelineSteps, this.getBusinessData) =
                 (providerResponsePump, sendProviderSearchRequest, createPipelineSteps, getBusinessData);
+            this.demoCredential = demoCredential;
         }
 
         [HttpGet]
@@ -51,7 +54,7 @@
 
             var providerSearchRequest = new ProviderSearchRequest<FashionSearchRequest>(
                 requestID: this.CreateRequestID(),
-                responseTopic: Startup.GetCurrentComputeNodeResponseTopic(),
+                responseTopic: Startup.GetCurrentComputeNodeResponseTopic(this.demoCredential),
                 searchRequest: searchRequest);
 
             var stopwatch = new Stopwatch();

@@ -20,12 +20,15 @@
         {
             Console.Title = "Snapshot Generator";
 
+            IDistributedSearchConfiguration demoCredential = new DemoCredential();
+
             var businessDataPump = new BusinessDataPump<BusinessData, BusinessDataUpdate>(
+                demoCredential: demoCredential,
                 applyUpdate: (bd, updateM) => bd.ApplyUpdates(new[] { Tuple.Create(updateM.Offset, updateM.Payload) }),
                 getOffset: bd => bd.Version,
                 snapshotContainerClient: new BlobContainerClient(
-                    blobContainerUri: new Uri($"https://{DemoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{DemoCredential.BusinessDataSnapshotContainerName}/"),
-                    credential: DemoCredential.AADServicePrincipal));
+                    blobContainerUri: new Uri($"https://{demoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{demoCredential.BusinessDataSnapshotContainerName}/"),
+                    credential: demoCredential.AADServicePrincipal));
 
             var cts = new CancellationTokenSource();
             IObservable<BusinessData> businessDataObservable = await businessDataPump.CreateObservable(cts.Token);

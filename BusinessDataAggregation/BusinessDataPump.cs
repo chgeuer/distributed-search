@@ -34,12 +34,13 @@
 
         // BusinessDataUpdate<TBusinessData, TBusinessDataUpdate> applyUpdate,
         public BusinessDataPump(
+            IDistributedSearchConfiguration demoCredential,
             Func<TBusinessData, Message<TBusinessDataUpdate>, TBusinessData> applyUpdate,
             Func<TBusinessData, Offset> getOffset,
             BlobContainerClient snapshotContainerClient)
         {
             this.applyUpdate = applyUpdate;
-            this.updateMessagingClient = MessagingClients.Updates<TBusinessDataUpdate>(partitionId: 0);
+            this.updateMessagingClient = MessagingClients.Updates<TBusinessDataUpdate>(demoCredential: demoCredential, partitionId: 0);
             this.snapshotContainerClient = snapshotContainerClient;
             this.getOffset = getOffset;
         }

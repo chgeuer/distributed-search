@@ -5,49 +5,48 @@ namespace Credentials
     using System.IO;
     using Azure.Core;
     using Azure.Identity;
+    using Interfaces;
     using Newtonsoft.Json;
 
-    public static class DemoCredential
+    public class DemoCredential : IDistributedSearchConfiguration
     {
-        public static string EventHubName { get => ProjectConfig.eventHubName; }
+        public string EventHubName { get => this.ProjectConfig.eventHubName; }
 
-        public static string EntityPath { get => ProjectConfig.entityPath; }
+        public string EntityPath { get => this.ProjectConfig.entityPath; }
 
-        public static string EventHubNamespaceName { get => EntityPath; }
+        public string EventHubNamespaceName { get => this.EntityPath; }
 
-        public static string EventHubTopicNameRequests { get => ProjectConfig.topicNames.requests; }
+        public string EventHubTopicNameRequests { get => this.ProjectConfig.topicNames.requests; }
 
-        public static string EventHubTopicNameBusinessDataUpdates { get => ProjectConfig.topicNames.businessdataupdates; }
+        public string EventHubTopicNameBusinessDataUpdates { get => this.ProjectConfig.topicNames.businessdataupdates; }
 
-        public static string EventHubTopicNameResponses { get => ProjectConfig.topicNames.responses; }
+        public string EventHubTopicNameResponses { get => this.ProjectConfig.topicNames.responses; }
 
-        public static string EventHubConnectionString { get => ProjectConfig.sharedAccessConnectionStringRoot; }
+        public string EventHubConnectionString { get => this.ProjectConfig.sharedAccessConnectionStringRoot; }
 
-        public static string EventHubCaptureStorageAccountConnectionString { get => ProjectConfig.capture.storageConnectionString; }
+        public string EventHubCaptureStorageAccountConnectionString { get => this.ProjectConfig.capture.storageConnectionString; }
 
-        public static string EventHubCaptureStorageAccountContainerName { get => ProjectConfig.capture.containerName; }
+        public string EventHubCaptureStorageAccountContainerName { get => this.ProjectConfig.capture.containerName; }
 
-        public static string StorageOffloadAccountName { get => ProjectConfig.storageOffload.storageAccountName; }
+        public string StorageOffloadAccountName { get => this.ProjectConfig.storageOffload.storageAccountName; }
 
-        public static string BusinessDataSnapshotAccountName { get => StorageOffloadAccountName; }
+        public string BusinessDataSnapshotAccountName { get => this.StorageOffloadAccountName; }
 
-        public static string BusinessDataSnapshotContainerName { get => ProjectConfig.snapshotStorageContainer; }
+        public string BusinessDataSnapshotContainerName { get => this.ProjectConfig.snapshotStorageContainer; }
 
-        public static string StorageOffloadContainerNameRequests { get => ProjectConfig.storageOffload.containerName.requests; }
+        public string StorageOffloadContainerNameRequests { get => this.ProjectConfig.storageOffload.containerName.requests; }
 
-        public static string StorageOffloadContainerNameResponses { get => ProjectConfig.storageOffload.containerName.responses; }
+        public string StorageOffloadContainerNameResponses { get => this.ProjectConfig.storageOffload.containerName.responses; }
 
-        public static TokenCredential AADServicePrincipal
+        public TokenCredential AADServicePrincipal
         {
             get => new ClientSecretCredential(
-                tenantId: (string)Data.azure.tenantId,
-                clientId: (string)ProjectConfig.servicePrincipal.clientId,
-                clientSecret: (string)ProjectConfig.servicePrincipal.clientSecret);
+                tenantId: (string)this.data.azure.tenantId,
+                clientId: (string)this.ProjectConfig.servicePrincipal.clientId,
+                clientSecret: (string)this.ProjectConfig.servicePrincipal.clientSecret);
         }
 
-        private static dynamic ProjectConfig { get => Data.flightbooking; }
-
-        private static readonly dynamic Data = ReadCredData();
+        private dynamic ProjectConfig { get => this.data.flightbooking; }
 
         private static dynamic ReadCredData()
         {
@@ -55,5 +54,7 @@ namespace Credentials
                 File.ReadAllText(
                     Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), "creds.json")));
         }
+
+        private readonly dynamic data = ReadCredData();
     }
 }

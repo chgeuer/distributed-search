@@ -2,6 +2,7 @@
 {
     using System;
     using System.Reactive.Linq;
+    using System.Runtime.CompilerServices;
     using System.Threading.Tasks;
     using Azure.Storage.Blobs;
     using BusinessDataAggregation;
@@ -24,9 +25,12 @@
     {
         public IConfiguration Configuration { get; }
 
+        private readonly IDistributedSearchConfiguration demoCredential;
+
         public Startup(IConfiguration configuration)
         {
             this.Configuration = configuration;
+            this.demoCredential = new DemoCredential();
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -48,14 +52,19 @@
         {
             services.AddControllers();
 
-            var responseDataPump = CreateProviderResponsePump<FashionItem>(
-                topicPartitionID: GetCurrentComputeNodeResponseTopic());
+            var responseDataPump = this.CreateProviderResponsePump<FashionItem>(
+                topicPartitionID: GetCurrentComputeNodeResponseTopic(this.demoCredential));
             services.AddSingleton(_ => responseDataPump);
+            services.AddSingleton<IDistributedSearchConfiguration>(_ => this.demoCredential);
 
-            services.AddSingleton(_ => SendProviderSearchRequest());
+            services.AddSingleton(_ => this.SendProviderSearchRequest());
             services.AddSingleton(_ => CreatePipelineSteps());
-            services.AddSingleton(_ => GetCurrentBusinessData());
+            services.AddSingleton(_ => this.GetCurrentBusinessData());
         }
+
+        internal static TopicPartitionID GetCurrentComputeNodeResponseTopic(IDistributedSearchConfiguration demoCredential)
+            => new TopicPartitionID(
+                topicName: demoCredential.EventHubTopicNameResponses, partitionId: 1);
 
         internal static Func<PipelineSteps<ProcessingContext, FashionItem>> CreatePipelineSteps() => () =>
         {
@@ -80,23 +89,22 @@
             };
         };
 
-        internal static Func<ProviderSearchRequest<FashionSearchRequest>, Task> SendProviderSearchRequest()
+        internal Func<ProviderSearchRequest<FashionSearchRequest>, Task> SendProviderSearchRequest()
         {
-            var requestProducer = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(partitionId: null);
+            var requestProducer = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(
+                demoCredential: this.demoCredential, partitionId: null);
 
             return searchRequest => requestProducer.SendMessage(searchRequest, requestId: searchRequest.RequestID);
         }
 
-        internal static TopicPartitionID GetCurrentComputeNodeResponseTopic()
-            => new TopicPartitionID(topicName: DemoCredential.EventHubTopicNameResponses, partitionId: 1);
-
-        internal static IObservable<Message<ProviderSearchResponse<T>>> CreateProviderResponsePump<T>(TopicPartitionID topicPartitionID)
+        internal IObservable<Message<ProviderSearchResponse<T>>> CreateProviderResponsePump<T>(TopicPartitionID topicPartitionID)
         {
             var messagingClient = MessagingClients
                 .WithStorageOffload<ProviderSearchResponse<T>>(
+                    demoCredential: this.demoCredential,
                     topicPartitionID: topicPartitionID,
-                    accountName: DemoCredential.StorageOffloadAccountName,
-                    containerName: DemoCredential.StorageOffloadContainerNameResponses);
+                    accountName: this.demoCredential.StorageOffloadAccountName,
+                    containerName: this.demoCredential.StorageOffloadContainerNameResponses);
 
             var connectable = messagingClient
                 .CreateObervable(SeekPosition.FromTail)
@@ -107,14 +115,15 @@
             return connectable.AsObservable();
         }
 
-        internal static Func<BusinessData> GetCurrentBusinessData()
+        internal Func<BusinessData> GetCurrentBusinessData()
         {
             var businessDataUpdates = new BusinessDataPump<BusinessData, BusinessDataUpdate>(
+                demoCredential: this.demoCredential,
                 applyUpdate: (bd, updateM) => bd.ApplyUpdates(new[] { Tuple.Create(updateM.Offset, updateM.Payload) }),
                 getOffset: bd => bd.Version,
                 snapshotContainerClient: new BlobContainerClient(
-                    blobContainerUri: new Uri($"https://{DemoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{DemoCredential.BusinessDataSnapshotContainerName}/"),
-                    credential: DemoCredential.AADServicePrincipal));
+                    blobContainerUri: new Uri($"https://{this.demoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{this.demoCredential.BusinessDataSnapshotContainerName}/"),
+                    credential: this.demoCredential.AADServicePrincipal));
 
             businessDataUpdates.StartUpdateProcess().Wait();
             return () => businessDataUpdates.BusinessData;

@@ -2,34 +2,37 @@
 {
     using System;
     using Azure.Storage.Blobs;
-    using Credentials;
     using Interfaces;
     using Messaging.KafkaImpl;
     using static Fundamentals.Types;
 
     public static class MessagingClients
     {
-        public static IMessageClient<T> Updates<T>(int? partitionId = null)
-            => Create<T>(new TopicPartitionID(
-                topicName: DemoCredential.EventHubTopicNameBusinessDataUpdates,
-                partitionId: partitionId));
+        public static IMessageClient<T> Updates<T>(IDistributedSearchConfiguration demoCredential, int? partitionId = null)
+            => Create<T>(
+                demoCredential: demoCredential,
+                topicPartitionID: new TopicPartitionID(
+                    topicName: demoCredential.EventHubTopicNameBusinessDataUpdates,
+                    partitionId: partitionId));
 
-        public static IMessageClient<T> Requests<T>(int? partitionId = null)
-            => Create<T>(new TopicPartitionID(
-                topicName: DemoCredential.EventHubTopicNameRequests,
-                partitionId: partitionId));
+        public static IMessageClient<T> Requests<T>(IDistributedSearchConfiguration demoCredential, int? partitionId = null)
+            => Create<T>(
+                demoCredential: demoCredential,
+                topicPartitionID: new TopicPartitionID(
+                    topicName: demoCredential.EventHubTopicNameRequests,
+                    partitionId: partitionId));
 
-        public static IMessageClient<T> Responses<T>(string responseTopicName, int partitionId)
-            => Create<T>(new TopicPartitionID(topicName: responseTopicName, partitionId: partitionId));
+        public static IMessageClient<T> Responses<T>(IDistributedSearchConfiguration demoCredential, string responseTopicName, int partitionId)
+            => Create<T>(demoCredential: demoCredential, new TopicPartitionID(topicName: responseTopicName, partitionId: partitionId));
 
-        public static IMessageClient<T> WithStorageOffload<T>(TopicPartitionID topicPartitionID, string accountName, string containerName)
+        public static IMessageClient<T> WithStorageOffload<T>(IDistributedSearchConfiguration demoCredential, TopicPartitionID topicPartitionID, string accountName, string containerName)
         {
             var blobContainerClient = new BlobContainerClient(
                 blobContainerUri: new Uri($"https://{accountName}.blob.core.windows.net/{containerName}/"),
-                credential: DemoCredential.AADServicePrincipal);
+                credential: demoCredential.AADServicePrincipal);
 
             return new MessagingClientWithStorageOffload<T>(
-                innerClient: Create<StorageOffloadReference>(topicPartitionID: topicPartitionID),
+                innerClient: Create<StorageOffloadReference>(demoCredential: demoCredential, topicPartitionID: topicPartitionID),
                 storageOffload: new StorageOffload(blobContainerClient.UpAndDownloadLambdas()));
         }
 
@@ -44,7 +47,7 @@
                    return result.Value.Content;
                });
 
-        private static IMessageClient<T> Create<T>(TopicPartitionID topicPartitionID)
-            => new KafkaMessagingClient<T>(topicPartitionID: topicPartitionID) as IMessageClient<T>;
+        private static IMessageClient<T> Create<T>(IDistributedSearchConfiguration demoCredential, TopicPartitionID topicPartitionID)
+            => new KafkaMessagingClient<T>(demoCredential: demoCredential, topicPartitionID: topicPartitionID) as IMessageClient<T>;
     }
 }

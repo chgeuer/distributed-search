@@ -19,7 +19,9 @@
         {
             Console.Title = "Sample Provider";
 
-            var requestsClient = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>();
+            IDistributedSearchConfiguration demoCredential = new DemoCredential();
+
+            var requestsClient = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(demoCredential);
 
             var cts = new CancellationTokenSource();
 
@@ -31,9 +33,10 @@
                     if (!clients.ContainsKey(tpid))
                     {
                         var client = MessagingClients.WithStorageOffload<ProviderSearchResponse<FashionItem>>(
-                                topicPartitionID: tpid,
-                                accountName: DemoCredential.StorageOffloadAccountName,
-                                containerName: DemoCredential.StorageOffloadContainerNameResponses);
+                            demoCredential: demoCredential,
+                            topicPartitionID: tpid,
+                            accountName: demoCredential.StorageOffloadAccountName,
+                            containerName: demoCredential.StorageOffloadContainerNameResponses);
                         clients.Add(tpid, client);
                     }
                 }

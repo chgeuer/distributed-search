@@ -8,6 +8,7 @@
     using Fashion.BusinessData;
     using Fashion.BusinessData.Logic;
     using Fashion.Domain;
+    using Interfaces;
 
     class UpdateConfigurationProgram
     {
@@ -15,12 +16,15 @@
         {
             Console.Title = "Update Configuration";
 
+            IDistributedSearchConfiguration demoCredential = new DemoCredential();
+
             var businessDataUpdates = new BusinessDataPump<BusinessData, BusinessDataUpdate>(
-            applyUpdate: (bd, updateM) => bd.ApplyUpdates(new[] { Tuple.Create(updateM.Offset, updateM.Payload) }),
-            getOffset: bd => bd.Version,
-            snapshotContainerClient: new BlobContainerClient(
-                blobContainerUri: new Uri($"https://{DemoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{DemoCredential.BusinessDataSnapshotContainerName}/"),
-                credential: DemoCredential.AADServicePrincipal));
+                demoCredential: demoCredential,
+                applyUpdate: (bd, updateM) => bd.ApplyUpdates(new[] { Tuple.Create(updateM.Offset, updateM.Payload) }),
+                getOffset: bd => bd.Version,
+                snapshotContainerClient: new BlobContainerClient(
+                    blobContainerUri: new Uri($"https://{demoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{demoCredential.BusinessDataSnapshotContainerName}/"),
+                    credential: demoCredential.AADServicePrincipal));
 
             var fashionType = FashionTypes.Hat;
             while (true)
