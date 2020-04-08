@@ -3,11 +3,11 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Update="FSharp.Core" Version="4.7.1" />
+  </ItemGroup>
+  <ItemGroup>
     <Compile Include="BusinessLogic.fs" />
     <Compile Include="Fundamentals.fs" />
     <Compile Include="FundamentalsExtensions.fs" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Update="FSharp.Core" Version="4.7.1" />
   </ItemGroup>
 </Project>

@@ -9,12 +9,12 @@
     <RootNamespace>Messaging.KafkaImpl</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.Reactive.Linq" Version="4.4.1" />
-    <PackageReference Include="Confluent.Kafka" Version="1.4.0" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="System.Reactive.Linq" Version="4.4.1" />
+    <PackageReference Include="Confluent.Kafka" Version="1.4.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Credentials\Credentials.csproj" />

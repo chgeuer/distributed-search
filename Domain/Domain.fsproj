@@ -3,16 +3,16 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="FashionDomainData.fs" />
-    <Compile Include="FashionBusinessData.fs" />
-    <Compile Include="DomainDomainLogic.fs" />
-    <Compile Include="FashionBusinessDataLogic.fs" />
+    <PackageReference Update="FSharp.Core" Version="4.7.1" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Fundamentals\Fundamentals.fsproj" />
     <ProjectReference Include="..\Interfaces\Interfaces.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Update="FSharp.Core" Version="4.7.1" />
+    <Compile Include="FashionDomainData.fs" />
+    <Compile Include="FashionBusinessData.fs" />
+    <Compile Include="DomainDomainLogic.fs" />
+    <Compile Include="FashionBusinessDataLogic.fs" />
   </ItemGroup>
 </Project>
