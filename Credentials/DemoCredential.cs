@@ -17,7 +17,7 @@ namespace Credentials
 
         public static string EventHubTopicNameRequests { get => ProjectConfig.topicNames.requests; }
 
-        public static string EventHubTopicNameBusinessDataUpdates { get => "businessdataupdates"; }
+        public static string EventHubTopicNameBusinessDataUpdates { get => ProjectConfig.topicNames.businessdataupdates; }
 
         public static string EventHubTopicNameResponses { get => ProjectConfig.topicNames.responses; }
 
@@ -31,7 +31,7 @@ namespace Credentials
 
         public static string BusinessDataSnapshotAccountName { get => StorageOffloadAccountName; }
 
-        public static string BusinessDataSnapshotContainerName { get => "snapshots"; }
+        public static string BusinessDataSnapshotContainerName { get => ProjectConfig.snapshotStorageContainer; }
 
         public static string StorageOffloadContainerNameRequests { get => ProjectConfig.storageOffload.containerName.requests; }
 
