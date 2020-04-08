@@ -11,7 +11,6 @@
     using Azure.Storage.Blobs;
     using Azure.Storage.Blobs.Models;
     using Interfaces;
-    using LanguageExt;
     using Messaging;
     using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
@@ -25,19 +24,24 @@
 
         private static string OffsetToBlobName(Offset offset) => $"{offset.Item}.json";
 
-        private readonly BlobContainerClient snapshotContainerClient;
+        private readonly Func<TBusinessData, Offset> getOffset;
         private readonly Func<TBusinessData, Message<TBusinessDataUpdate>, TBusinessData> applyUpdate;
+        private readonly BlobContainerClient snapshotContainerClient;
         private readonly IMessageClient<TBusinessDataUpdate> updateMessagingClient;
         private CancellationTokenSource cts;
         private Offset lastWrittenOffset = Offset.NewOffset(-1);
         private Task deletetionTask;
 
         // BusinessDataUpdate<TBusinessData, TBusinessDataUpdate> applyUpdate,
-        public BusinessDataPump(Func<TBusinessData, Message<TBusinessDataUpdate>, TBusinessData> applyUpdate, BlobContainerClient snapshotContainerClient)
+        public BusinessDataPump(
+            Func<TBusinessData, Message<TBusinessDataUpdate>, TBusinessData> applyUpdate,
+            Func<TBusinessData, Offset> getOffset,
+            BlobContainerClient snapshotContainerClient)
         {
             this.applyUpdate = applyUpdate;
             this.updateMessagingClient = MessagingClients.Updates<TBusinessDataUpdate>(partitionId: 0);
             this.snapshotContainerClient = snapshotContainerClient;
+            this.getOffset = getOffset;
         }
 
         public TBusinessData BusinessData { get; private set; }
@@ -67,7 +71,8 @@
             IConnectableObservable<TBusinessData> connectableObservable =
                 this.updateMessagingClient
                     .CreateObervable(
-                        startingPosition: SeekPosition.NewFromOffset(offset: snapshotValue.Version),
+                        startingPosition: SeekPosition.NewFromOffset(
+                            offset: this.getOffset(snapshotValue)),
                         cancellationToken: this.cts.Token)
                     .Scan(
                         seed: snapshotValue,
@@ -86,25 +91,27 @@
 
         public async Task<TBusinessData> FetchBusinessDataSnapshot(CancellationToken cancellationToken)
         {
-            var someOffsetAndName = await this.GetLatestSnapshotID(cancellationToken);
-            return await someOffsetAndName.Match(
-                Some: async offsetAndName =>
-                {
-                    await Console.Out.WriteLineAsync($"Loading snapshot offset {offsetAndName.Item1} from {offsetAndName.Item2}");
+            FSharpOption<(Offset, string)> someOffsetAndName = await this.GetLatestSnapshotID(cancellationToken);
 
-                    var blobClient = this.snapshotContainerClient.GetBlobClient(blobName: offsetAndName.Item2);
-                    var result = await blobClient.DownloadAsync(cancellationToken: cancellationToken);
-                    return await result.Value.Content.ReadJSON<TBusinessData>();
-                },
-                None: () => Task.FromResult(this.EmptyBusinessData()));
+            if (FSharpOption<(Offset, string)>.get_IsNone(someOffsetAndName))
+            {
+                return default(TBusinessData);
+            }
+
+            var (offset, blobName) = someOffsetAndName.Value;
+            await Console.Out.WriteLineAsync($"Loading snapshot offset {offset.Item} from {blobName}");
+
+            var blobClient = this.snapshotContainerClient.GetBlobClient(blobName: blobName);
+            var result = await blobClient.DownloadAsync(cancellationToken: cancellationToken);
+            return await result.Value.Content.ReadJSON<TBusinessData>();
         }
 
         public async Task<string> WriteBusinessDataSnapshot(TBusinessData businessData, CancellationToken cancellationToken = default)
         {
-            var blobName = OffsetToBlobName(businessData.Version);
+            var blobName = OffsetToBlobName(this.getOffset(businessData));
             var blobClient = this.snapshotContainerClient.GetBlobClient(blobName: blobName);
 
-            if (businessData.Version == this.lastWrittenOffset)
+            if (this.getOffset(businessData) == this.lastWrittenOffset)
             {
                 await Console.Error.WriteLineAsync($"Skip writing {blobClient.Name} (no change)");
                 return blobClient.Name;
@@ -113,7 +120,7 @@
             try
             {
                 _ = await blobClient.UploadAsync(content: businessData.AsJSONStream(), overwrite: false, cancellationToken: cancellationToken);
-                this.lastWrittenOffset = businessData.Version;
+                this.lastWrittenOffset = this.getOffset(businessData);
             }
             catch (RequestFailedException rfe) when (rfe.ErrorCode == "BlobAlreadyExists")
             {
@@ -162,7 +169,7 @@
                 .SkipLast(5);
         }
 
-        private async Task<Option<(Offset, string)>> GetLatestSnapshotID(CancellationToken cancellationToken)
+        private async Task<FSharpOption<(Offset, string)>> GetLatestSnapshotID(CancellationToken cancellationToken)
         {
             var blobs = this.snapshotContainerClient.GetBlobsAsync(cancellationToken: cancellationToken);
             var items = new List<(Offset, string)>();
@@ -179,10 +186,10 @@
 
             if (items.Count == 0)
             {
-                return Option<(Offset, string)>.None;
+                return FSharpOption<(Offset, string)>.None;
             }
 
-            return Option<(Offset, string)>.Some(items.OrderByDescending(_ => _.Item1).First());
+            return FSharpOption<(Offset, string)>.Some(items.OrderByDescending(_ => _.Item1).First());
         }
     }
 }

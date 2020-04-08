@@ -19,8 +19,8 @@
     <Compile Update="..\Properties\stylecop\GlobalStylecopSuppressions.cs" Link="GlobalStylecopSuppressions.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Azure.Storage.Blobs" Version="12.4.0" />
-    <PackageReference Include="System.Reactive.Linq" Version="4.3.2" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.4.1" />
+    <PackageReference Include="System.Reactive.Linq" Version="4.4.1" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

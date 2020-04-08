@@ -9,7 +9,6 @@
     using Confluent.Kafka;
     using Credentials;
     using Interfaces;
-    using LanguageExt;
     using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
     using ConfluentKafkaOffset = Confluent.Kafka.Offset;

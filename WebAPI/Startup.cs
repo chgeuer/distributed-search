@@ -44,7 +44,6 @@
             });
         }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
@@ -99,23 +98,20 @@
                     accountName: DemoCredential.StorageOffloadAccountName,
                     containerName: DemoCredential.StorageOffloadContainerNameResponses);
 
-            // var replaySubject = new ReplaySubject<Message<ProviderSearchResponse<T>>>(window: TimeSpan.FromSeconds(15));
-            // .Multicast(replaySubject); /* .Publish(); */
-            var connectable =
-                messagingClient
+            var connectable = messagingClient
                 .CreateObervable(SeekPosition.FromTail)
                 .Publish();
 
             connectable.Connect();
 
-            return connectable // replaySubject
-                .AsObservable();
+            return connectable.AsObservable();
         }
 
         internal static Func<BusinessData> GetCurrentBusinessData()
         {
             var businessDataUpdates = new BusinessDataPump<BusinessData, BusinessDataUpdate>(
                 applyUpdate: (bd, updateM) => bd.ApplyUpdates(new[] { Tuple.Create(updateM.Offset, updateM.Payload) }),
+                getOffset: bd => bd.Version,
                 snapshotContainerClient: new BlobContainerClient(
                     blobContainerUri: new Uri($"https://{DemoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{DemoCredential.BusinessDataSnapshotContainerName}/"),
                     credential: DemoCredential.AADServicePrincipal));
