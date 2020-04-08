@@ -5,7 +5,7 @@ type Predicate<'context, 'item> =
 
 type Projection<'context, 'item> =
     'context * 'item -> 'item
-    
+
 type PipelineStep<'context, 'item> =
     | Predicate of Predicate<'context, 'item>
     | Projection of Projection<'context, 'item>

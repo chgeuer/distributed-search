@@ -10,16 +10,13 @@
     using Azure;
     using Azure.Storage.Blobs;
     using Azure.Storage.Blobs.Models;
-    using Fashion.BusinessData;
-    using Fashion.BusinessData.Logic;
     using Interfaces;
     using LanguageExt;
     using Messaging;
-    using Microsoft.FSharp.Collections;
     using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
 
-    public class BusinessDataPump
+    public class BusinessDataPump<TBusinessData, TBusinessDataUpdate>
     {
         private static FSharpOption<Offset> ParseOffsetFromBlobName(string n)
              => long.TryParse(n.Replace(".json", string.Empty), out long offset)
@@ -29,22 +26,25 @@
         private static string OffsetToBlobName(Offset offset) => $"{offset.Item}.json";
 
         private readonly BlobContainerClient snapshotContainerClient;
-        private readonly IMessageClient<BusinessDataUpdate> updateMessagingClient;
+        private readonly Func<TBusinessData, Message<TBusinessDataUpdate>, TBusinessData> applyUpdate;
+        private readonly IMessageClient<TBusinessDataUpdate> updateMessagingClient;
         private CancellationTokenSource cts;
         private Offset lastWrittenOffset = Offset.NewOffset(-1);
         private Task deletetionTask;
 
-        public BusinessDataPump(BlobContainerClient snapshotContainerClient)
+        // BusinessDataUpdate<TBusinessData, TBusinessDataUpdate> applyUpdate,
+        public BusinessDataPump(Func<TBusinessData, Message<TBusinessDataUpdate>, TBusinessData> applyUpdate, BlobContainerClient snapshotContainerClient)
         {
-            this.updateMessagingClient = MessagingClients.Updates<BusinessDataUpdate>(partitionId: 0);
+            this.applyUpdate = applyUpdate;
+            this.updateMessagingClient = MessagingClients.Updates<TBusinessDataUpdate>(partitionId: 0);
             this.snapshotContainerClient = snapshotContainerClient;
         }
 
-        public BusinessData BusinessData { get; private set; }
+        public TBusinessData BusinessData { get; private set; }
 
         public async Task StartUpdateProcess(CancellationToken cancellationToken = default)
         {
-            IObservable<BusinessData> businessDataObservable = await this.CreateObservable(cancellationToken);
+            IObservable<TBusinessData> businessDataObservable = await this.CreateObservable(cancellationToken);
             businessDataObservable.Subscribe(
                 onNext: bd =>
                 {
@@ -53,7 +53,7 @@
                 cancellationToken);
         }
 
-        public async Task<IObservable<BusinessData>> CreateObservable(CancellationToken cancellationToken = default)
+        public async Task<IObservable<TBusinessData>> CreateObservable(CancellationToken cancellationToken = default)
         {
             this.deletetionTask = Task.Run(() => this.DeleteOldSnapshots(
                 maxAge: TimeSpan.FromDays(1),
@@ -62,16 +62,16 @@
 
             this.cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-            BusinessData snapshotValue = await this.FetchBusinessDataSnapshot(this.cts.Token);
+            TBusinessData snapshotValue = await this.FetchBusinessDataSnapshot(this.cts.Token);
 
-            IConnectableObservable<BusinessData> connectableObservable =
+            IConnectableObservable<TBusinessData> connectableObservable =
                 this.updateMessagingClient
                     .CreateObervable(
                         startingPosition: SeekPosition.NewFromOffset(offset: snapshotValue.Version),
                         cancellationToken: this.cts.Token)
                     .Scan(
                         seed: snapshotValue,
-                        accumulator: (businessData, msg) => businessData.ApplyUpdates(new[] { Tuple.Create(msg.Offset, msg.Payload) }))
+                        accumulator: (businessData, msg) => this.applyUpdate(businessData, msg))
                     .StartWith(snapshotValue)
                     .Publish(initialValue: snapshotValue);
 
@@ -81,10 +81,10 @@
                 .AsObservable();
         }
 
-        public Task SendUpdate(BusinessDataUpdate update, CancellationToken cancellationToken = default)
+        public Task SendUpdate(TBusinessDataUpdate update, CancellationToken cancellationToken = default)
             => this.updateMessagingClient.SendMessage(update, cancellationToken);
 
-        public async Task<BusinessData> FetchBusinessDataSnapshot(CancellationToken cancellationToken)
+        public async Task<TBusinessData> FetchBusinessDataSnapshot(CancellationToken cancellationToken)
         {
             var someOffsetAndName = await this.GetLatestSnapshotID(cancellationToken);
             return await someOffsetAndName.Match(
@@ -94,12 +94,12 @@
 
                     var blobClient = this.snapshotContainerClient.GetBlobClient(blobName: offsetAndName.Item2);
                     var result = await blobClient.DownloadAsync(cancellationToken: cancellationToken);
-                    return await result.Value.Content.ReadJSON<BusinessData>();
+                    return await result.Value.Content.ReadJSON<TBusinessData>();
                 },
                 None: () => Task.FromResult(this.EmptyBusinessData()));
         }
 
-        public async Task<string> WriteBusinessDataSnapshot(BusinessData businessData, CancellationToken cancellationToken = default)
+        public async Task<string> WriteBusinessDataSnapshot(TBusinessData businessData, CancellationToken cancellationToken = default)
         {
             var blobName = OffsetToBlobName(businessData.Version);
             var blobClient = this.snapshotContainerClient.GetBlobClient(blobName: blobName);
@@ -184,11 +184,5 @@
 
             return Option<(Offset, string)>.Some(items.OrderByDescending(_ => _.Item1).First());
         }
-
-        private BusinessData EmptyBusinessData() => new BusinessData(
-            markup: new FSharpMap<string, decimal>(Array.Empty<Tuple<string, decimal>>()),
-            brands: new FSharpMap<string, string>(Array.Empty<Tuple<string, string>>()),
-            defaultMarkup: 0m,
-            version: Offset.NewOffset(-1));
     }
 }

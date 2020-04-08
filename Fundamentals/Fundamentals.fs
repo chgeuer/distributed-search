@@ -40,6 +40,9 @@ type BlobStorageAddress = string
 type StorageOffloadReference =
     { Address: BlobStorageAddress }
 
+type BusinessDataUpdate<'businessData, 'update> =
+    'businessData -> 'update -> 'businessData
+
 open System
 open System.IO
 open System.Threading

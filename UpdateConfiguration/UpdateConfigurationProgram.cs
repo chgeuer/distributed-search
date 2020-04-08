@@ -6,6 +6,7 @@
     using BusinessDataAggregation;
     using Credentials;
     using Fashion.BusinessData;
+    using Fashion.BusinessData.Logic;
     using Fashion.Domain;
 
     class UpdateConfigurationProgram
@@ -14,7 +15,8 @@
         {
             Console.Title = "Update Configuration";
 
-            var businessDataUpdates = new BusinessDataPump(
+            var businessDataUpdates = new BusinessDataPump<BusinessData, BusinessDataUpdate>(
+                applyUpdate: (bd, updateM) => bd.ApplyUpdates(new[] { Tuple.Create(updateM.Offset, updateM.Payload) }),
                snapshotContainerClient: new BlobContainerClient(
                    blobContainerUri: new Uri($"https://{DemoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{DemoCredential.BusinessDataSnapshotContainerName}/"),
                    credential: DemoCredential.AADServicePrincipal));

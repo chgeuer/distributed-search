@@ -8,6 +8,7 @@
     using BusinessDataAggregation;
     using Credentials;
     using Fashion.BusinessData;
+    using Fashion.BusinessData.Logic;
     using Interfaces;
 
     /// <summary>
@@ -19,7 +20,8 @@
         {
             Console.Title = "Snapshot Generator";
 
-            var businessDataPump = new BusinessDataPump(
+            var businessDataPump = new BusinessDataPump<BusinessData, BusinessDataUpdate>(
+                applyUpdate: (bd, updateM) => bd.ApplyUpdates(new[] { Tuple.Create(updateM.Offset, updateM.Payload) }),
                 snapshotContainerClient: new BlobContainerClient(
                     blobContainerUri: new Uri($"https://{DemoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{DemoCredential.BusinessDataSnapshotContainerName}/"),
                     credential: DemoCredential.AADServicePrincipal));
