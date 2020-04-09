@@ -1,4 +1,4 @@
-namespace Fashion.Domain
+module Fashion.Domain
 
 type FashionType = string
 
@@ -13,9 +13,8 @@ type FashionItem =
       Description: string
       StockKeepingUnitID: string }
 
-module FashionTypes =
-    let TShirt: FashionType = "T-Shirt"
-    let Pullover: FashionType = "Pullover"
-    let Shoes: FashionType = "Shoes"
-    let Hat: FashionType = "Hat"
-    let Throusers: FashionType = "Throusers"
+let TShirt: FashionType = "T-Shirt"
+let Pullover: FashionType = "Pullover"
+let Shoes: FashionType = "Shoes"
+let Hat: FashionType = "Hat"
+let Throusers: FashionType = "Throusers"

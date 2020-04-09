@@ -6,11 +6,11 @@
     using System.Linq;
     using System.Reactive.Linq;
     using System.Threading.Tasks;
-    using Fashion.Domain;
     using Interfaces;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.FSharp.Core;
     using static Fashion.BusinessData;
+    using static Fashion.Domain;
     using static Fundamentals.Types;
 
     [ApiController]

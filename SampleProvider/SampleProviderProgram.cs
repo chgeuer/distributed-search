@@ -7,10 +7,10 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Credentials;
-    using Fashion.Domain;
     using Interfaces;
     using Messaging;
     using Microsoft.FSharp.Collections;
+    using static Fashion.Domain;
     using static Fundamentals.Types;
 
     internal class SampleProviderProgram
@@ -94,11 +94,11 @@
 
         private static IObservable<FashionItem> GetResponses()
         {
-            var sufficientlyGoodHat = new FashionItem(size: 16, fashionType: FashionTypes.Hat, price: 12_00, description: "A nice large hat", stockKeepingUnitID: Guid.NewGuid().ToString());
-            var sufficientlyGoodHatButTooExpensive = new FashionItem(size: 16, fashionType: FashionTypes.Hat, price: 12_50, description: "A very same nice large hat", stockKeepingUnitID: sufficientlyGoodHat.StockKeepingUnitID);
-            var someThrouser = new FashionItem(size: 54, fashionType: FashionTypes.Throusers, price: 120_00, description: "A blue Jeans", stockKeepingUnitID: Guid.NewGuid().ToString());
-            var aHatButTooSmall = new FashionItem(size: 15, fashionType: FashionTypes.Hat, price: 13_00, description: "A smaller hat", stockKeepingUnitID: Guid.NewGuid().ToString());
-            var someDifferentHat = new FashionItem(size: 16, fashionType: FashionTypes.Hat, price: 12_00, description: "A different large hat", stockKeepingUnitID: Guid.NewGuid().ToString());
+            var sufficientlyGoodHat = new FashionItem(size: 16, fashionType: Hat, price: 12_00, description: "A nice large hat", stockKeepingUnitID: Guid.NewGuid().ToString());
+            var sufficientlyGoodHatButTooExpensive = new FashionItem(size: 16, fashionType: Hat, price: 12_50, description: "A very same nice large hat", stockKeepingUnitID: sufficientlyGoodHat.StockKeepingUnitID);
+            var someThrouser = new FashionItem(size: 54, fashionType: Throusers, price: 120_00, description: "A blue Jeans", stockKeepingUnitID: Guid.NewGuid().ToString());
+            var aHatButTooSmall = new FashionItem(size: 15, fashionType: Hat, price: 13_00, description: "A smaller hat", stockKeepingUnitID: Guid.NewGuid().ToString());
+            var someDifferentHat = new FashionItem(size: 16, fashionType: Hat, price: 12_00, description: "A different large hat", stockKeepingUnitID: Guid.NewGuid().ToString());
 
             return
                 sufficientlyGoodHat.EmitIn(TimeSpan.FromSeconds(0.8))

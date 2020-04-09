@@ -6,7 +6,6 @@
     using BusinessDataAggregation;
     using Credentials;
     using Fashion;
-    using Fashion.Domain;
     using Interfaces;
     using static Fashion.BusinessData;
 
@@ -21,12 +20,12 @@
             var businessDataUpdates = new BusinessDataPump<FashionBusinessData, FashionBusinessDataUpdate>(
                 demoCredential: demoCredential,
                 createEmptyBusinessData: newFashionBusinessData,
-                applyUpdate: FashionBusinessDataExtensions.ApplyFashionUpdate, 
+                applyUpdate: FashionExtensions.ApplyFashionUpdate, 
                 snapshotContainerClient: new BlobContainerClient(
                     blobContainerUri: new Uri($"https://{demoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{demoCredential.BusinessDataSnapshotContainerName}/"),
                     credential: demoCredential.AADServicePrincipal));
 
-            var fashionType = FashionTypes.Hat;
+            var fashionType = "Hat";
             while (true)
             {
                 await Console.Out.WriteAsync($"Please enter an item and a price, separated by a space: ");

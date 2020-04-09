@@ -1,5 +1,14 @@
 module Fundamentals.Types
 
+open System
+open System.IO
+open System.Threading
+open System.Threading.Tasks
+
+type StorageOffloadFunctions =
+    { Upload: Func<string, Stream, CancellationToken, Task> 
+      Download: Func<string, CancellationToken, Task<Stream>> }
+
 type Offset = Offset of int64
 
 type SeekPosition =
@@ -42,11 +51,3 @@ let updateBusinessData<'domainSpecificBusinessData, 'domainSpecificUpdate> (doma
         Offset = domainSpecificUpdateMessage.Offset
         Data = domainSpecificUpdateFunction (businessData.Data, domainSpecificUpdateMessage.Payload) }
 
-open System
-open System.IO
-open System.Threading
-open System.Threading.Tasks
-
-type StorageOffloadFunctions =
-    { Upload: Func<string, Stream, CancellationToken, Task> 
-      Download: Func<string, CancellationToken, Task<Stream>> }

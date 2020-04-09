@@ -9,10 +9,10 @@ namespace MyTests
     using Interfaces;
     using Fundamentals.Extensions;
     using Fashion;
-    using Fashion.Domain;
     using static Fundamentals.Types;
     using static BusinessLogic.Logic;
     using static Fashion.BusinessData;
+    using static Fashion.Domain;
 
     public class VersionedDictionary<T>
     {
@@ -109,7 +109,7 @@ namespace MyTests
         {
             var updates = new FashionBusinessDataUpdate[]
                 {
-                    FashionBusinessDataUpdate.NewMarkupUpdate(FashionTypes.Throusers, 2_00m),
+                    FashionBusinessDataUpdate.NewMarkupUpdate(Throusers, 2_00m),
                     FashionBusinessDataUpdate.NewBrandUpdate("BB", "Bruno Banano")
                 }
                 .ToFSharp();
@@ -117,8 +117,8 @@ namespace MyTests
             var v1 = new FashionBusinessData(
                       markup: new FSharpMap<string, decimal>(new[]
                       {
-                            Tuple.Create(FashionTypes.Hat, 0_12m),
-                            Tuple.Create(FashionTypes.Throusers, 1_50m),
+                            Tuple.Create(Hat, 0_12m),
+                            Tuple.Create(Throusers, 1_50m),
                       }),
                       brands: new FSharpMap<string, string>(new[]
                       {
@@ -130,16 +130,16 @@ namespace MyTests
             var v3 = v1.ApplyFashionUpdates(updates); // apply all updates
             var v3_2 = v2.ApplyFashionUpdates(updates.Skip(1)); // apply only last update
 
-            Assert.AreEqual(v1.Markup[FashionTypes.Hat], 0_12m);
-            Assert.AreEqual(v1.Markup[FashionTypes.Throusers], 1_50m);
+            Assert.AreEqual(v1.Markup[Hat], 0_12m);
+            Assert.AreEqual(v1.Markup[Throusers], 1_50m);
             Assert.IsFalse(v1.Brands.ContainsKey("BB"));
 
-            Assert.AreEqual(v2.Markup[FashionTypes.Hat], 0_12m);
-            Assert.AreEqual(v2.Markup[FashionTypes.Throusers], 2_00m);
+            Assert.AreEqual(v2.Markup[Hat], 0_12m);
+            Assert.AreEqual(v2.Markup[Throusers], 2_00m);
             Assert.IsFalse(v2.Brands.ContainsKey("BB"));
 
-            Assert.AreEqual(v3.Markup[FashionTypes.Hat], 0_12m);
-            Assert.AreEqual(v3.Markup[FashionTypes.Throusers], 2_00m);
+            Assert.AreEqual(v3.Markup[Hat], 0_12m);
+            Assert.AreEqual(v3.Markup[Throusers], 2_00m);
             Assert.IsTrue(v3.Brands.ContainsKey("DG"));
             Assert.IsTrue(v3.Brands.ContainsKey("BB"));
 
@@ -191,8 +191,8 @@ namespace MyTests
 
             var fashionBusinessData = new FashionBusinessData(
                 markup: new FSharpMap<string, decimal>(new[] {
-                    Tuple.Create(FashionTypes.Hat, 0_12m),
-                    Tuple.Create(FashionTypes.Throusers, 1_50m),
+                    Tuple.Create(Hat, 0_12m),
+                    Tuple.Create(Throusers, 1_50m),
                 }),
                 brands: new FSharpMap<string, string>(new[]
                 {
@@ -204,14 +204,14 @@ namespace MyTests
                 fashionBusinessData,
                 Offset.NewOffset(1));
 
-            var query = new FashionSearchRequest(size: 16, fashionType: FashionTypes.Hat);
+            var query = new FashionSearchRequest(size: 16, fashionType: Hat);
             var ctx2 = new FashionProcessingContext(query: query, businessData: fashionBusinessData);
 
-            var sufficientlyGoodHat = new FashionItem(size: 16, fashionType: FashionTypes.Hat, price: 12_00, description: "A nice large hat", stockKeepingUnitID: Guid.NewGuid().ToString());
-            var sufficientlyGoodHatButTooExpensive = new FashionItem(size: 16, fashionType: FashionTypes.Hat, price: 12_50, description: "A nice large hat", stockKeepingUnitID: sufficientlyGoodHat.StockKeepingUnitID);
-            var someThrouser = new FashionItem(size: 54, fashionType: FashionTypes.Throusers, price: 120_00, description: "A blue Jeans", stockKeepingUnitID: Guid.NewGuid().ToString());
-            var aHatButTooSmall = new FashionItem(size: 15, fashionType: FashionTypes.Hat, price: 13_00, description: "A smaller hat", stockKeepingUnitID: Guid.NewGuid().ToString());
-            var someDifferentHat = new FashionItem(size: 16, fashionType: FashionTypes.Hat, price: 12_00, description: "A different large hat", stockKeepingUnitID: Guid.NewGuid().ToString());
+            var sufficientlyGoodHat = new FashionItem(size: 16, fashionType: Hat, price: 12_00, description: "A nice large hat", stockKeepingUnitID: Guid.NewGuid().ToString());
+            var sufficientlyGoodHatButTooExpensive = new FashionItem(size: 16, fashionType: Hat, price: 12_50, description: "A nice large hat", stockKeepingUnitID: sufficientlyGoodHat.StockKeepingUnitID);
+            var someThrouser = new FashionItem(size: 54, fashionType: Throusers, price: 120_00, description: "A blue Jeans", stockKeepingUnitID: Guid.NewGuid().ToString());
+            var aHatButTooSmall = new FashionItem(size: 15, fashionType: Hat, price: 13_00, description: "A smaller hat", stockKeepingUnitID: Guid.NewGuid().ToString());
+            var someDifferentHat = new FashionItem(size: 16, fashionType: Hat, price: 12_00, description: "A different large hat", stockKeepingUnitID: Guid.NewGuid().ToString());
 
             var funcItems = new[] { sufficientlyGoodHat, someThrouser, aHatButTooSmall, someDifferentHat, sufficientlyGoodHatButTooExpensive };
 
