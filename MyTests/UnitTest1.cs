@@ -153,15 +153,15 @@ namespace MyTests
         [Test]
         public void TestDomainSpecificUpdates()
         {
-            var updates = new (Offset, BusinessDataUpdate)[]
+            var updates = new (Offset, FashionBusinessDataUpdate)[]
                 {
-                    (Offset.NewOffset(2), BusinessDataUpdate.NewMarkupUpdate(FashionTypes.Throusers, 2_00m)),
-                    (Offset.NewOffset(3), BusinessDataUpdate.NewBrandUpdate("BB", "Bruno Banano"))
+                    (Offset.NewOffset(2), FashionBusinessDataUpdate.NewMarkupUpdate(FashionTypes.Throusers, 2_00m)),
+                    (Offset.NewOffset(3), FashionBusinessDataUpdate.NewBrandUpdate("BB", "Bruno Banano"))
                 }
                 .Select(TupleExtensions.ToTuple)
                 .ToFSharp();
 
-            var v1 = new BusinessData(
+            var v1 = new FashionBusinessData(
               version: Offset.NewOffset(1),
               markup: new FSharpMap<string, decimal>(new[]
               {
@@ -240,7 +240,7 @@ namespace MyTests
                     new MarkupAdder(),
                 };
 
-            var businessData = new BusinessData(
+            var businessData = new FashionBusinessData(
                 markup: new FSharpMap<string, decimal>(new[] { 
                     Tuple.Create(FashionTypes.Hat, 0_12m),
                     Tuple.Create(FashionTypes.Throusers, 1_50m),

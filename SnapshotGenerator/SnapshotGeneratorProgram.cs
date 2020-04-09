@@ -22,7 +22,7 @@
 
             IDistributedSearchConfiguration demoCredential = new DemoCredential();
 
-            var businessDataPump = new BusinessDataPump<BusinessData, BusinessDataUpdate>(
+            var businessDataPump = new BusinessDataPump<FashionBusinessData, FashionBusinessDataUpdate>(
                 demoCredential: demoCredential,
                 applyUpdate: (bd, updateM) => bd.ApplyUpdates(new[] { Tuple.Create(updateM.Offset, updateM.Payload) }),
                 getOffset: bd => bd.Version,
@@ -31,7 +31,7 @@
                     credential: demoCredential.AADServicePrincipal));
 
             var cts = new CancellationTokenSource();
-            IObservable<BusinessData> businessDataObservable = await businessDataPump.CreateObservable(cts.Token);
+            IObservable<FashionBusinessData> businessDataObservable = await businessDataPump.CreateObservable(cts.Token);
             
             businessDataObservable
                 .Sample(interval: TimeSpan.FromSeconds(5))

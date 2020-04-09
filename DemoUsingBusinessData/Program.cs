@@ -21,7 +21,7 @@
 
             var cts = new CancellationTokenSource();
 
-            var businessDataPump = new BusinessDataPump<BusinessData, BusinessDataUpdate>(
+            var businessDataPump = new BusinessDataPump<FashionBusinessData, FashionBusinessDataUpdate>(
                 demoCredential: demoCredential,
                 applyUpdate: (bd, updateM) => bd.ApplyUpdates(new[] { Tuple.Create(updateM.Offset, updateM.Payload) }),
                 getOffset: bd => bd.Version,
@@ -29,7 +29,7 @@
                     blobContainerUri: new Uri($"https://{demoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{demoCredential.BusinessDataSnapshotContainerName}/"),
                     credential: demoCredential.AADServicePrincipal));
 
-            Func<BusinessData, string> bdToStr = bd => string.Join(" ",
+            Func<FashionBusinessData, string> bdToStr = bd => string.Join(" ",
                         bd.Markup.Select( kvp => $"{kvp.Key}={kvp.Value}").ToArray());
 
             bool demoObservable = true;

@@ -17,7 +17,7 @@
     [Route("[controller]")]
     public class FashionSearchController : ControllerBase
     {
-        private readonly Func<BusinessData> getBusinessData;
+        private readonly Func<FashionBusinessData> getBusinessData;
         private readonly Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest;
         private readonly IObservable<Message<ProviderSearchResponse<FashionItem>>> providerResponsePump;
         private readonly Func<PipelineSteps<ProcessingContext, FashionItem>> createPipelineSteps;
@@ -28,7 +28,7 @@
             IObservable<Message<ProviderSearchResponse<FashionItem>>> providerResponsePump,
             Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest,
             Func<PipelineSteps<ProcessingContext, FashionItem>> createPipelineSteps,
-            Func<BusinessData> getBusinessData)
+            Func<FashionBusinessData> getBusinessData)
         {
             (this.providerResponsePump, this.sendProviderSearchRequest, this.createPipelineSteps, this.getBusinessData) =
                 (providerResponsePump, sendProviderSearchRequest, createPipelineSteps, getBusinessData);
@@ -112,6 +112,6 @@
 
         public long Version { get; set; }
 
-        public BusinessData BusinessData { get; set; }
+        public FashionBusinessData BusinessData { get; set; }
     }
 }

@@ -3,7 +3,7 @@ namespace Fashion.BusinessData
 open Fashion.Domain
 open Fundamentals.Types
 
-type BusinessData =
+type FashionBusinessData =
     { Markup: Map<FashionType, decimal>
       Brands: Map<string, string>
       DefaultMarkup: decimal
@@ -22,9 +22,9 @@ type BusinessData =
       
 type ProcessingContext =
     { Query: FashionSearchRequest
-      BusinessData: BusinessData }
+      BusinessData: FashionBusinessData }
 
-type BusinessDataUpdate =
+type FashionBusinessDataUpdate =
     | MarkupUpdate of FashionType: FashionType * MarkupPrice: decimal
     | BrandUpdate of BrandAcronym: string * Name: string
     | SetDefaultMarkup of DefaultMarkupPrice: decimal

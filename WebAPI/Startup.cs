@@ -115,9 +115,9 @@
             return connectable.AsObservable();
         }
 
-        internal Func<BusinessData> GetCurrentBusinessData()
+        internal Func<FashionBusinessData> GetCurrentBusinessData()
         {
-            var businessDataUpdates = new BusinessDataPump<BusinessData, BusinessDataUpdate>(
+            var businessDataUpdates = new BusinessDataPump<FashionBusinessData, FashionBusinessDataUpdate>(
                 demoCredential: this.demoCredential,
                 applyUpdate: (bd, updateM) => bd.ApplyUpdates(new[] { Tuple.Create(updateM.Offset, updateM.Payload) }),
                 getOffset: bd => bd.Version,

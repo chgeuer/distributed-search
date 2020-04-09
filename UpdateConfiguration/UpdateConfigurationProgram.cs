@@ -18,7 +18,7 @@
 
             IDistributedSearchConfiguration demoCredential = new DemoCredential();
 
-            var businessDataUpdates = new BusinessDataPump<BusinessData, BusinessDataUpdate>(
+            var businessDataUpdates = new BusinessDataPump<FashionBusinessData, FashionBusinessDataUpdate>(
                 demoCredential: demoCredential,
                 applyUpdate: (bd, updateM) => bd.ApplyUpdates(new[] { Tuple.Create(updateM.Offset, updateM.Payload) }),
                 getOffset: bd => bd.Version,
@@ -43,7 +43,7 @@
                     continue;
                 }
 
-                var update = BusinessDataUpdate.NewMarkupUpdate(
+                var update = FashionBusinessDataUpdate.NewMarkupUpdate(
                         fashionType: item,
                         markupPrice: newMarkup);
 
