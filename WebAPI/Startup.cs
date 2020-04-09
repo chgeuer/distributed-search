@@ -6,7 +6,7 @@
     using Azure.Storage.Blobs;
     using BusinessDataAggregation;
     using Credentials;
-    using Fashion.BusinessData;
+    using Fashion;
     using Fashion.Domain;
     using Interfaces;
     using Messaging;
@@ -16,6 +16,7 @@
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using static BusinessLogic.Logic;
+    using static Fashion.BusinessData;
     using static Fundamentals.Types;
 
     public class Startup
@@ -116,7 +117,7 @@
         {
             var businessDataUpdates = new BusinessDataPump<FashionBusinessData, FashionBusinessDataUpdate>(
                 demoCredential: this.demoCredential,
-                createEmptyBusinessData: Code.newFashionBusinessData,
+                createEmptyBusinessData: newFashionBusinessData,
                 applyUpdate: FashionBusinessDataExtensions.ApplyFashionUpdate,
                 snapshotContainerClient: new BlobContainerClient(
                     blobContainerUri: new Uri($"https://{this.demoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{this.demoCredential.BusinessDataSnapshotContainerName}/"),

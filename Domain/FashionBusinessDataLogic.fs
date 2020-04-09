@@ -1,4 +1,4 @@
-namespace Fashion.BusinessData
+namespace Fashion
 
 open System.Collections.Generic
 open System.Runtime.CompilerServices

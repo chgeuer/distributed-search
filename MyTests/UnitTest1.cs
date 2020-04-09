@@ -8,10 +8,11 @@ namespace MyTests
     using NUnit.Framework;
     using Interfaces;
     using Fundamentals.Extensions;
-    using Fashion.BusinessData;
+    using Fashion;
     using Fashion.Domain;
     using static Fundamentals.Types;
     using static BusinessLogic.Logic;
+    using static Fashion.BusinessData;
 
     public class VersionedDictionary<T>
     {

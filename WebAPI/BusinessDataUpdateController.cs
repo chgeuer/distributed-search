@@ -3,8 +3,8 @@
     using System;
     using System.Threading.Tasks;
     using BusinessDataAggregation;
-    using Fashion.BusinessData;
     using Microsoft.AspNetCore.Mvc;
+    using static Fashion.BusinessData;
     using static Fundamentals.Types;
 
     [ApiController]

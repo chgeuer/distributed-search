@@ -1,4 +1,4 @@
-namespace Fashion.Domain
+namespace Fashion
 
 open Fashion.Domain
 open Fashion.BusinessData

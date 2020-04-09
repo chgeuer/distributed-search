@@ -1,4 +1,4 @@
-namespace Fashion.BusinessData
+module Fashion.BusinessData
 
 open Fashion.Domain
 
@@ -16,8 +16,7 @@ type FashionBusinessDataUpdate =
     | BrandUpdate of BrandAcronym: string * Name: string
     | SetDefaultMarkup of DefaultMarkupPrice: decimal
 
-module Code =
-    let newFashionBusinessData(): FashionBusinessData =
-        { Markup = Map.empty
-          Brands = Map.empty
-          DefaultMarkup = 0m }
+let newFashionBusinessData(): FashionBusinessData =
+    { Markup = Map.empty
+      Brands = Map.empty
+      DefaultMarkup = 0m }

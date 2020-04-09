@@ -7,8 +7,9 @@
     using Azure.Storage.Blobs;
     using BusinessDataAggregation;
     using Credentials;
-    using Fashion.BusinessData;
+    using Fashion;
     using Interfaces;
+    using static Fashion.BusinessData;
     using static Fundamentals.Types;
 
     class Program
@@ -23,7 +24,7 @@
 
             var businessDataPump = new BusinessDataPump<FashionBusinessData, FashionBusinessDataUpdate>(
                 demoCredential: demoCredential,
-                createEmptyBusinessData: Code.newFashionBusinessData,
+                createEmptyBusinessData: newFashionBusinessData,
                 applyUpdate: FashionBusinessDataExtensions.ApplyFashionUpdate,
                 snapshotContainerClient: new BlobContainerClient(
                     blobContainerUri: new Uri($"https://{demoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{demoCredential.BusinessDataSnapshotContainerName}/"),
