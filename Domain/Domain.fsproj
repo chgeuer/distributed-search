@@ -12,6 +12,6 @@
   <ItemGroup>
     <Compile Include="FashionDomainData.fs" />
     <Compile Include="FashionBusinessData.fs" />
-    <Compile Include="DomainLogic.fs" />
+    <Compile Include="FashionLogic.fs" />
   </ItemGroup>
 </Project>
