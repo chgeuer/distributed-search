@@ -8,8 +8,8 @@
     using BusinessDataAggregation;
     using Credentials;
     using Fashion.BusinessData;
-    using Fashion.BusinessData.Logic;
     using Interfaces;
+    using static Fundamentals.Types;
 
     /// <summary>
     /// This utility can run on multiple instances. In the worst case, we generate snapshots multiple times.
@@ -24,14 +24,14 @@
 
             var businessDataPump = new BusinessDataPump<FashionBusinessData, FashionBusinessDataUpdate>(
                 demoCredential: demoCredential,
-                applyUpdate: (bd, updateM) => bd.ApplyUpdates(new[] { Tuple.Create(updateM.Offset, updateM.Payload) }),
-                getOffset: bd => bd.Version,
+                createEmptyBusinessData: Code.newFashionBusinessData,
+                applyUpdate: FashionBusinessDataExtensions.ApplyFashionUpdate, 
                 snapshotContainerClient: new BlobContainerClient(
                     blobContainerUri: new Uri($"https://{demoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{demoCredential.BusinessDataSnapshotContainerName}/"),
                     credential: demoCredential.AADServicePrincipal));
 
             var cts = new CancellationTokenSource();
-            IObservable<FashionBusinessData> businessDataObservable = await businessDataPump.CreateObservable(cts.Token);
+            IObservable<BusinessData<FashionBusinessData>> businessDataObservable = await businessDataPump.CreateObservable(cts.Token);
             
             businessDataObservable
                 .Sample(interval: TimeSpan.FromSeconds(5))

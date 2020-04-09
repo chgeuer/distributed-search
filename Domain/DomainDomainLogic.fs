@@ -1,4 +1,4 @@
-namespace Fashion.Domain.Logic
+namespace Fashion.Domain
 
 open Fashion.Domain
 open Fashion.BusinessData
@@ -6,7 +6,7 @@ open Fashion.BusinessData
 open Interfaces
 
 type MarkupAdder() =
-    interface IBusinessLogicFilterProjection<ProcessingContext, FashionItem> with
+    interface IBusinessLogicFilterProjection<FashionProcessingContext, FashionItem> with
         member this.Map(ctx, item) =
             let markup =
                 match ctx.BusinessData.Markup.TryFind(item.FashionType) with
@@ -17,11 +17,11 @@ type MarkupAdder() =
             { item with Price = newPrice }
 
 type SizeFilter() =
-    interface IBusinessLogicFilterPredicate<ProcessingContext, FashionItem> with
+    interface IBusinessLogicFilterPredicate<FashionProcessingContext, FashionItem> with
         member this.Matches(ctx, item) = ctx.Query.Size = item.Size
 
 type FashionTypeFilter() =
-    interface IBusinessLogicFilterPredicate<ProcessingContext, FashionItem> with
+    interface IBusinessLogicFilterPredicate<FashionProcessingContext, FashionItem> with
         member this.Matches(ctx, item) = ctx.Query.FashionType = item.FashionType
 
 open System.Runtime.CompilerServices
@@ -38,12 +38,12 @@ module FashionExtensions =
 open BusinessLogic.Logic
 
 module Steps =
-    let ProperSize (ctx: ProcessingContext) (item: FashionItem) =
+    let ProperSize (ctx: FashionProcessingContext) (item: FashionItem) =
         ctx.Query.Size = item.Size
 
-    let ProperFashionType (ctx: ProcessingContext) (item: FashionItem) =
+    let ProperFashionType (ctx: FashionProcessingContext) (item: FashionItem) =
         ctx.Query.FashionType = item.FashionType
 
-    let StepCollection : PipelineSteps2<ProcessingContext, FashionItem> =
+    let StepCollection : PipelineSteps2<FashionProcessingContext, FashionItem> =
         { StreamingSteps = [];
           SequentialSteps = [] }

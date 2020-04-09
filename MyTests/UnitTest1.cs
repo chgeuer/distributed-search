@@ -4,16 +4,14 @@ namespace MyTests
     using System.Collections.Generic;
     using System.Linq;
     using System.Reactive.Linq;
-    using Interfaces;
     using Microsoft.FSharp.Collections;
     using NUnit.Framework;
+    using Interfaces;
     using Fundamentals.Extensions;
+    using Fashion.BusinessData;
+    using Fashion.Domain;
     using static Fundamentals.Types;
     using static BusinessLogic.Logic;
-    using Fashion.BusinessData;
-    using Fashion.BusinessData.Logic;
-    using Fashion.Domain;
-    using Fashion.Domain.Logic;
 
     public class VersionedDictionary<T>
     {
@@ -87,8 +85,7 @@ namespace MyTests
 
             var updates = new[]{
                 new Update(offset: Offset.NewOffset(2), "f", Add("f3", "f4")),
-                new Update(offset: Offset.NewOffset(3), "f", Remove("f1")),
-                "{\"Offset\":4,\"UpdateArea\":\"f\",\"Operation\":{\"Case\":\"Add\",\"Fields\":[\"f3\",\"f5\"]}}".DeserializeJSON<Update>(),
+                new Update(offset: Offset.NewOffset(3), "f", Remove("f1"))
             }.ToFSharp();
 
             var data = new UpdateableData(
@@ -102,93 +99,44 @@ namespace MyTests
 
             Assert.IsFalse(postUpdate.Data["f"].ContainsKey("13"));
             Assert.IsTrue(postUpdate.Data["f"].ContainsKey("f3"));
-            Assert.AreEqual("f5", postUpdate.Data["f"]["f3"]);
 
             Console.WriteLine(postUpdate.AsJSON());
         }
 
-        //[Test]
-        //public void TestGenericUpdateskk()
-        //{
-        //    static string GetSnapshotContent(string area, long offset) => 
-        //        (area, offset) switch
-        //        {
-        //            // simulate blob loading
-        //            ("airports", 1) => @" {
-        //                ""Offset"": 1,
-        //                ""Values"": {
-        //                    ""LHR"": {
-        //                        ""legalName"": ""London Heathrow"",
-        //                        ""coordinates"": { ""lat"": 51.470020, ""lon"": -0.454295 }
-        //                    },
-        //                    ""DUS"": {
-        //                        ""legalName"": ""Düsseldorf"",
-        //                        ""coordinates"": { ""lat"": 51.286998852, ""lon"": 6.7666636 }
-        //                    }
-        //                }
-        //            } ",
-        //            ("currencyConversionRates", 1) => @" {   
-        //                ""Offset"": 1,
-        //                ""Values"": {
-        //                    ""EURGBP"": 0.92,
-        //                    ""GBPEUR"": 1.09
-        //                }   
-        //            }
-        //            ",
-        //            _ => throw new KeyNotFoundException()
-        //        };
-
-        //    static VersionedDictionary<T> Read<T>(string json) => (VersionedDictionary<T>)
-        //        JsonConvert.DeserializeObject(value: json,
-        //            type: typeof(VersionedDictionary<T>));
-
-        //    static VersionedDictionary<T> LoadSnapshot<T>(string area, long offset) => 
-        //        Read<T>(GetSnapshotContent(area, offset));
-
-        //    Assert.AreEqual(0.92, LoadSnapshot<double>("currencyConversionRates", 1)["EURGBP"]);
-        //    Assert.AreEqual("London Heathrow", LoadSnapshot<Airport>("airports", 1)["LHR"].LegalName);
-        //    Assert.AreEqual(51.286998852, LoadSnapshot<Airport>("airports", 1)["DUS"].Coordinates.Lat);
-        //}
-
         [Test]
         public void TestDomainSpecificUpdates()
         {
-            var updates = new (Offset, FashionBusinessDataUpdate)[]
+            var updates = new FashionBusinessDataUpdate[]
                 {
-                    (Offset.NewOffset(2), FashionBusinessDataUpdate.NewMarkupUpdate(FashionTypes.Throusers, 2_00m)),
-                    (Offset.NewOffset(3), FashionBusinessDataUpdate.NewBrandUpdate("BB", "Bruno Banano"))
+                    FashionBusinessDataUpdate.NewMarkupUpdate(FashionTypes.Throusers, 2_00m),
+                    FashionBusinessDataUpdate.NewBrandUpdate("BB", "Bruno Banano")
                 }
-                .Select(TupleExtensions.ToTuple)
                 .ToFSharp();
-
+            
             var v1 = new FashionBusinessData(
-              version: Offset.NewOffset(1),
-              markup: new FSharpMap<string, decimal>(new[]
-              {
-                    Tuple.Create(FashionTypes.Hat, 0_12m),
-                    Tuple.Create(FashionTypes.Throusers, 1_50m),
-              }),
-              brands: new FSharpMap<string, string>(new[]
-              {
-                  Tuple.Create("DG", "Docker and Galbani")
-              }),
-              defaultMarkup: 1_00);
+                      markup: new FSharpMap<string, decimal>(new[]
+                      {
+                            Tuple.Create(FashionTypes.Hat, 0_12m),
+                            Tuple.Create(FashionTypes.Throusers, 1_50m),
+                      }),
+                      brands: new FSharpMap<string, string>(new[]
+                      {
+                          Tuple.Create("DG", "Docker and Galbani")
+                      }),
+                      defaultMarkup: 1_00);
 
-            var v2 = v1.ApplyUpdates(updates.Take(1)); // only apply a single update
-            var v3 = v1.ApplyUpdates(updates); // apply all updates
-            var v3_2 = v2.ApplyUpdates(updates.Skip(1)); // apply only last update
+            var v2 = v1.ApplyFashionUpdates(updates.Take(1)); // only apply a single update
+            var v3 = v1.ApplyFashionUpdates(updates); // apply all updates
+            var v3_2 = v2.ApplyFashionUpdates(updates.Skip(1)); // apply only last update
 
-            Assert.AreEqual(v1.Version, 1);
             Assert.AreEqual(v1.Markup[FashionTypes.Hat], 0_12m);
             Assert.AreEqual(v1.Markup[FashionTypes.Throusers], 1_50m);
             Assert.IsFalse(v1.Brands.ContainsKey("BB"));
 
-            Assert.AreEqual(v2.Version, 2);
             Assert.AreEqual(v2.Markup[FashionTypes.Hat], 0_12m);
             Assert.AreEqual(v2.Markup[FashionTypes.Throusers], 2_00m);
             Assert.IsFalse(v2.Brands.ContainsKey("BB"));
 
-            Assert.AreEqual(v3.Version, 3);
             Assert.AreEqual(v3.Markup[FashionTypes.Hat], 0_12m);
             Assert.AreEqual(v3.Markup[FashionTypes.Throusers], 2_00m);
             Assert.IsTrue(v3.Brands.ContainsKey("DG"));
@@ -200,10 +148,10 @@ namespace MyTests
         [Test]
         public void Test1()
         {
-            static Func<ProcessingContext, FashionItem, bool> NewStatefulFilter()
+            static Func<FashionProcessingContext, FashionItem, bool> NewStatefulFilter()
             {
                 var bySizeDict = new Dictionary<int, FashionItem>();
-                bool emitNewEntry(ProcessingContext _, FashionItem i)
+                bool emitNewEntry(FashionProcessingContext _, FashionItem i)
                 {
                     var alreadyEmitted = bySizeDict.ContainsKey(i.Size);
                     if (!alreadyEmitted)
@@ -215,9 +163,9 @@ namespace MyTests
                 return emitNewEntry;
             }
 
-            IBusinessLogicFilterStatefulPredicate<ProcessingContext, FashionItem> createF()
+            IBusinessLogicFilterStatefulPredicate<FashionProcessingContext, FashionItem> createF()
             {
-                static ComparisonResult comparePrice(ProcessingContext _, FashionItem existingItem, FashionItem newItem)
+                static ComparisonResult comparePrice(FashionProcessingContext _, FashionItem existingItem, FashionItem newItem)
                 {
                     if (existingItem.StockKeepingUnitID != newItem.StockKeepingUnitID)
                     {
@@ -229,19 +177,19 @@ namespace MyTests
                         : ComparisonResult.NotBetterAlternative;
                 }
 
-                return new GenericBetterAlternativeFilter<ProcessingContext, FashionItem>(comparePrice);
+                return new GenericBetterAlternativeFilter<FashionProcessingContext, FashionItem>(comparePrice);
             }
 
-            IEnumerable<IBusinessLogicStep<ProcessingContext, FashionItem>> CreatePipeline() =>
-                new IBusinessLogicStep<ProcessingContext, FashionItem>[]
+            IEnumerable<IBusinessLogicStep<FashionProcessingContext, FashionItem>> CreatePipeline() =>
+                new IBusinessLogicStep<FashionProcessingContext, FashionItem>[]
                 {
-                    new GenericFilter<ProcessingContext, FashionItem>((c,i) => c.Query.Size == i.Size),
-                    new GenericFilter<ProcessingContext, FashionItem>(NewStatefulFilter()),
+                    new GenericFilter<FashionProcessingContext, FashionItem>((c,i) => c.Query.Size == i.Size),
+                    new GenericFilter<FashionProcessingContext, FashionItem>(NewStatefulFilter()),
                     new MarkupAdder(),
                 };
 
-            var businessData = new FashionBusinessData(
-                markup: new FSharpMap<string, decimal>(new[] { 
+            var fashionBusinessData = new FashionBusinessData(
+                markup: new FSharpMap<string, decimal>(new[] {
                     Tuple.Create(FashionTypes.Hat, 0_12m),
                     Tuple.Create(FashionTypes.Throusers, 1_50m),
                 }),
@@ -249,11 +197,14 @@ namespace MyTests
                 {
                     Tuple.Create("DG", "Docker and Galbani")
                 }),
-                defaultMarkup: 1_00,
-                version: Offset.NewOffset(1));
+                defaultMarkup: 1_00);
+            
+            var businessData = new BusinessData<FashionBusinessData>(
+                fashionBusinessData,
+                Offset.NewOffset(1));
 
             var query = new FashionSearchRequest(size: 16, fashionType: FashionTypes.Hat);
-            var ctx2 = new ProcessingContext(query: query, businessData: businessData);
+            var ctx2 = new FashionProcessingContext(query: query, businessData: fashionBusinessData);
 
             var sufficientlyGoodHat = new FashionItem(size: 16, fashionType: FashionTypes.Hat, price: 12_00, description: "A nice large hat", stockKeepingUnitID: Guid.NewGuid().ToString());
             var sufficientlyGoodHatButTooExpensive = new FashionItem(size: 16, fashionType: FashionTypes.Hat, price: 12_50, description: "A nice large hat", stockKeepingUnitID: sufficientlyGoodHat.StockKeepingUnitID);

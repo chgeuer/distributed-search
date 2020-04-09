@@ -6,15 +6,6 @@ type SeekPosition =
     | FromOffset of Offset: Offset 
     | FromTail
 
-//public class SeekPosition
-//{
-//    public static SeekPosition FromPosition(long position) => new SeekPosition { FromTail = false, Offset = position };
-//    public static readonly SeekPosition Tail = new SeekPosition { FromTail = true, Offset = 0 };
-//    public bool FromTail { get; private set; }
-//    public long Offset { get; private set; }
-//    private SeekPosition() { }
-//}
-
 type RequestID = string
 
 type Message<'payload> =
@@ -40,8 +31,16 @@ type BlobStorageAddress = string
 type StorageOffloadReference =
     { Address: BlobStorageAddress }
 
-type BusinessDataUpdate<'businessData, 'update> =
-    'businessData -> 'update -> 'businessData
+type BusinessData<'domainSpecificBusinessData> =
+    { Data: 'domainSpecificBusinessData
+      Offset: Offset }
+
+type singleUpdate<'domainSpecificBusinessData, 'domainSpecificUpdate> = 'domainSpecificBusinessData * 'domainSpecificUpdate -> 'domainSpecificBusinessData
+
+let updateBusinessData<'domainSpecificBusinessData, 'domainSpecificUpdate> (domainSpecificUpdateFunction: singleUpdate<'domainSpecificBusinessData, 'domainSpecificUpdate>) (businessData: BusinessData<'domainSpecificBusinessData>) (domainSpecificUpdateMessage: Message<'domainSpecificUpdate>): BusinessData<'domainSpecificBusinessData> =
+    { businessData with
+        Offset = domainSpecificUpdateMessage.Offset
+        Data = domainSpecificUpdateFunction (businessData.Data, domainSpecificUpdateMessage.Payload) }
 
 open System
 open System.IO

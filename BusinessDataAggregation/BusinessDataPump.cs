@@ -24,79 +24,83 @@
 
         private static string OffsetToBlobName(Offset offset) => $"{offset.Item}.json";
 
-        private readonly Func<TBusinessData, Offset> getOffset;
-        private readonly Func<TBusinessData, Message<TBusinessDataUpdate>, TBusinessData> applyUpdate;
-        private readonly BlobContainerClient snapshotContainerClient;
+        private static string OffsetToBlobName(BusinessData<TBusinessData> businessData) => OffsetToBlobName(businessData.Offset);
+
+        private readonly Func<TBusinessData, TBusinessDataUpdate, TBusinessData> applyUpdate;
+        private readonly Func<TBusinessData> createEmptyBusinessData;
         private readonly IMessageClient<TBusinessDataUpdate> updateMessagingClient;
+        private readonly BlobContainerClient snapshotContainerClient;
         private CancellationTokenSource cts;
         private Offset lastWrittenOffset = Offset.NewOffset(-1);
         private Task deletetionTask;
 
-        // BusinessDataUpdate<TBusinessData, TBusinessDataUpdate> applyUpdate,
         public BusinessDataPump(
             IDistributedSearchConfiguration demoCredential,
-            Func<TBusinessData, Message<TBusinessDataUpdate>, TBusinessData> applyUpdate,
-            Func<TBusinessData, Offset> getOffset,
+            Func<TBusinessData> createEmptyBusinessData,
+            Func<TBusinessData, TBusinessDataUpdate, TBusinessData> applyUpdate,
             BlobContainerClient snapshotContainerClient)
         {
             this.applyUpdate = applyUpdate;
-            this.updateMessagingClient = MessagingClients.Updates<TBusinessDataUpdate>(demoCredential: demoCredential, partitionId: 0);
+            this.createEmptyBusinessData = createEmptyBusinessData;
+            this.updateMessagingClient =
+                MessagingClients.Updates<TBusinessDataUpdate>(
+                    demoCredential: demoCredential,
+                    partitionId: 0); // TODO
             this.snapshotContainerClient = snapshotContainerClient;
-            this.getOffset = getOffset;
         }
 
-        public TBusinessData BusinessData { get; private set; }
+        public BusinessData<TBusinessData> BusinessData { get; private set; }
 
         public async Task StartUpdateProcess(CancellationToken cancellationToken = default)
         {
-            IObservable<TBusinessData> businessDataObservable = await this.CreateObservable(cancellationToken);
+            IObservable<BusinessData<TBusinessData>> businessDataObservable = await this.CreateObservable(cancellationToken);
             businessDataObservable.Subscribe(
-                onNext: bd =>
-                {
-                    this.BusinessData = bd;
-                },
+                onNext: bd => this.BusinessData = bd,
                 cancellationToken);
         }
 
-        public async Task<IObservable<TBusinessData>> CreateObservable(CancellationToken cancellationToken = default)
+        public async Task<IObservable<BusinessData<TBusinessData>>> CreateObservable(CancellationToken cancellationToken = default)
         {
+            this.cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
             this.deletetionTask = Task.Run(() => this.DeleteOldSnapshots(
                 maxAge: TimeSpan.FromDays(1),
                 sleepTime: TimeSpan.FromMinutes(1),
                 cancellationToken: this.cts.Token));
 
-            this.cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            BusinessData<TBusinessData> snapshotValue = await this.FetchBusinessDataSnapshot(this.cts.Token);
 
-            TBusinessData snapshotValue = await this.FetchBusinessDataSnapshot(this.cts.Token);
+            // TODO Use curried function / partial application here?
+            var updateFunc = this.applyUpdate.ToFSharpFunc();
 
-            IConnectableObservable<TBusinessData> connectableObservable =
+            IConnectableObservable<BusinessData<TBusinessData>> connectableObservable =
                 this.updateMessagingClient
                     .CreateObervable(
-                        startingPosition: SeekPosition.NewFromOffset(
-                            offset: this.getOffset(snapshotValue)),
+                        startingPosition: SeekPosition.NewFromOffset(snapshotValue.Offset),
                         cancellationToken: this.cts.Token)
                     .Scan(
                         seed: snapshotValue,
-                        accumulator: (businessData, msg) => this.applyUpdate(businessData, msg))
+                        accumulator: (businessData, updateMessage) => updateBusinessData(updateFunc, businessData, updateMessage))
                     .StartWith(snapshotValue)
                     .Publish(initialValue: snapshotValue);
 
             _ = connectableObservable.Connect();
 
-            return connectableObservable
-                .AsObservable();
+            return connectableObservable.AsObservable();
         }
 
         public Task SendUpdate(TBusinessDataUpdate update, CancellationToken cancellationToken = default)
             => this.updateMessagingClient.SendMessage(update, cancellationToken);
 
-        public async Task<TBusinessData> FetchBusinessDataSnapshot(CancellationToken cancellationToken)
+        public async Task<BusinessData<TBusinessData>> FetchBusinessDataSnapshot(CancellationToken cancellationToken)
         {
             FSharpOption<(Offset, string)> someOffsetAndName = await this.GetLatestSnapshotID(cancellationToken);
 
             if (FSharpOption<(Offset, string)>.get_IsNone(someOffsetAndName))
             {
-                return default(TBusinessData);
+                return new BusinessData<TBusinessData>(
+                    data: this.createEmptyBusinessData(),
+                    offset: Offset.NewOffset(-1));
             }
 
             var (offset, blobName) = someOffsetAndName.Value;
@@ -104,15 +108,15 @@
 
             var blobClient = this.snapshotContainerClient.GetBlobClient(blobName: blobName);
             var result = await blobClient.DownloadAsync(cancellationToken: cancellationToken);
-            return await result.Value.Content.ReadJSON<TBusinessData>();
+            return await result.Value.Content.ReadJSON<BusinessData<TBusinessData>>();
         }
 
-        public async Task<string> WriteBusinessDataSnapshot(TBusinessData businessData, CancellationToken cancellationToken = default)
+        public async Task<string> WriteBusinessDataSnapshot(BusinessData<TBusinessData> businessData, CancellationToken cancellationToken = default)
         {
-            var blobName = OffsetToBlobName(this.getOffset(businessData));
+            var blobName = OffsetToBlobName(businessData);
             var blobClient = this.snapshotContainerClient.GetBlobClient(blobName: blobName);
 
-            if (this.getOffset(businessData) == this.lastWrittenOffset)
+            if (businessData.Offset == this.lastWrittenOffset)
             {
                 await Console.Error.WriteLineAsync($"Skip writing {blobClient.Name} (no change)");
                 return blobClient.Name;
@@ -121,7 +125,7 @@
             try
             {
                 _ = await blobClient.UploadAsync(content: businessData.AsJSONStream(), overwrite: false, cancellationToken: cancellationToken);
-                this.lastWrittenOffset = this.getOffset(businessData);
+                this.lastWrittenOffset = businessData.Offset;
             }
             catch (RequestFailedException rfe) when (rfe.ErrorCode == "BlobAlreadyExists")
             {

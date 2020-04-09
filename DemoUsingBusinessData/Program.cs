@@ -8,8 +8,8 @@
     using BusinessDataAggregation;
     using Credentials;
     using Fashion.BusinessData;
-    using Fashion.BusinessData.Logic;
     using Interfaces;
+    using static Fundamentals.Types;
 
     class Program
     {
@@ -23,14 +23,14 @@
 
             var businessDataPump = new BusinessDataPump<FashionBusinessData, FashionBusinessDataUpdate>(
                 demoCredential: demoCredential,
-                applyUpdate: (bd, updateM) => bd.ApplyUpdates(new[] { Tuple.Create(updateM.Offset, updateM.Payload) }),
-                getOffset: bd => bd.Version,
+                createEmptyBusinessData: Code.newFashionBusinessData,
+                applyUpdate: FashionBusinessDataExtensions.ApplyFashionUpdate,
                 snapshotContainerClient: new BlobContainerClient(
                     blobContainerUri: new Uri($"https://{demoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{demoCredential.BusinessDataSnapshotContainerName}/"),
                     credential: demoCredential.AADServicePrincipal));
 
-            Func<FashionBusinessData, string> bdToStr = bd => string.Join(" ",
-                        bd.Markup.Select( kvp => $"{kvp.Key}={kvp.Value}").ToArray());
+            Func<BusinessData<FashionBusinessData>, string> bdToStr = bd => string.Join(" ",
+                        bd.Data.Markup.Select( kvp => $"{kvp.Key}={kvp.Value}").ToArray());
 
             bool demoObservable = true;
             if (demoObservable)

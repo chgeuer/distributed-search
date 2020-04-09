@@ -2,15 +2,12 @@
 {
     using System;
     using System.Reactive.Linq;
-    using System.Runtime.CompilerServices;
     using System.Threading.Tasks;
     using Azure.Storage.Blobs;
     using BusinessDataAggregation;
     using Credentials;
     using Fashion.BusinessData;
-    using Fashion.BusinessData.Logic;
     using Fashion.Domain;
-    using Fashion.Domain.Logic;
     using Interfaces;
     using Messaging;
     using Microsoft.AspNetCore.Builder;
@@ -66,26 +63,26 @@
             => new TopicPartitionID(
                 topicName: demoCredential.EventHubTopicNameResponses, partitionId: 1);
 
-        internal static Func<PipelineSteps<ProcessingContext, FashionItem>> CreatePipelineSteps() => () =>
+        internal static Func<PipelineSteps<FashionProcessingContext, FashionItem>> CreatePipelineSteps() => () =>
         {
-            var s1 = PipelineStep<ProcessingContext, FashionItem>.NewPredicate(
-                FSharpExtensions.ToFSharpFunc<Tuple<ProcessingContext, FashionItem>, bool>(
+            var s1 = PipelineStep<FashionProcessingContext, FashionItem>.NewPredicate(
+                FSharpExtensions.ToFSharpFunc<Tuple<FashionProcessingContext, FashionItem>, bool>(
                     t => t.Item1.Query.Size == t.Item2.Size));
 
-            return new PipelineSteps<ProcessingContext, FashionItem>
+            return new PipelineSteps<FashionProcessingContext, FashionItem>
             {
-                StreamingSteps = new IBusinessLogicStep<ProcessingContext, FashionItem>[]
+                StreamingSteps = new IBusinessLogicStep<FashionProcessingContext, FashionItem>[]
                 {
                     // new StatefulMixAndMatchFilter(),
-                    // new GenericFilter<ProcessingContext, FashionItem>((c, i) => c.Query.Size == i.Size),
-                    // new GenericFilter<ProcessingContext, FashionItem>((c,i) => c.Query.FashionType == i.FashionType),
+                    // new GenericFilter<FashionProcessingContext, FashionItem>((c, i) => c.Query.Size == i.Size),
+                    // new GenericFilter<FashionProcessingContext, FashionItem>((c,i) => c.Query.FashionType == i.FashionType),
                     new SizeFilter(),
 
-                    // GenericBetterAlternativeFilter<ProcessingContext, FashionItem>.FilterCheaperPrice(fi => fi.StockKeepingUnitID, fi => fi.Price),
+                    // GenericBetterAlternativeFilter<FashionProcessingContext, FashionItem>.FilterCheaperPrice(fi => fi.StockKeepingUnitID, fi => fi.Price),
                     new FashionTypeFilter(),
                     new MarkupAdder(),
                 },
-                FinalSteps = Array.Empty<IBusinessLogicStep<ProcessingContext, FashionItem>>(),
+                FinalSteps = Array.Empty<IBusinessLogicStep<FashionProcessingContext, FashionItem>>(),
             };
         };
 
@@ -115,12 +112,12 @@
             return connectable.AsObservable();
         }
 
-        internal Func<FashionBusinessData> GetCurrentBusinessData()
+        internal Func<BusinessData<FashionBusinessData>> GetCurrentBusinessData()
         {
             var businessDataUpdates = new BusinessDataPump<FashionBusinessData, FashionBusinessDataUpdate>(
                 demoCredential: this.demoCredential,
-                applyUpdate: (bd, updateM) => bd.ApplyUpdates(new[] { Tuple.Create(updateM.Offset, updateM.Payload) }),
-                getOffset: bd => bd.Version,
+                createEmptyBusinessData: Code.newFashionBusinessData,
+                applyUpdate: FashionBusinessDataExtensions.ApplyFashionUpdate,
                 snapshotContainerClient: new BlobContainerClient(
                     blobContainerUri: new Uri($"https://{this.demoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{this.demoCredential.BusinessDataSnapshotContainerName}/"),
                     credential: this.demoCredential.AADServicePrincipal));

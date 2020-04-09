@@ -118,6 +118,7 @@
             return Observable.Create<ConsumeResult<TKey, TValue>>(o =>
             {
                 var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                var innerCancellationToken = cts.Token;
 
                 _ = Task.Run(
                     () =>
@@ -139,18 +140,18 @@
                             consumer.Assign(tpo);
                         }
 
-                        while (!cts.Token.IsCancellationRequested)
+                        while (!innerCancellationToken.IsCancellationRequested)
                         {
-                            var msg = consumer.Consume(cts.Token);
+                            var msg = consumer.Consume(innerCancellationToken);
 
                             // Console.WriteLine($"RX {msg.Topic}#{msg.Partition.Value}#{msg.Offset.Value}: {msg.Message.Value}");
                             o.OnNext(msg);
-                            cts.Token.ThrowIfCancellationRequested();
+                            innerCancellationToken.ThrowIfCancellationRequested();
                         }
 
                         o.OnCompleted();
                     },
-                    cts.Token);
+                    innerCancellationToken);
 
                 return new CancellationDisposable(cts);
             });

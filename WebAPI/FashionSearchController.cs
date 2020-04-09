@@ -17,18 +17,18 @@
     [Route("[controller]")]
     public class FashionSearchController : ControllerBase
     {
-        private readonly Func<FashionBusinessData> getBusinessData;
+        private readonly Func<BusinessData<FashionBusinessData>> getBusinessData;
         private readonly Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest;
         private readonly IObservable<Message<ProviderSearchResponse<FashionItem>>> providerResponsePump;
-        private readonly Func<PipelineSteps<ProcessingContext, FashionItem>> createPipelineSteps;
+        private readonly Func<PipelineSteps<FashionProcessingContext, FashionItem>> createPipelineSteps;
         private readonly IDistributedSearchConfiguration demoCredential;
 
         public FashionSearchController(
             IDistributedSearchConfiguration demoCredential,
             IObservable<Message<ProviderSearchResponse<FashionItem>>> providerResponsePump,
             Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest,
-            Func<PipelineSteps<ProcessingContext, FashionItem>> createPipelineSteps,
-            Func<FashionBusinessData> getBusinessData)
+            Func<PipelineSteps<FashionProcessingContext, FashionItem>> createPipelineSteps,
+            Func<BusinessData<FashionBusinessData>> getBusinessData)
         {
             (this.providerResponsePump, this.sendProviderSearchRequest, this.createPipelineSteps, this.getBusinessData) =
                 (providerResponsePump, sendProviderSearchRequest, createPipelineSteps, getBusinessData);
@@ -36,7 +36,7 @@
         }
 
         [HttpGet]
-        public async Task<SearchResponse<FashionItem>> Get(int size, string type = "Hat", int timeout = 15000)
+        public async Task<SearchResponse<FashionBusinessData, FashionItem>> Get(int size, string type = "Hat", int timeout = 15000)
         {
             var searchRequest = new FashionSearchRequest(size: size, fashionType: type);
 
@@ -61,7 +61,7 @@
             stopwatch.Start();
 
             var pipelineSteps = this.createPipelineSteps();
-            var processingContext = new ProcessingContext(searchRequest, businessData);
+            var processingContext = new FashionProcessingContext(searchRequest, businessData.Data);
 
             // *** Subscribe and start processing inbound stream
             IObservable<FashionItem> responses =
@@ -79,13 +79,13 @@
                 .ToArray();
 
             stopwatch.Stop();
-            return new SearchResponse<FashionItem>
+            return new SearchResponse<FashionBusinessData, FashionItem>
             {
                 RequestID = providerSearchRequest.RequestID,
                 Items = items,
                 Timing = $"Duration: {stopwatch.Elapsed.TotalSeconds:N3}",
-                Version = businessData.Version.Item,
-                BusinessData = businessData,
+                Version = businessData.Offset.Item,
+                BusinessData = businessData.Data,
             };
         }
 
@@ -102,16 +102,16 @@
         private TimeSpan SubtractExpectedComputeTime(TimeSpan timeout) => timeout.Subtract(TimeSpan.FromMilliseconds(100));
     }
 
-    public class SearchResponse<T>
+    public class SearchResponse<TBusinessData, TItem>
     {
         public string RequestID { get; set; }
-
-        public IEnumerable<T> Items { get; set; }
 
         public string Timing { get; set; }
 
         public long Version { get; set; }
 
-        public FashionBusinessData BusinessData { get; set; }
+        public IEnumerable<TItem> Items { get; set; }
+
+        public TBusinessData BusinessData { get; set; }
     }
 }

@@ -6,7 +6,6 @@
     using BusinessDataAggregation;
     using Credentials;
     using Fashion.BusinessData;
-    using Fashion.BusinessData.Logic;
     using Fashion.Domain;
     using Interfaces;
 
@@ -20,8 +19,8 @@
 
             var businessDataUpdates = new BusinessDataPump<FashionBusinessData, FashionBusinessDataUpdate>(
                 demoCredential: demoCredential,
-                applyUpdate: (bd, updateM) => bd.ApplyUpdates(new[] { Tuple.Create(updateM.Offset, updateM.Payload) }),
-                getOffset: bd => bd.Version,
+                createEmptyBusinessData: Code.newFashionBusinessData,
+                applyUpdate: FashionBusinessDataExtensions.ApplyFashionUpdate, 
                 snapshotContainerClient: new BlobContainerClient(
                     blobContainerUri: new Uri($"https://{demoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{demoCredential.BusinessDataSnapshotContainerName}/"),
                     credential: demoCredential.AADServicePrincipal));
