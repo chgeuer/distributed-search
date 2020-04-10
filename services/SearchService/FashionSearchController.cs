@@ -9,7 +9,6 @@
     using Mercury.Interfaces;
     using Mercury.Utils.Extensions;
     using Microsoft.AspNetCore.Mvc;
-    using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
     using static Mercury.Customer.Fashion.BusinessData;
     using static Mercury.Customer.Fashion.Domain;
@@ -18,22 +17,32 @@
     [Route("[controller]")]
     public class FashionSearchController : ControllerBase
     {
-        private readonly IDistributedSearchConfiguration demoCredential;
+        private readonly IDistributedSearchConfiguration searchConfiguration;
         private readonly Func<BusinessData<FashionBusinessData>> getBusinessData;
         private readonly Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest;
         private readonly IObservable<Message<ProviderSearchResponse<FashionItem>>> providerResponsePump;
         private readonly Func<PipelineSteps<FashionProcessingContext, FashionItem>> createPipelineSteps;
+        private readonly Func<TopicPartitionID> getTopicPartitionID;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="FashionSearchController"/> class.
+        /// </summary>
+        /// <param name="searchConfiguration">The configuration.</param>
+        /// <param name="providerResponsePump">Pumps provider search responses into the compute node.</param>
+        /// <param name="sendProviderSearchRequest">Sends a provider search request to the requests topic.</param>
+        /// <param name="createPipelineSteps">Creates the processing pipeline steps.</param>
+        /// <param name="getBusinessData">Returns the most recent business data.</param>
+        /// <param name="getTopicPartitionID">Returns the <see cref="TopicPartitionID"/>.</param>
         public FashionSearchController(
-            IDistributedSearchConfiguration demoCredential,
+            IDistributedSearchConfiguration searchConfiguration,
             IObservable<Message<ProviderSearchResponse<FashionItem>>> providerResponsePump,
             Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest,
             Func<PipelineSteps<FashionProcessingContext, FashionItem>> createPipelineSteps,
-            Func<BusinessData<FashionBusinessData>> getBusinessData)
+            Func<BusinessData<FashionBusinessData>> getBusinessData,
+            Func<TopicPartitionID> getTopicPartitionID)
         {
-            (this.providerResponsePump, this.sendProviderSearchRequest, this.createPipelineSteps, this.getBusinessData) =
-                (providerResponsePump, sendProviderSearchRequest, createPipelineSteps, getBusinessData);
-            this.demoCredential = demoCredential;
+            (this.providerResponsePump, this.sendProviderSearchRequest, this.createPipelineSteps, this.getBusinessData, this.searchConfiguration, this.getTopicPartitionID) =
+                (providerResponsePump, sendProviderSearchRequest, createPipelineSteps, getBusinessData, searchConfiguration, getTopicPartitionID);
         }
 
         [HttpGet]
@@ -50,12 +59,11 @@
             var businessData = this.getBusinessData();
 
             var responseMustBeReadyBy = DateTimeOffset.Now.Add(
-                this.SubtractExpectedComputeTime(
-                    TimeSpan.FromMilliseconds(timeout)));
+                TimeSpan.FromMilliseconds(timeout));
 
             var providerSearchRequest = new ProviderSearchRequest<FashionSearchRequest>(
-                requestID: this.CreateRequestID(),
-                responseTopic: SearchServiceStartup.GetCurrentComputeNodeResponseTopic(this.demoCredential),
+                requestID: Guid.NewGuid().ToString(),
+                responseTopic: this.getTopicPartitionID(),
                 searchRequest: searchRequest);
 
             var stopwatch = new Stopwatch();
@@ -64,16 +72,20 @@
             var pipelineSteps = this.createPipelineSteps();
             var processingContext = new FashionProcessingContext(searchRequest, businessData.Data);
 
-            // *** Subscribe and start processing inbound stream
+            // Subscribe and start processing inbound stream. This is a non-blocking call.
             IObservable<FashionItem> responses =
-                this.GetResponses(requestId: providerSearchRequest.RequestID)
+                this.providerResponsePump
+                    .Where(t => t.RequestID.OptionEqualsValue(t.RequestID.Value))
+                    .SelectMany(providerSearchResponse => providerSearchResponse.Payload.Response)
                     .ApplySteps(processingContext, pipelineSteps.StreamingSteps)
                     .TakeUntil(responseMustBeReadyBy);
 
-            // *** Send search request
+            // Send search provider request into requests topic.
             await this.sendProviderSearchRequest(providerSearchRequest);
 
-            // *** Aggregate all things we have when `responseMustBeReadyBy` fires
+            // Convert IObservable<> into IEnumerable, apply the sequential steps, and
+            // materialize everything into an array.
+            // Aggregate all things we have, by when `responseMustBeReadyBy` fires
             FashionItem[] items = responses
                 .ToEnumerable()
                 .ApplySteps(processingContext, pipelineSteps.FinalSteps)
@@ -89,18 +101,6 @@
                 BusinessData = businessData.Data,
             };
         }
-
-        private IObservable<FashionItem> GetResponses(string requestId)
-        {
-            return this.providerResponsePump
-                .Where(t => FSharpOption<string>.get_IsSome(t.RequestID)
-                    && requestId == t.RequestID.Value)
-                .SelectMany(providerSearchResponse => providerSearchResponse.Payload.Response);
-        }
-
-        private string CreateRequestID() => Guid.NewGuid().ToString();
-
-        private TimeSpan SubtractExpectedComputeTime(TimeSpan timeout) => timeout.Subtract(TimeSpan.FromMilliseconds(100));
     }
 
     public class SearchResponse<TBusinessData, TItem>

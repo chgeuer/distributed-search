@@ -9,7 +9,6 @@
     using Mercury.Customer.Fashion;
     using Mercury.Interfaces;
     using Mercury.Messaging;
-    using Mercury.Utils;
     using Mercury.Utils.Extensions;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
@@ -26,11 +25,25 @@
         public IConfiguration Configuration { get; }
 
         private readonly IDistributedSearchConfiguration demoCredential;
+        private readonly BlobContainerClient snapshotContainerClient;
+        private readonly BlobContainerClient storageOffloadStorage;
+        private readonly TopicPartitionID topicPartitionID;
 
         public SearchServiceStartup(IConfiguration configuration)
         {
             this.Configuration = configuration;
             this.demoCredential = new DemoCredential();
+
+            this.snapshotContainerClient = new BlobContainerClient(
+                blobContainerUri: new Uri($"https://{this.demoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{this.demoCredential.BusinessDataSnapshotContainerName}/"),
+                credential: this.demoCredential.AADServicePrincipal);
+
+            this.storageOffloadStorage = new BlobContainerClient(
+               blobContainerUri: new Uri($"https://{this.demoCredential.StorageOffloadAccountName}.blob.core.windows.net/{this.demoCredential.StorageOffloadContainerNameResponses}/"),
+               credential: this.demoCredential.AADServicePrincipal);
+
+            // TODO Currently this is locked to a partitionId 1
+            this.topicPartitionID = new TopicPartitionID(topicName: this.demoCredential.EventHubTopicNameResponses, partitionId: 1);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -52,9 +65,8 @@
         {
             services.AddControllers();
 
-            var responseDataPump = this.CreateProviderResponsePump<FashionItem>(
-                topicPartitionID: GetCurrentComputeNodeResponseTopic(this.demoCredential));
-            services.AddSingleton(_ => responseDataPump);
+            services.AddSingleton(_ => this.GetTopicPartitionID());
+            services.AddSingleton(_ => this.CreateProviderResponsePump<FashionItem>(this.topicPartitionID));
             services.AddSingleton<IDistributedSearchConfiguration>(_ => this.demoCredential);
 
             services.AddSingleton(_ => this.SendProviderSearchRequest());
@@ -63,11 +75,7 @@
                 newFashionBusinessData, FashionExtensions.ApplyFashionUpdate));
         }
 
-        internal static TopicPartitionID GetCurrentComputeNodeResponseTopic(IDistributedSearchConfiguration demoCredential)
-            => new TopicPartitionID(
-                topicName: demoCredential.EventHubTopicNameResponses, partitionId: 1);
-
-        internal static Func<PipelineSteps<FashionProcessingContext, FashionItem>> CreatePipelineSteps() => () =>
+        private static Func<PipelineSteps<FashionProcessingContext, FashionItem>> CreatePipelineSteps() => () =>
         {
             var s1 = PipelineStep<FashionProcessingContext, FashionItem>.NewPredicate(
                 FSharpExtensions.ToFSharpFunc<Tuple<FashionProcessingContext, FashionItem>, bool>(
@@ -90,7 +98,7 @@
             };
         };
 
-        internal Func<ProviderSearchRequest<FashionSearchRequest>, Task> SendProviderSearchRequest()
+        private Func<ProviderSearchRequest<FashionSearchRequest>, Task> SendProviderSearchRequest()
         {
             var requestProducer = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(
                 demoCredential: this.demoCredential, partitionId: null);
@@ -98,17 +106,13 @@
             return searchRequest => requestProducer.SendMessage(searchRequest, requestId: searchRequest.RequestID);
         }
 
-        internal IObservable<Message<ProviderSearchResponse<T>>> CreateProviderResponsePump<T>(TopicPartitionID topicPartitionID)
+        private IObservable<Message<ProviderSearchResponse<T>>> CreateProviderResponsePump<T>(TopicPartitionID topicPartitionID)
         {
-            var blobContainerClient = new BlobContainerClient(
-                blobContainerUri: new Uri($"https://{this.demoCredential.StorageOffloadAccountName}.blob.core.windows.net/{this.demoCredential.StorageOffloadContainerNameResponses}/"),
-                credential: this.demoCredential.AADServicePrincipal);
-
             var messagingClient = MessagingClients
                 .WithStorageOffload<ProviderSearchResponse<T>>(
                     demoCredential: this.demoCredential,
                     topicPartitionID: topicPartitionID,
-                    storageOffload: blobContainerClient.ToStorageOffload());
+                    storageOffload: this.storageOffloadStorage.ToStorageOffload());
 
             var connectable = messagingClient
                 .CreateObervable(SeekPosition.FromTail)
@@ -119,7 +123,7 @@
             return connectable.AsObservable();
         }
 
-        internal Func<BusinessData<TBusinessData>> GetCurrentBusinessData<TBusinessData, TBusinessDataUpdate>(
+        private Func<BusinessData<TBusinessData>> GetCurrentBusinessData<TBusinessData, TBusinessDataUpdate>(
             Func<TBusinessData> createEmptyBusinessData,
             Func<TBusinessData, TBusinessDataUpdate, TBusinessData> applyUpdate)
         {
@@ -127,12 +131,15 @@
                 demoCredential: this.demoCredential,
                 createEmptyBusinessData: createEmptyBusinessData,
                 applyUpdate: applyUpdate,
-                snapshotContainerClient: new BlobContainerClient(
-                    blobContainerUri: new Uri($"https://{this.demoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{this.demoCredential.BusinessDataSnapshotContainerName}/"),
-                    credential: this.demoCredential.AADServicePrincipal));
+                snapshotContainerClient: this.snapshotContainerClient);
 
             businessDataUpdates.StartUpdateProcess().Wait();
             return () => businessDataUpdates.BusinessData;
         }
+
+        private Func<TopicPartitionID> GetTopicPartitionID() => () =>
+        {
+            return this.topicPartitionID;
+        };
     }
 }

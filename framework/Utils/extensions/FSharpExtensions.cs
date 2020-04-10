@@ -11,6 +11,9 @@
 
         public static FSharpFunc<TInput, TResult> ToFSharp<TInput, TResult>(Func<TInput, TResult> func) => FSharpFunc<TInput, TResult>.FromConverter(new Converter<TInput, TResult>(func));
 
+        public static bool OptionEqualsValue<T>(this FSharpOption<T> tOption, T tValue)
+            => FSharpOption<T>.get_IsSome(tOption) && tOption.Value.Equals(tValue);
+
         public static FSharpFunc<TInput, TResult> ToFSharpFunc<TInput, TResult>(Func<TInput, TResult> func)
             => FSharpFunc<TInput, TResult>.FromConverter(
                 new Converter<TInput, TResult>(func));
