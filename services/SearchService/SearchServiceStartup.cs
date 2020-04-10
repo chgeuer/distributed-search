@@ -9,6 +9,7 @@
     using Mercury.Customer.Fashion;
     using Mercury.Interfaces;
     using Mercury.Messaging;
+    using Mercury.Utils;
     using Mercury.Utils.Extensions;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
@@ -99,12 +100,15 @@
 
         internal IObservable<Message<ProviderSearchResponse<T>>> CreateProviderResponsePump<T>(TopicPartitionID topicPartitionID)
         {
+            var blobContainerClient = new BlobContainerClient(
+                blobContainerUri: new Uri($"https://{this.demoCredential.StorageOffloadAccountName}.blob.core.windows.net/{this.demoCredential.StorageOffloadContainerNameResponses}/"),
+                credential: this.demoCredential.AADServicePrincipal);
+
             var messagingClient = MessagingClients
                 .WithStorageOffload<ProviderSearchResponse<T>>(
                     demoCredential: this.demoCredential,
                     topicPartitionID: topicPartitionID,
-                    accountName: this.demoCredential.StorageOffloadAccountName,
-                    containerName: this.demoCredential.StorageOffloadContainerNameResponses);
+                    storageOffload: blobContainerClient.ToStorageOffload());
 
             var connectable = messagingClient
                 .CreateObervable(SeekPosition.FromTail)

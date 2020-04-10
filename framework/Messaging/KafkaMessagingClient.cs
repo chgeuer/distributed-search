@@ -1,15 +1,15 @@
 ﻿namespace Mercury.Messaging
 {
-    using Confluent.Kafka;
-    using Mercury.Interfaces;
-    using Mercury.Utils.Extensions;
-    using Microsoft.FSharp.Core;
     using System;
     using System.Linq;
     using System.Reactive.Disposables;
     using System.Reactive.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Confluent.Kafka;
+    using Mercury.Interfaces;
+    using Mercury.Utils.Extensions;
+    using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
     using ConfluentKafkaOffset = Confluent.Kafka.Offset;
     using MercuryOffset = Mercury.Fundamentals.Types.Offset;

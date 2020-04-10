@@ -1,5 +1,6 @@
 ﻿namespace Mercury.Services.SampleProvider
 {
+    using Azure.Storage.Blobs;
     using Credentials;
     using Interfaces;
     using Mercury.Utils.Extensions;
@@ -33,11 +34,15 @@
                 {
                     if (!clients.ContainsKey(tpid))
                     {
+                        var blobContainerClient = new BlobContainerClient(
+                            blobContainerUri: new Uri($"https://{demoCredential.StorageOffloadAccountName}.blob.core.windows.net/{demoCredential.StorageOffloadContainerNameResponses}/"),
+                            credential: demoCredential.AADServicePrincipal);
+
                         var client = MessagingClients.WithStorageOffload<ProviderSearchResponse<FashionItem>>(
                             demoCredential: demoCredential,
                             topicPartitionID: tpid,
-                            accountName: demoCredential.StorageOffloadAccountName,
-                            containerName: demoCredential.StorageOffloadContainerNameResponses);
+                            storageOffload: blobContainerClient.ToStorageOffload());
+
                         clients.Add(tpid, client);
                     }
                 }
