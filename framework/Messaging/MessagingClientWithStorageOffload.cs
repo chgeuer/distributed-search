@@ -1,10 +1,11 @@
-﻿namespace Mercury.Utils
+﻿namespace Mercury.Messaging
 {
     using System;
     using System.Reactive.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Mercury.Interfaces;
+    using Mercury.Utils;
     using Mercury.Utils.Extensions;
     using static Fundamentals.Types;
 

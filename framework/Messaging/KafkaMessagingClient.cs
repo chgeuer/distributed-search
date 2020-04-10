@@ -14,6 +14,7 @@
     using ConfluentKafkaOffset = Confluent.Kafka.Offset;
     using MercuryOffset = Mercury.Fundamentals.Types.Offset;
 
+    // A purely internal implementation dealing with Kafka. No Confluent data types outside this file and on public APIs.
     internal class KafkaMessagingClient<TMessagePayload> : IMessageClient<TMessagePayload>
     {
         private readonly IProducer<Null, string> producer;
