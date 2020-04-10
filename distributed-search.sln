@@ -3,20 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29728.190
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Interfaces", "Interfaces\Interfaces.csproj", "{F90459D8-8DD7-4CBD-89C0-FCCD7D2B6832}"
-EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Domain", "Domain\Domain.fsproj", "{D42A8949-5D91-4C3E-AB17-B1FA2C90383F}"
-EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Fundamentals", "Fundamentals\Fundamentals.fsproj", "{A7E1B2F5-B843-4EA2-8642-9DE48FA6A609}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyTests", "MyTests\MyTests.csproj", "{F6AEEF5B-3B31-4BE9-9E5E-6B7AFA377150}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebAPI", "WebAPI\WebAPI.csproj", "{0BA9163E-7E77-4EF5-9A3D-6241874C5DFA}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleProvider", "SampleProvider\SampleProvider.csproj", "{42126C92-931A-4341-A063-C9CEDE2168EA}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Credentials", "Credentials\Credentials.csproj", "{9D804426-80A6-43E8-BFFF-377305CB66D4}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5858F120-45D6-4B9E-9D95-9C9F13693A7A}"
 	ProjectSection(SolutionItems) = preProject
 		Properties\common.props = Properties\common.props
@@ -25,15 +11,41 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Properties\stylecop.props = Properties\stylecop.props
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UpdateConfiguration", "UpdateConfiguration\UpdateConfiguration.csproj", "{B70EF22E-2140-4C91-8D22-7812EDE90F7C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Utils", "Utils\Utils.csproj", "{F90459D8-8DD7-4CBD-89C0-FCCD7D2B6832}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SnapshotGenerator", "SnapshotGenerator\SnapshotGenerator.csproj", "{97402184-B5E0-49F7-9741-EFA8192E52D6}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Domain", "Domain\Domain.fsproj", "{D42A8949-5D91-4C3E-AB17-B1FA2C90383F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BusinessDataAggregation", "BusinessDataAggregation\BusinessDataAggregation.csproj", "{853D3E4C-6C51-48B7-AECC-4FC0B36BC304}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Fundamentals", "Fundamentals\Fundamentals.fsproj", "{A7E1B2F5-B843-4EA2-8642-9DE48FA6A609}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DemoUsingBusinessData", "DemoUsingBusinessData\DemoUsingBusinessData.csproj", "{10BB1D8A-6A6A-4268-8947-C3DF962DF0F1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyTests", "MyTests\MyTests.csproj", "{F6AEEF5B-3B31-4BE9-9E5E-6B7AFA377150}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SearchService", "SearchService\SearchService.csproj", "{0BA9163E-7E77-4EF5-9A3D-6241874C5DFA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SampleProviderService", "SampleProviderService\SampleProviderService.csproj", "{42126C92-931A-4341-A063-C9CEDE2168EA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Credentials", "Credentials\Credentials.csproj", "{9D804426-80A6-43E8-BFFF-377305CB66D4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UpdateConfigurationClient", "UpdateConfigurationClient\UpdateConfigurationClient.csproj", "{B70EF22E-2140-4C91-8D22-7812EDE90F7C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SnapshotGeneratorService", "SnapshotGeneratorService\SnapshotGeneratorService.csproj", "{97402184-B5E0-49F7-9741-EFA8192E52D6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BusinessDataPump", "BusinessDataPump\BusinessDataPump.csproj", "{853D3E4C-6C51-48B7-AECC-4FC0B36BC304}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DemoUsingBusinessDataClient", "DemoUsingBusinessDataClient\DemoUsingBusinessDataClient.csproj", "{10BB1D8A-6A6A-4268-8947-C3DF962DF0F1}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Messaging.KafkaImpl", "Messaging.KafkaImpl\Messaging.KafkaImpl.csproj", "{5FF0FD43-2778-499D-A23B-7D8F53DD882F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Clients", "Clients", "{6F78A7C7-5FC8-4FF4-8116-5D312EF36315}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{8845B943-00ED-4F7C-9AE8-C2C08E98A838}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{BA0438B5-45D3-40E1-96D6-80BB857BA9D0}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Generic", "Generic", "{7215F4AB-5CBC-41AF-B553-98CEF7EA1CF9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CustomerSpecific", "CustomerSpecific", "{F1BB2398-F9F0-472E-8181-D6EE489C1E32}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Interfaces", "Interfaces\Interfaces.csproj", "{56DBC553-4E15-4BD3-96B5-128001A45EA9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -89,9 +101,28 @@ Global
 		{5FF0FD43-2778-499D-A23B-7D8F53DD882F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5FF0FD43-2778-499D-A23B-7D8F53DD882F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5FF0FD43-2778-499D-A23B-7D8F53DD882F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{56DBC553-4E15-4BD3-96B5-128001A45EA9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{56DBC553-4E15-4BD3-96B5-128001A45EA9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{56DBC553-4E15-4BD3-96B5-128001A45EA9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{56DBC553-4E15-4BD3-96B5-128001A45EA9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{F90459D8-8DD7-4CBD-89C0-FCCD7D2B6832} = {7215F4AB-5CBC-41AF-B553-98CEF7EA1CF9}
+		{D42A8949-5D91-4C3E-AB17-B1FA2C90383F} = {F1BB2398-F9F0-472E-8181-D6EE489C1E32}
+		{A7E1B2F5-B843-4EA2-8642-9DE48FA6A609} = {7215F4AB-5CBC-41AF-B553-98CEF7EA1CF9}
+		{F6AEEF5B-3B31-4BE9-9E5E-6B7AFA377150} = {BA0438B5-45D3-40E1-96D6-80BB857BA9D0}
+		{0BA9163E-7E77-4EF5-9A3D-6241874C5DFA} = {8845B943-00ED-4F7C-9AE8-C2C08E98A838}
+		{42126C92-931A-4341-A063-C9CEDE2168EA} = {8845B943-00ED-4F7C-9AE8-C2C08E98A838}
+		{9D804426-80A6-43E8-BFFF-377305CB66D4} = {7215F4AB-5CBC-41AF-B553-98CEF7EA1CF9}
+		{B70EF22E-2140-4C91-8D22-7812EDE90F7C} = {6F78A7C7-5FC8-4FF4-8116-5D312EF36315}
+		{97402184-B5E0-49F7-9741-EFA8192E52D6} = {8845B943-00ED-4F7C-9AE8-C2C08E98A838}
+		{853D3E4C-6C51-48B7-AECC-4FC0B36BC304} = {7215F4AB-5CBC-41AF-B553-98CEF7EA1CF9}
+		{10BB1D8A-6A6A-4268-8947-C3DF962DF0F1} = {6F78A7C7-5FC8-4FF4-8116-5D312EF36315}
+		{5FF0FD43-2778-499D-A23B-7D8F53DD882F} = {7215F4AB-5CBC-41AF-B553-98CEF7EA1CF9}
+		{56DBC553-4E15-4BD3-96B5-128001A45EA9} = {7215F4AB-5CBC-41AF-B553-98CEF7EA1CF9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4D4C50E1-A8D3-4A1B-B38A-300F5E906227}

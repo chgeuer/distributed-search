@@ -1,0 +1,13 @@
+C:\github\chgeuer\distributed-search\Interfaces\obj\Debug\netcoreapp3.1\Interfaces.csproj.CoreCompileInputs.cache
+C:\github\chgeuer\distributed-search\Interfaces\obj\Debug\netcoreapp3.1\Interfaces.AssemblyInfoInputs.cache
+C:\github\chgeuer\distributed-search\Interfaces\obj\Debug\netcoreapp3.1\Interfaces.AssemblyInfo.cs
+C:\github\chgeuer\distributed-search\Interfaces\bin\Debug\netcoreapp3.1\Interfaces.deps.json
+C:\github\chgeuer\distributed-search\Interfaces\bin\Debug\netcoreapp3.1\Interfaces.dll
+C:\github\chgeuer\distributed-search\Interfaces\bin\Debug\netcoreapp3.1\Interfaces.pdb
+C:\github\chgeuer\distributed-search\Interfaces\bin\Debug\netcoreapp3.1\Fundamentals.dll
+C:\github\chgeuer\distributed-search\Interfaces\bin\Debug\netcoreapp3.1\System.Reactive.dll
+C:\github\chgeuer\distributed-search\Interfaces\bin\Debug\netcoreapp3.1\Fundamentals.pdb
+C:\github\chgeuer\distributed-search\Interfaces\bin\Debug\netcoreapp3.1\System.Reactive.xml
+C:\github\chgeuer\distributed-search\Interfaces\obj\Debug\netcoreapp3.1\Interfaces.csproj.CopyComplete
+C:\github\chgeuer\distributed-search\Interfaces\obj\Debug\netcoreapp3.1\Interfaces.dll
+C:\github\chgeuer\distributed-search\Interfaces\obj\Debug\netcoreapp3.1\Interfaces.pdb

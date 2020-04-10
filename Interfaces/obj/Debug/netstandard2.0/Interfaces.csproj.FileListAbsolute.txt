@@ -1,0 +1,4 @@
+C:\github\chgeuer\distributed-search\Interfaces\obj\Debug\netstandard2.0\Interfaces.csprojAssemblyReference.cache
+C:\github\chgeuer\distributed-search\Interfaces\obj\Debug\netstandard2.0\Interfaces.csproj.CoreCompileInputs.cache
+C:\github\chgeuer\distributed-search\Interfaces\obj\Debug\netstandard2.0\Interfaces.AssemblyInfoInputs.cache
+C:\github\chgeuer\distributed-search\Interfaces\obj\Debug\netstandard2.0\Interfaces.AssemblyInfo.cs

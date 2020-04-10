@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "dgSpecHash": "T1uVYwD8HsPT+w1OxF02uCgtW4l/IjoRumT9TXv4RYDeUU+phNjqALgVdUspwcbg04lwCQyNCYPJ67NCP6WuJw==",
+  "success": true,
+  "projectFilePath": "C:\\github\\chgeuer\\distributed-search\\Interfaces\\Interfaces.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\chgeuer\\.nuget\\packages\\azure.core\\1.2.0\\azure.core.1.2.0.nupkg.sha512",
+    "C:\\Users\\chgeuer\\.nuget\\packages\\azure.storage.blobs\\12.4.1\\azure.storage.blobs.12.4.1.nupkg.sha512",
+    "C:\\Users\\chgeuer\\.nuget\\packages\\azure.storage.common\\12.4.0\\azure.storage.common.12.4.0.nupkg.sha512",
+    "C:\\Users\\chgeuer\\.nuget\\packages\\fsharp.core\\4.7.1\\fsharp.core.4.7.1.nupkg.sha512",
+    "C:\\Users\\chgeuer\\.nuget\\packages\\microsoft.bcl.asyncinterfaces\\1.0.0\\microsoft.bcl.asyncinterfaces.1.0.0.nupkg.sha512",
+    "C:\\Users\\chgeuer\\.nuget\\packages\\stylecop.analyzers\\1.1.118\\stylecop.analyzers.1.1.118.nupkg.sha512",
+    "C:\\Users\\chgeuer\\.nuget\\packages\\system.buffers\\4.5.0\\system.buffers.4.5.0.nupkg.sha512",
+    "C:\\Users\\chgeuer\\.nuget\\packages\\system.diagnostics.diagnosticsource\\4.6.0\\system.diagnostics.diagnosticsource.4.6.0.nupkg.sha512",
+    "C:\\Users\\chgeuer\\.nuget\\packages\\system.memory\\4.5.3\\system.memory.4.5.3.nupkg.sha512",
+    "C:\\Users\\chgeuer\\.nuget\\packages\\system.numerics.vectors\\4.5.0\\system.numerics.vectors.4.5.0.nupkg.sha512",
+    "C:\\Users\\chgeuer\\.nuget\\packages\\system.reactive\\4.4.1\\system.reactive.4.4.1.nupkg.sha512",
+    "C:\\Users\\chgeuer\\.nuget\\packages\\system.reactive.linq\\4.4.1\\system.reactive.linq.4.4.1.nupkg.sha512",
+    "C:\\Users\\chgeuer\\.nuget\\packages\\system.threading.tasks.extensions\\4.5.4\\system.threading.tasks.extensions.4.5.4.nupkg.sha512"
+  ],
+  "logs": []
+}
