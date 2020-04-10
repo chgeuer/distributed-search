@@ -1,4 +1,4 @@
-﻿namespace SearchService.Controllers
+﻿namespace Mercury.Services.SearchService
 {
     using System;
     using System.Collections.Generic;
@@ -6,7 +6,8 @@
     using System.Linq;
     using System.Reactive.Linq;
     using System.Threading.Tasks;
-    using Interfaces;
+    using Mercury.Interfaces;
+    using Mercury.Utils.Extensions;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.FSharp.Core;
     using static Fashion.BusinessData;

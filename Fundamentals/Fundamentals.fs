@@ -1,4 +1,4 @@
-module Fundamentals.Types
+module Mercury.Fundamentals.Types
 
 open System
 open System.IO

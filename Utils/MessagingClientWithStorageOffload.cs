@@ -1,9 +1,11 @@
-﻿namespace Interfaces
+﻿namespace Mercury.Utils
 {
     using System;
     using System.Reactive.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Mercury.Interfaces;
+    using Mercury.Utils.Extensions;
     using static Fundamentals.Types;
 
     public class MessagingClientWithStorageOffload<TMessagePayload> : IMessageClient<TMessagePayload>

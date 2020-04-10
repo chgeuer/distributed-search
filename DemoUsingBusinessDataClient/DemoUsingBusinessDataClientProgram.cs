@@ -1,14 +1,14 @@
-﻿namespace DemoUsingBusinessData
+﻿namespace Mercury.Clients.DemoUsingBusinessData
 {
     using System;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
     using Azure.Storage.Blobs;
-    using BusinessDataPump;
-    using Credentials;
+    using Mercury.BusinessDataPump;
+    using Mercury.Credentials;
     using Fashion;
-    using Interfaces;
+    using Mercury.Interfaces;
     using static Fashion.BusinessData;
     using static Fundamentals.Types;
 

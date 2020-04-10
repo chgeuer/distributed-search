@@ -1,4 +1,4 @@
-﻿namespace SampleProviderService
+﻿namespace Mercury.Services.SampleProvider
 {
     using System;
     using System.Collections.Generic;
@@ -8,6 +8,7 @@
     using System.Threading.Tasks;
     using Credentials;
     using Interfaces;
+    using Mercury.Utils.Extensions;
     using Messaging;
     using Microsoft.FSharp.Collections;
     using static Fashion.Domain;

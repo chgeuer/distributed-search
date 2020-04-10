@@ -6,11 +6,13 @@ namespace MyTests
     using System.Reactive.Linq;
     using Microsoft.FSharp.Collections;
     using NUnit.Framework;
-    using Interfaces;
-    using Fundamentals.Extensions;
     using Fashion;
-    using static Fundamentals.Types;
-    using static BusinessLogic.Logic;
+    using Mercury.Interfaces;
+    using Mercury.Fundamentals.Extensions;
+    using Mercury.Utils.Extensions;
+    using Mercury.Utils;
+    using static Mercury.Fundamentals.Types;
+    using static Mercury.BusinessLogic.Logic;
     using static Fashion.BusinessData;
     using static Fashion.Domain;
 

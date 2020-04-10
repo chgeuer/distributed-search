@@ -5,12 +5,13 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Azure.Storage.Blobs;
-    using BusinessDataPump;
-    using Credentials;
     using Fashion;
-    using Interfaces;
+    using Mercury.BusinessDataPump;
+    using Mercury.Credentials;
+    using Mercury.Interfaces;
+    using Mercury.Utils.Extensions;
     using static Fashion.BusinessData;
-    using static Fundamentals.Types;
+    using static Mercury.Fundamentals.Types;
 
     /// <summary>
     /// This utility can run on multiple instances. In the worst case, we generate snapshots multiple times.

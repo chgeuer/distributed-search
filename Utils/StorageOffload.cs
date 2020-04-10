@@ -1,8 +1,9 @@
-﻿namespace Interfaces
+﻿namespace Mercury.Utils
 {
     using System.IO;
     using System.Threading;
     using System.Threading.Tasks;
+    using Mercury.Utils.Extensions;
     using static Fundamentals.Types;
 
     public class StorageOffload

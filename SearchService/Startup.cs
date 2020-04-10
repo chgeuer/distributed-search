@@ -1,14 +1,15 @@
-﻿namespace SearchService
+﻿namespace Mercury.Services.SearchService
 {
     using System;
     using System.Reactive.Linq;
     using System.Threading.Tasks;
     using Azure.Storage.Blobs;
-    using BusinessDataPump;
-    using Credentials;
     using Fashion;
-    using Interfaces;
-    using Messaging;
+    using Mercury.BusinessDataPump;
+    using Mercury.Credentials;
+    using Mercury.Interfaces;
+    using Mercury.Messaging;
+    using Mercury.Utils.Extensions;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;

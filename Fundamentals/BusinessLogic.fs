@@ -1,4 +1,4 @@
-﻿module BusinessLogic.Logic
+﻿module Mercury.BusinessLogic.Logic
 
 type Predicate<'context, 'item> =
     'context * 'item -> bool

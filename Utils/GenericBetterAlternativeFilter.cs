@@ -1,7 +1,8 @@
-﻿namespace Interfaces
+﻿namespace Mercury.Utils
 {
     using System;
     using System.Collections.Generic;
+    using Mercury.Interfaces;
     using static BusinessLogic.Logic;
 
     public class GenericBetterAlternativeFilter<TContext, TItem> : IBusinessLogicFilterStatefulPredicate<TContext, TItem>

@@ -1,4 +1,4 @@
-﻿namespace Messaging.KafkaImpl
+﻿namespace Mercury.Messaging.KafkaImpl
 {
     using System;
     using System.Linq;
@@ -8,6 +8,7 @@
     using System.Threading.Tasks;
     using Confluent.Kafka;
     using Interfaces;
+    using Mercury.Utils.Extensions;
     using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
     using ConfluentKafkaOffset = Confluent.Kafka.Offset;

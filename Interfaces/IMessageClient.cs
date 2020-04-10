@@ -1,4 +1,4 @@
-﻿namespace Interfaces
+﻿namespace Mercury.Interfaces
 {
     using System;
     using System.Threading;

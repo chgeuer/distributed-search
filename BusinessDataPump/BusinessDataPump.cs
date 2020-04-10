@@ -1,4 +1,4 @@
-﻿namespace BusinessDataPump
+﻿namespace Mercury.BusinessDataPump
 {
     using System;
     using System.Collections.Generic;
@@ -10,8 +10,9 @@
     using Azure;
     using Azure.Storage.Blobs;
     using Azure.Storage.Blobs.Models;
-    using Interfaces;
-    using Messaging;
+    using Mercury.Interfaces;
+    using Mercury.Messaging;
+    using Mercury.Utils.Extensions;
     using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
 

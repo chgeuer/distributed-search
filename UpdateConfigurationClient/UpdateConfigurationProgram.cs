@@ -1,12 +1,12 @@
-﻿namespace UpdateConfiguration
+﻿namespace Mercury.Clients.UpdateConfiguration
 {
     using System;
     using System.Threading.Tasks;
     using Azure.Storage.Blobs;
-    using BusinessDataPump;
-    using Credentials;
+    using Mercury.BusinessDataPump;
+    using Mercury.Credentials;
     using Fashion;
-    using Interfaces;
+    using Mercury.Interfaces;
     using static Fashion.BusinessData;
 
     // A simple client, which sends update commands *directly* into Kafka. 

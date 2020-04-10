@@ -1,7 +1,7 @@
-﻿namespace Fundamentals.Extensions
+﻿namespace Mercury.Fundamentals.Extensions
 
 open System.Runtime.CompilerServices
-open Fundamentals.Types
+open Mercury.Fundamentals.Types
 
 type Configuration<'k, 'v when 'k: comparison> =
     { Offset: Offset

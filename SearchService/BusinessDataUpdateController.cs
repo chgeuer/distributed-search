@@ -1,8 +1,8 @@
-﻿namespace SearchService
+﻿namespace Mercury.Services.SearchService
 {
     using System;
     using System.Threading.Tasks;
-    using BusinessDataPump;
+    using Mercury.BusinessDataPump;
     using Microsoft.AspNetCore.Mvc;
     using static Fashion.BusinessData;
     using static Fundamentals.Types;

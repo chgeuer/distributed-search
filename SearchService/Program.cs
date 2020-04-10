@@ -1,4 +1,4 @@
-namespace SearchService
+namespace Mercury.Services.SearchService
 {
     using System;
     using Microsoft.AspNetCore.Hosting;

@@ -1,4 +1,4 @@
-﻿namespace Interfaces
+﻿namespace Mercury.Utils.Extensions
 {
     using System;
     using System.Collections.Generic;

@@ -4,7 +4,7 @@ open System.Collections.Generic
 open System.Runtime.CompilerServices
 open Fashion.Domain
 open Fashion.BusinessData
-open Interfaces
+open Mercury.Interfaces
 
 type MarkupAdder() =
     interface IBusinessLogicFilterProjection<FashionProcessingContext, FashionItem> with

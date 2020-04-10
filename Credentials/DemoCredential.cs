@@ -1,11 +1,11 @@
 ﻿// Copyright (c) Microsoft Corporation. Licensed under the MIT License.
-namespace Credentials
+namespace Mercury.Credentials
 {
     using System;
     using System.IO;
     using Azure.Core;
     using Azure.Identity;
-    using Interfaces;
+    using Mercury.Interfaces;
     using Newtonsoft.Json;
 
     public class DemoCredential : IDistributedSearchConfiguration

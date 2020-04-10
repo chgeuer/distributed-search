@@ -1,4 +1,4 @@
-﻿namespace Interfaces
+﻿namespace Mercury.Interfaces
 {
     using static BusinessLogic.Logic;
 

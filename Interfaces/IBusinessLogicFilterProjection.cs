@@ -1,4 +1,4 @@
-﻿namespace Interfaces
+﻿namespace Mercury.Interfaces
 {
     public interface IBusinessLogicFilterProjection<TContext, TItem> : IBusinessLogicStep<TContext, TItem>
     {

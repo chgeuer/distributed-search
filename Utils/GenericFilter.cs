@@ -1,6 +1,7 @@
-﻿namespace Interfaces
+﻿namespace Mercury.Utils
 {
     using System;
+    using Mercury.Interfaces;
 
     public class GenericFilter<TContext, TItem> : IBusinessLogicFilterPredicate<TContext, TItem>
     {
