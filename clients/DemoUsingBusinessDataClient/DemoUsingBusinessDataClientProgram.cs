@@ -1,21 +1,21 @@
 ﻿namespace Mercury.Clients.DemoUsingBusinessData
 {
+    using Azure.Storage.Blobs;
+    using Mercury.BusinessDataPump;
+    using Mercury.Credentials;
+    using Mercury.Customer.Fashion;
+    using Mercury.Interfaces;
     using System;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Azure.Storage.Blobs;
-    using Mercury.BusinessDataPump;
-    using Mercury.Credentials;
-    using Fashion;
-    using Mercury.Interfaces;
-    using static Fashion.BusinessData;
     using static Fundamentals.Types;
+    using static Mercury.Customer.Fashion.BusinessData;
 
-    class DemoUsingBusinessDataClientProgram
+    internal class DemoUsingBusinessDataClientProgram
     {
         // This demo shows how you can consume business data. 
-        static async Task Main(string[] args)
+        private static async Task Main(string[] args)
         {
             Console.Title = "Business Data User";
 
@@ -32,7 +32,7 @@
                     credential: demoCredential.AADServicePrincipal));
 
             Func<BusinessData<FashionBusinessData>, string> bdToStr = bd => string.Join(" ",
-                        bd.Data.Markup.Select( kvp => $"{kvp.Key}={kvp.Value}").ToArray());
+                        bd.Data.Markup.Select(kvp => $"{kvp.Key}={kvp.Value}").ToArray());
 
             bool demoObservable = true;
             if (demoObservable)

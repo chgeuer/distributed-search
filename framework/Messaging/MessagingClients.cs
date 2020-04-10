@@ -1,9 +1,9 @@
 ﻿namespace Mercury.Messaging
 {
-    using System;
     using Azure.Storage.Blobs;
     using Mercury.Interfaces;
     using Mercury.Utils;
+    using System;
     using static Fundamentals.Types;
 
     public static class MessagingClients

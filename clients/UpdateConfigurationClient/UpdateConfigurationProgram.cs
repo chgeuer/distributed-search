@@ -1,19 +1,19 @@
 ﻿namespace Mercury.Clients.UpdateConfiguration
 {
-    using System;
-    using System.Threading.Tasks;
     using Azure.Storage.Blobs;
     using Mercury.BusinessDataPump;
     using Mercury.Credentials;
-    using Fashion;
+    using Mercury.Customer.Fashion;
     using Mercury.Interfaces;
-    using static Fashion.BusinessData;
+    using System;
+    using System.Threading.Tasks;
+    using static Mercury.Customer.Fashion.BusinessData;
 
     // A simple client, which sends update commands *directly* into Kafka. 
     // In reality, this needs to send HTTP requests into the "Business Data Service"
-    class UpdateConfigurationProgram
+    internal class UpdateConfigurationProgram
     {
-        static async Task Main()
+        private static async Task Main()
         {
             Console.Title = "Update Configuration";
 
@@ -22,7 +22,7 @@
             var businessDataUpdates = new BusinessDataPump<FashionBusinessData, FashionBusinessDataUpdate>(
                 demoCredential: demoCredential,
                 createEmptyBusinessData: newFashionBusinessData,
-                applyUpdate: FashionExtensions.ApplyFashionUpdate, 
+                applyUpdate: FashionExtensions.ApplyFashionUpdate,
                 snapshotContainerClient: new BlobContainerClient(
                     blobContainerUri: new Uri($"https://{demoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{demoCredential.BusinessDataSnapshotContainerName}/"),
                     credential: demoCredential.AADServicePrincipal));

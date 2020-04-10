@@ -10,9 +10,9 @@
     using Mercury.Utils.Extensions;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.FSharp.Core;
-    using static Fashion.BusinessData;
-    using static Fashion.Domain;
     using static Fundamentals.Types;
+    using static Mercury.Customer.Fashion.BusinessData;
+    using static Mercury.Customer.Fashion.Domain;
 
     [ApiController]
     [Route("[controller]")]

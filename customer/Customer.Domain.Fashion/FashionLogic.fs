@@ -1,9 +1,9 @@
-namespace Fashion
+namespace Mercury.Customer.Fashion
 
 open System.Collections.Generic
 open System.Runtime.CompilerServices
-open Fashion.Domain
-open Fashion.BusinessData
+open Mercury.Customer.Fashion.Domain
+open Mercury.Customer.Fashion.BusinessData
 open Mercury.Interfaces
 
 type MarkupAdder() =

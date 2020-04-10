@@ -4,8 +4,8 @@
     using System.Threading.Tasks;
     using Mercury.BusinessDataPump;
     using Microsoft.AspNetCore.Mvc;
-    using static Fashion.BusinessData;
     using static Fundamentals.Types;
+    using static Mercury.Customer.Fashion.BusinessData;
 
     [ApiController]
     [Route("[controller]")]

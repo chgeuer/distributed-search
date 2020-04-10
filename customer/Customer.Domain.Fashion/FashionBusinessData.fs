@@ -1,6 +1,6 @@
-module Fashion.BusinessData
+module Mercury.Customer.Fashion.BusinessData
 
-open Fashion.Domain
+open Mercury.Customer.Fashion.Domain
 
 type FashionBusinessData =
     { Markup: Map<FashionType, decimal>

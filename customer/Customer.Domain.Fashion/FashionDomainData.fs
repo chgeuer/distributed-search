@@ -1,4 +1,4 @@
-module Fashion.Domain
+module Mercury.Customer.Fashion.Domain
 
 type FashionType = string
 

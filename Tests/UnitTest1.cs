@@ -1,20 +1,20 @@
 namespace Mercury.UnitTests
 {
+    using Mercury.Customer.Fashion;
+    using Mercury.Fundamentals.Extensions;
+    using Mercury.Interfaces;
+    using Mercury.Utils;
+    using Mercury.Utils.Extensions;
+    using Microsoft.FSharp.Collections;
+    using NUnit.Framework;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reactive.Linq;
-    using Microsoft.FSharp.Collections;
-    using NUnit.Framework;
-    using Fashion;
-    using Mercury.Interfaces;
-    using Mercury.Fundamentals.Extensions;
-    using Mercury.Utils.Extensions;
-    using Mercury.Utils;
-    using static Mercury.Fundamentals.Types;
     using static Mercury.BusinessLogic.Logic;
-    using static Fashion.BusinessData;
-    using static Fashion.Domain;
+    using static Mercury.Customer.Fashion.BusinessData;
+    using static Mercury.Customer.Fashion.Domain;
+    using static Mercury.Fundamentals.Types;
 
     public class VersionedDictionary<T>
     {
@@ -29,7 +29,7 @@ namespace Mercury.UnitTests
         public void Setup() { }
 
         [Test]
-        public void TestGenericUpdates2() 
+        public void TestGenericUpdates2()
         {
             var data = new UpdateableData(
                 offset: Offset.NewOffset(0),
@@ -59,7 +59,7 @@ namespace Mercury.UnitTests
         {
             static UpdateOperation<string, int> Add(string key, int value) => UpdateOperation<string, int>.NewAdd(key, value);
             static UpdateOperation<string, int> Remove(string key) => UpdateOperation<string, int>.NewRemove(key);
-            
+
             var input = "{ \"hallo\": 2 }";
 
             var ops = new[] {
@@ -115,7 +115,7 @@ namespace Mercury.UnitTests
                     FashionBusinessDataUpdate.NewBrandUpdate("BB", "Bruno Banano")
                 }
                 .ToFSharp();
-            
+
             var v1 = new FashionBusinessData(
                       markup: new FSharpMap<string, decimal>(new[]
                       {
@@ -201,7 +201,7 @@ namespace Mercury.UnitTests
                     Tuple.Create("DG", "Docker and Galbani")
                 }),
                 defaultMarkup: 1_00);
-            
+
             var businessData = new BusinessData<FashionBusinessData>(
                 fashionBusinessData,
                 Offset.NewOffset(1));

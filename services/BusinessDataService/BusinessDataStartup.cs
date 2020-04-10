@@ -2,9 +2,9 @@ namespace Mercury.BusinessDataService
 {
     using System;
     using Azure.Storage.Blobs;
-    using Fashion;
     using Mercury.BusinessDataPump;
     using Mercury.Credentials;
+    using Mercury.Customer.Fashion;
     using Mercury.Interfaces;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
@@ -12,7 +12,7 @@ namespace Mercury.BusinessDataService
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using static Fashion.BusinessData;
+    using static Mercury.Customer.Fashion.BusinessData;
     using static Mercury.Fundamentals.Types;
 
     public class BusinessDataStartup

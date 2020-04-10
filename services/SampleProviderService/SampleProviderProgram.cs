@@ -1,18 +1,18 @@
 ﻿namespace Mercury.Services.SampleProvider
 {
+    using Credentials;
+    using Interfaces;
+    using Mercury.Utils.Extensions;
+    using Messaging;
+    using Microsoft.FSharp.Collections;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reactive.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Credentials;
-    using Interfaces;
-    using Mercury.Utils.Extensions;
-    using Messaging;
-    using Microsoft.FSharp.Collections;
-    using static Fashion.Domain;
     using static Fundamentals.Types;
+    using static Mercury.Customer.Fashion.Domain;
 
     internal class SampleProviderProgram
     {

@@ -4,9 +4,9 @@
     using System.Reactive.Linq;
     using System.Threading.Tasks;
     using Azure.Storage.Blobs;
-    using Fashion;
     using Mercury.BusinessDataPump;
     using Mercury.Credentials;
+    using Mercury.Customer.Fashion;
     using Mercury.Interfaces;
     using Mercury.Messaging;
     using Mercury.Utils.Extensions;
@@ -16,9 +16,9 @@
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using static BusinessLogic.Logic;
-    using static Fashion.BusinessData;
-    using static Fashion.Domain;
     using static Fundamentals.Types;
+    using static Mercury.Customer.Fashion.BusinessData;
+    using static Mercury.Customer.Fashion.Domain;
 
     public class SearchServiceStartup
     {

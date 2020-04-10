@@ -1,15 +1,15 @@
 ﻿namespace Mercury.Messaging
 {
+    using Confluent.Kafka;
+    using Mercury.Interfaces;
+    using Mercury.Utils.Extensions;
+    using Microsoft.FSharp.Core;
     using System;
     using System.Linq;
     using System.Reactive.Disposables;
     using System.Reactive.Linq;
     using System.Threading;
     using System.Threading.Tasks;
-    using Confluent.Kafka;
-    using Mercury.Interfaces;
-    using Mercury.Utils.Extensions;
-    using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
     using ConfluentKafkaOffset = Confluent.Kafka.Offset;
     using MercuryOffset = Mercury.Fundamentals.Types.Offset;
@@ -30,34 +30,34 @@
             var groupId = "$Default";
 
             this.producer = new ProducerBuilder<Null, string>(new ProducerConfig
-                {
-                    BootstrapServers = bootstrapServers,
-                    SecurityProtocol = securityProtocol,
-                    SaslMechanism = saslMechanism,
-                    SaslUsername = saslUsername,
-                    SaslPassword = saslPassword,
+            {
+                BootstrapServers = bootstrapServers,
+                SecurityProtocol = securityProtocol,
+                SaslMechanism = saslMechanism,
+                SaslUsername = saslUsername,
+                SaslPassword = saslPassword,
 
-                    // SslCaLocation = cacertlocation,
-                    // Debug = "security,broker,protocol",
-                })
+                // SslCaLocation = cacertlocation,
+                // Debug = "security,broker,protocol",
+            })
                 .SetKeySerializer(Serializers.Null)
                 .SetValueSerializer(Serializers.Utf8)
                 .Build();
 
             this.consumer = new ConsumerBuilder<Ignore, string>(new ConsumerConfig
-                {
-                    BootstrapServers = bootstrapServers,
-                    SecurityProtocol = securityProtocol,
-                    SaslMechanism = saslMechanism,
-                    SaslUsername = saslUsername,
-                    SaslPassword = saslPassword,
-                    GroupId = groupId,
-                    BrokerVersionFallback = "1.0.0",
-                    AutoOffsetReset = AutoOffsetReset.Latest,
+            {
+                BootstrapServers = bootstrapServers,
+                SecurityProtocol = securityProtocol,
+                SaslMechanism = saslMechanism,
+                SaslUsername = saslUsername,
+                SaslPassword = saslPassword,
+                GroupId = groupId,
+                BrokerVersionFallback = "1.0.0",
+                AutoOffsetReset = AutoOffsetReset.Latest,
 
-                    // SslCaLocation = cacertlocation,
-                    // Debug = "security,broker,protocol",
-                })
+                // SslCaLocation = cacertlocation,
+                // Debug = "security,broker,protocol",
+            })
                 .SetKeyDeserializer(Deserializers.Ignore)
                 .SetValueDeserializer(Deserializers.Utf8)
                 .Build();
