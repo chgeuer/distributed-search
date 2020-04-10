@@ -1,4 +1,4 @@
-﻿namespace Mercury.Messaging.KafkaImpl
+﻿namespace Mercury.Messaging
 {
     using System;
     using System.Linq;
@@ -7,12 +7,12 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Confluent.Kafka;
-    using Interfaces;
+    using Mercury.Interfaces;
     using Mercury.Utils.Extensions;
     using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
     using ConfluentKafkaOffset = Confluent.Kafka.Offset;
-    using Offset = Fundamentals.Types.Offset;
+    using MercuryOffset = Mercury.Fundamentals.Types.Offset;
 
     internal class KafkaMessagingClient<TMessagePayload> : IMessageClient<TMessagePayload>
     {
@@ -72,10 +72,10 @@
                     partition: partition);
         }
 
-        public Task<Offset> SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default)
+        public Task<MercuryOffset> SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default)
             => this.SendMessage(messagePayload: messagePayload, requestId: null, cancellationToken);
 
-        public async Task<Offset> SendMessage(TMessagePayload messagePayload, string requestId, CancellationToken cancellationToken = default)
+        public async Task<MercuryOffset> SendMessage(TMessagePayload messagePayload, string requestId, CancellationToken cancellationToken = default)
         {
             var kafkaMessage = new Message<Null, string>
             {
@@ -94,7 +94,7 @@
                 message: kafkaMessage);
 
             // await Console.Out.WriteLineAsync($"TX {report.Topic}#{report.Partition.Value}#{report.Offset.Value} {messagePayload}");
-            return Offset.NewOffset(report.Offset.Value);
+            return MercuryOffset.NewOffset(report.Offset.Value);
         }
 
         public IObservable<Message<TMessagePayload>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default)
@@ -105,7 +105,7 @@
                     startingPosition: startingPosition,
                     cancellationToken: cancellationToken)
                 .Select(consumeResult => new Message<TMessagePayload>(
-                    offset: Offset.NewOffset(consumeResult.Offset.Value),
+                    offset: MercuryOffset.NewOffset(consumeResult.Offset.Value),
                     requestID: GetRequestID(consumeResult.Message.Headers),
                     payload: consumeResult.Message.Value.DeserializeJSON<TMessagePayload>()));
         }

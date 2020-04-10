@@ -2,9 +2,8 @@
 {
     using System;
     using Azure.Storage.Blobs;
-    using Interfaces;
+    using Mercury.Interfaces;
     using Mercury.Utils;
-    using Messaging.KafkaImpl;
     using static Fundamentals.Types;
 
     public static class MessagingClients

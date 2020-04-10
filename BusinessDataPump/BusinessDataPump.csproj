@@ -28,6 +28,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Utils\Utils.csproj" />
-    <ProjectReference Include="..\Messaging.KafkaImpl\Messaging.KafkaImpl.csproj" />
+    <ProjectReference Include="..\Messaging\Messaging.csproj" />
   </ItemGroup>
 </Project>

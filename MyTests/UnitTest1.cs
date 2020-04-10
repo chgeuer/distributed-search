@@ -1,4 +1,4 @@
-namespace MyTests
+namespace Mercury.UnitTests
 {
     using System;
     using System.Collections.Generic;

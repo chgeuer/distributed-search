@@ -6,16 +6,16 @@ EXPOSE 80
 
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
 WORKDIR /src
-COPY ["SearchService/SearchService.csproj", "WebAPI/"]
-RUN dotnet restore "SearchService/SearchService.csproj"
+COPY ["BusinessDataService/BusinessDataService.csproj", "BusinessDataService/"]
+RUN dotnet restore "BusinessDataService/BusinessDataService.csproj"
 COPY . .
-WORKDIR "/src/SearchService"
-RUN dotnet build "SearchService.csproj" -c Release -o /app/build
+WORKDIR "/src/BusinessDataService"
+RUN dotnet build "BusinessDataService.csproj" -c Release -o /app/build
 
 FROM build AS publish
-RUN dotnet publish "SearchService.csproj" -c Release -o /app/publish
+RUN dotnet publish "BusinessDataService.csproj" -c Release -o /app/publish
 
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "SearchService.dll"]
+ENTRYPOINT ["dotnet", "BusinessDataService.dll"]

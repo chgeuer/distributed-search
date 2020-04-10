@@ -58,7 +58,8 @@
 
             services.AddSingleton(_ => this.SendProviderSearchRequest());
             services.AddSingleton(_ => CreatePipelineSteps());
-            services.AddSingleton(_ => this.GetCurrentBusinessData());
+            services.AddSingleton(_ => this.GetCurrentBusinessData<FashionBusinessData, FashionBusinessDataUpdate>(
+                newFashionBusinessData, FashionExtensions.ApplyFashionUpdate));
         }
 
         internal static TopicPartitionID GetCurrentComputeNodeResponseTopic(IDistributedSearchConfiguration demoCredential)
@@ -114,12 +115,14 @@
             return connectable.AsObservable();
         }
 
-        internal Func<BusinessData<FashionBusinessData>> GetCurrentBusinessData()
+        internal Func<BusinessData<TBusinessData>> GetCurrentBusinessData<TBusinessData, TBusinessDataUpdate>(
+            Func<TBusinessData> createEmptyBusinessData,
+            Func<TBusinessData, TBusinessDataUpdate, TBusinessData> applyUpdate)
         {
-            var businessDataUpdates = new BusinessDataPump<FashionBusinessData, FashionBusinessDataUpdate>(
+            var businessDataUpdates = new BusinessDataPump<TBusinessData, TBusinessDataUpdate>(
                 demoCredential: this.demoCredential,
-                createEmptyBusinessData: newFashionBusinessData,
-                applyUpdate: FashionExtensions.ApplyFashionUpdate,
+                createEmptyBusinessData: createEmptyBusinessData,
+                applyUpdate: applyUpdate,
                 snapshotContainerClient: new BlobContainerClient(
                     blobContainerUri: new Uri($"https://{this.demoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{this.demoCredential.BusinessDataSnapshotContainerName}/"),
                     credential: this.demoCredential.AADServicePrincipal));
