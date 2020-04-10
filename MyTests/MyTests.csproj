@@ -13,7 +13,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.5.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Domain\Domain.fsproj" />
+    <ProjectReference Include="..\Customer.Domain.Fashion\Customer.Domain.Fashion.fsproj" />
     <ProjectReference Include="..\Fundamentals\Fundamentals.fsproj" />
     <ProjectReference Include="..\Utils\Utils.csproj" />
   </ItemGroup>
