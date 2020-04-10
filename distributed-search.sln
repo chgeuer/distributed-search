@@ -11,43 +11,43 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Properties\stylecop.props = Properties\stylecop.props
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Utils", "Utils\Utils.csproj", "{F90459D8-8DD7-4CBD-89C0-FCCD7D2B6832}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Utils", "framework\Utils\Utils.csproj", "{F90459D8-8DD7-4CBD-89C0-FCCD7D2B6832}"
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Customer.Domain.Fashion", "Customer.Domain.Fashion\Customer.Domain.Fashion.fsproj", "{D42A8949-5D91-4C3E-AB17-B1FA2C90383F}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Customer.Domain.Fashion", "customer\Customer.Domain.Fashion\Customer.Domain.Fashion.fsproj", "{D42A8949-5D91-4C3E-AB17-B1FA2C90383F}"
 EndProject
-Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Fundamentals", "Fundamentals\Fundamentals.fsproj", "{A7E1B2F5-B843-4EA2-8642-9DE48FA6A609}"
+Project("{6EC3EE1D-3C4E-46DD-8F32-0CC8E7565705}") = "Fundamentals", "framework\Fundamentals\Fundamentals.fsproj", "{A7E1B2F5-B843-4EA2-8642-9DE48FA6A609}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyTests", "MyTests\MyTests.csproj", "{F6AEEF5B-3B31-4BE9-9E5E-6B7AFA377150}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{F6AEEF5B-3B31-4BE9-9E5E-6B7AFA377150}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Service.Search", "SearchService\Service.Search.csproj", "{0BA9163E-7E77-4EF5-9A3D-6241874C5DFA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Service.Search", "services\SearchService\Service.Search.csproj", "{0BA9163E-7E77-4EF5-9A3D-6241874C5DFA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Service.SampleProvider", "SampleProviderService\Service.SampleProvider.csproj", "{42126C92-931A-4341-A063-C9CEDE2168EA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Service.SampleProvider", "services\SampleProviderService\Service.SampleProvider.csproj", "{42126C92-931A-4341-A063-C9CEDE2168EA}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Credentials", "Credentials\Credentials.csproj", "{9D804426-80A6-43E8-BFFF-377305CB66D4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Credentials", "framework\Credentials\Credentials.csproj", "{9D804426-80A6-43E8-BFFF-377305CB66D4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client.UpdateConfiguration", "UpdateConfigurationClient\Client.UpdateConfiguration.csproj", "{B70EF22E-2140-4C91-8D22-7812EDE90F7C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client.UpdateConfiguration", "clients\UpdateConfigurationClient\Client.UpdateConfiguration.csproj", "{B70EF22E-2140-4C91-8D22-7812EDE90F7C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Service.SnapshotGenerator", "SnapshotGeneratorService\Service.SnapshotGenerator.csproj", "{97402184-B5E0-49F7-9741-EFA8192E52D6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Service.SnapshotGenerator", "services\SnapshotGeneratorService\Service.SnapshotGenerator.csproj", "{97402184-B5E0-49F7-9741-EFA8192E52D6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BusinessDataPump", "BusinessDataPump\BusinessDataPump.csproj", "{853D3E4C-6C51-48B7-AECC-4FC0B36BC304}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BusinessDataPump", "framework\BusinessDataPump\BusinessDataPump.csproj", "{853D3E4C-6C51-48B7-AECC-4FC0B36BC304}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client.DemoUsingBusinessData", "DemoUsingBusinessDataClient\Client.DemoUsingBusinessData.csproj", "{10BB1D8A-6A6A-4268-8947-C3DF962DF0F1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Client.DemoUsingBusinessData", "clients\DemoUsingBusinessDataClient\Client.DemoUsingBusinessData.csproj", "{10BB1D8A-6A6A-4268-8947-C3DF962DF0F1}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Clients", "Clients", "{6F78A7C7-5FC8-4FF4-8116-5D312EF36315}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "clients", "clients", "{6F78A7C7-5FC8-4FF4-8116-5D312EF36315}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{8845B943-00ED-4F7C-9AE8-C2C08E98A838}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "services", "services", "{8845B943-00ED-4F7C-9AE8-C2C08E98A838}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{BA0438B5-45D3-40E1-96D6-80BB857BA9D0}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Generic", "Generic", "{7215F4AB-5CBC-41AF-B553-98CEF7EA1CF9}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "framework", "framework", "{7215F4AB-5CBC-41AF-B553-98CEF7EA1CF9}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CustomerSpecific", "CustomerSpecific", "{F1BB2398-F9F0-472E-8181-D6EE489C1E32}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "customer", "customer", "{F1BB2398-F9F0-472E-8181-D6EE489C1E32}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Interfaces", "Interfaces\Interfaces.csproj", "{56DBC553-4E15-4BD3-96B5-128001A45EA9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Interfaces", "framework\Interfaces\Interfaces.csproj", "{56DBC553-4E15-4BD3-96B5-128001A45EA9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Messaging", "Messaging\Messaging.csproj", "{0C8E6BD9-BDE8-4879-B35B-739FCEBD3F82}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Messaging", "framework\Messaging\Messaging.csproj", "{0C8E6BD9-BDE8-4879-B35B-739FCEBD3F82}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Service.BusinessData", "BusinessDataService\Service.BusinessData.csproj", "{1FC26B26-5534-44D5-B1B2-C2556846E308}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Service.BusinessData", "services\BusinessDataService\Service.BusinessData.csproj", "{1FC26B26-5534-44D5-B1B2-C2556846E308}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
