@@ -7,6 +7,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Fundamentals.fs" />
+    <Compile Include="BusinessData.fs" />
     <Compile Include="FundamentalsExtensions.fs" />
     <Compile Include="FSharpFuncUtil.fs" />
     <Compile Include="BusinessLogic.fs" />

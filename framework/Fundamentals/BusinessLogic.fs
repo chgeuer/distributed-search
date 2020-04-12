@@ -1,4 +1,4 @@
-﻿module Mercury.BusinessLogic.Logic
+﻿module Mercury.Fundamentals.BusinessLogic
 
 open Mercury.Fundamentals
 
@@ -7,6 +7,12 @@ type Predicate<'context, 'item> =
 
 type Projection<'context, 'item> =
     'context -> 'item -> 'item
+
+type IPredicate<'context, 'item> =
+    abstract member Matches : Predicate<'context, 'item>
+
+type IProjection<'context, 'item> =
+    abstract member Map: Projection<'context, 'item>
 
 type PipelineStep<'context, 'item> =
     | Predicate of Predicate<'context, 'item>

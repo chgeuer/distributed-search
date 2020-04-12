@@ -16,6 +16,7 @@
     using Mercury.Utils.Extensions;
     using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
+    using static Mercury.Fundamentals.BusinessData;
 
     public class BusinessDataPump<TBusinessData, TBusinessDataUpdate>
     {

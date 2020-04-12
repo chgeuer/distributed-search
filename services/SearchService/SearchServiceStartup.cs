@@ -16,10 +16,11 @@
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using static BusinessLogic.Logic;
     using static Fundamentals.Types;
     using static Mercury.Customer.Fashion.BusinessData;
     using static Mercury.Customer.Fashion.Domain;
+    using static Mercury.Fundamentals.BusinessData;
+    using static Mercury.Fundamentals.BusinessLogic;
 
     public class SearchServiceStartup
     {

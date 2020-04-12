@@ -13,6 +13,7 @@ namespace Mercury.BusinessDataService
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using static Mercury.Customer.Fashion.BusinessData;
+    using static Mercury.Fundamentals.BusinessData;
     using static Mercury.Fundamentals.Types;
 
     public class BusinessDataStartup

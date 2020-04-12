@@ -4,7 +4,7 @@ open System.Collections.Generic
 open System.Runtime.CompilerServices
 open Mercury.Customer.Fashion.Domain
 open Mercury.Customer.Fashion.BusinessData
-open Mercury.Fundamentals.Types
+open Mercury.Fundamentals.BusinessData
 open Mercury.Interfaces
 
 type MarkupAdder() =

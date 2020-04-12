@@ -11,6 +11,7 @@
     using System.Threading.Tasks;
     using static Fundamentals.Types;
     using static Mercury.Customer.Fashion.BusinessData;
+    using static Mercury.Fundamentals.BusinessData;
 
     internal class DemoUsingBusinessDataClientProgram
     {

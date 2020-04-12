@@ -10,14 +10,14 @@ namespace Mercury.UnitTests
     using NUnit.Framework;
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using System.Reactive.Linq;
     using System.Threading.Tasks;
-    using static Mercury.BusinessLogic.Logic;
-    using static Mercury.BusinessLogic.Logic.PipelineStep;
+    using static Mercury.Fundamentals.BusinessLogic;
+    using static Mercury.Fundamentals.BusinessLogic.PipelineStep;
     using static Mercury.Customer.Fashion.BusinessData;
     using static Mercury.Customer.Fashion.Domain;
+    using static Mercury.Fundamentals.BusinessData;
     using static Mercury.Fundamentals.Types;
 
     public class VersionedDictionary<T>
@@ -36,9 +36,13 @@ namespace Mercury.UnitTests
         [Test]
         public void FunctionalPipeline2()
         {
+            var size = new GenericFilter<FashionProcessingContext, FashionItem>((c, i) => c.Query.Size == i.Size) 
+                as IPredicate<FashionProcessingContext, FashionItem>;
+            
             var p = new PipelineSteps2<FashionProcessingContext, FashionItem>(
                 streamingSteps: new PipelineStep<FashionProcessingContext, FashionItem>[]
                     {
+                        PipelineStep<FashionProcessingContext, FashionItem>.NewPredicate(size.Matches),
                         createPredicate((FashionProcessingContext c, FashionItem i) => c.Query.FashionType == i.FashionType),
                         createProjection((FashionProcessingContext c, FashionItem i) => FashionItemModule.newPrice(i, i.Price + c.BusinessData.DefaultMarkup)),
                     }.ToFSharp(),

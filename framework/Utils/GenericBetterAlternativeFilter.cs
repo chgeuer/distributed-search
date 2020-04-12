@@ -3,7 +3,7 @@
     using System;
     using System.Collections.Generic;
     using Mercury.Interfaces;
-    using static BusinessLogic.Logic;
+    using static Mercury.Fundamentals.BusinessLogic;
 
     public class GenericBetterAlternativeFilter<TContext, TItem> : IBusinessLogicFilterStatefulPredicate<TContext, TItem>
     {

@@ -13,6 +13,7 @@
     using static Fundamentals.Types;
     using static Mercury.Customer.Fashion.BusinessData;
     using static Mercury.Customer.Fashion.Domain;
+    using static Mercury.Fundamentals.BusinessData;
 
     [ApiController]
     [Route("[controller]")]
