@@ -1,5 +1,10 @@
 namespace Mercury.UnitTests
 {
+    using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using System.Reactive.Linq;
+    using System.Threading.Tasks;
     using Mercury.Customer.Fashion;
     using Mercury.Fundamentals;
     using Mercury.Fundamentals.Extensions;
@@ -8,11 +13,6 @@ namespace Mercury.UnitTests
     using Mercury.Utils.Extensions;
     using Microsoft.FSharp.Collections;
     using NUnit.Framework;
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Reactive.Linq;
-    using System.Threading.Tasks;
     using static Mercury.Fundamentals.BusinessLogic;
     using static Mercury.Fundamentals.BusinessLogic.PipelineStep;
     using static Mercury.Customer.Fashion.BusinessData;
