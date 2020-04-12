@@ -6,7 +6,6 @@
     using System.Threading.Tasks;
     using Mercury.Interfaces;
     using Mercury.Utils;
-    using Mercury.Utils.Extensions;
     using static Fundamentals.Types;
     using static Fundamentals.Types.BlobStorageAddressModule;
 
@@ -44,11 +43,11 @@
             TMessagePayload messagePayload,
             CancellationToken cancellationToken = default)
         {
-            var blobName = $"{Guid.NewGuid()}.json";
+            var blobName = Guid.NewGuid().ToString();
 
             await this.storageOffload.Upload(
                 blobName: blobName,
-                stream: messagePayload.AsJSONStream(),
+                value: messagePayload,
                 cancellationToken: cancellationToken);
 
             return await this.innerClient.SendMessage(
@@ -61,11 +60,11 @@
             string requestId,
             CancellationToken cancellationToken = default)
         {
-            var blobName = $"{requestId}/{Guid.NewGuid()}.json";
+            var blobName = $"{requestId}/{Guid.NewGuid()}";
 
             await this.storageOffload.Upload(
                 blobName: blobName,
-                stream: messagePayload.AsJSONStream(),
+                value: messagePayload,
                 cancellationToken: cancellationToken);
 
             return await this.innerClient.SendMessage(

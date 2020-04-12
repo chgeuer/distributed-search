@@ -22,13 +22,17 @@ type Message<'payload> =
       Offset: Offset
       Payload: 'payload }
 
-type TopicPartitionID =
+type TopicAndComputeNodeID =
     { TopicName: string
+      /// If a node expects responses in a particular partition,
+      /// specify a node ID number here. This node ID will be used
+      /// modulo the number of partitions, to determine the
+      /// precise partition.
       ComputeNodeId: int option }
 
 type ProviderSearchRequest<'searchRequest> =
     { RequestID: RequestID
-      ResponseTopic: TopicPartitionID
+      ResponseTopic: TopicAndComputeNodeID
       SearchRequest: 'searchRequest }
 
 type ProviderSearchResponse<'item> =

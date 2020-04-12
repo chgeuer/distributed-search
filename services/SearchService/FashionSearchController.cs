@@ -23,7 +23,7 @@
         private readonly Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest;
         private readonly IObservable<Message<ProviderSearchResponse<FashionItem>>> providerResponsePump;
         private readonly Func<PipelineSteps<FashionProcessingContext, FashionItem>> createPipelineSteps;
-        private readonly Func<TopicPartitionID> getTopicPartitionID;
+        private readonly Func<TopicAndComputeNodeID> getTopicAndComputeNodeID;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FashionSearchController"/> class.
@@ -33,17 +33,17 @@
         /// <param name="sendProviderSearchRequest">Sends a provider search request to the requests topic.</param>
         /// <param name="createPipelineSteps">Creates the processing pipeline steps.</param>
         /// <param name="getBusinessData">Returns the most recent business data.</param>
-        /// <param name="getTopicPartitionID">Returns the <see cref="TopicPartitionID"/>.</param>
+        /// <param name="getTopicAndComputeNodeID">Returns the <see cref="TopicAndComputeNodeID"/>.</param>
         public FashionSearchController(
             IDistributedSearchConfiguration searchConfiguration,
             IObservable<Message<ProviderSearchResponse<FashionItem>>> providerResponsePump,
             Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest,
             Func<PipelineSteps<FashionProcessingContext, FashionItem>> createPipelineSteps,
             Func<BusinessData<FashionBusinessData>> getBusinessData,
-            Func<TopicPartitionID> getTopicPartitionID)
+            Func<TopicAndComputeNodeID> getTopicAndComputeNodeID)
         {
-            (this.providerResponsePump, this.sendProviderSearchRequest, this.createPipelineSteps, this.getBusinessData, this.searchConfiguration, this.getTopicPartitionID) =
-                (providerResponsePump, sendProviderSearchRequest, createPipelineSteps, getBusinessData, searchConfiguration, getTopicPartitionID);
+            (this.providerResponsePump, this.sendProviderSearchRequest, this.createPipelineSteps, this.getBusinessData, this.searchConfiguration, this.getTopicAndComputeNodeID) =
+                (providerResponsePump, sendProviderSearchRequest, createPipelineSteps, getBusinessData, searchConfiguration, getTopicAndComputeNodeID);
         }
 
         [HttpGet]
@@ -64,7 +64,7 @@
 
             var providerSearchRequest = new ProviderSearchRequest<FashionSearchRequest>(
                 requestID: Guid.NewGuid().ToString(),
-                responseTopic: this.getTopicPartitionID(),
+                responseTopic: this.getTopicAndComputeNodeID(),
                 searchRequest: searchRequest);
 
             var stopwatch = new Stopwatch();

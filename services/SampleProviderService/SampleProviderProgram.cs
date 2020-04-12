@@ -27,8 +27,8 @@
 
             var cts = new CancellationTokenSource();
 
-            var clients = new Dictionary<TopicPartitionID, IMessageClient<ProviderSearchResponse<FashionItem>>>();
-            IMessageClient<ProviderSearchResponse<FashionItem>> getMessageClient(TopicPartitionID tpid)
+            var clients = new Dictionary<TopicAndComputeNodeID, IMessageClient<ProviderSearchResponse<FashionItem>>>();
+            IMessageClient<ProviderSearchResponse<FashionItem>> getMessageClient(TopicAndComputeNodeID tpid)
             {
                 lock (clients)
                 {
@@ -40,7 +40,7 @@
 
                         var client = MessagingClients.WithStorageOffload<ProviderSearchResponse<FashionItem>>(
                             demoCredential: demoCredential,
-                            topicPartitionID: tpid,
+                            topicAndComputeNodeID: tpid,
                             storageOffload: blobContainerClient.ToStorageOffload());
 
                         clients.Add(tpid, client);

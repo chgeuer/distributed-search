@@ -28,7 +28,7 @@
         private readonly IDistributedSearchConfiguration demoCredential;
         private readonly BlobContainerClient snapshotContainerClient;
         private readonly BlobContainerClient storageOffloadStorage;
-        private readonly TopicPartitionID topicPartitionID;
+        private readonly TopicAndComputeNodeID topicAndComputeNodeID;
 
         public SearchServiceStartup(IConfiguration configuration)
         {
@@ -37,7 +37,7 @@
 
             var computeNodeId = 100;
 
-            this.topicPartitionID = new TopicPartitionID(
+            this.topicAndComputeNodeID = new TopicAndComputeNodeID(
                 topicName: this.demoCredential.EventHubTopicNameResponses,
                 computeNodeId: computeNodeId);
 
@@ -69,8 +69,8 @@
         {
             services.AddControllers();
 
-            services.AddSingleton(_ => this.GetTopicPartitionID());
-            services.AddSingleton(_ => this.CreateProviderResponsePump<FashionItem>(this.topicPartitionID));
+            services.AddSingleton(_ => this.GetTopicAndComputeNodeID());
+            services.AddSingleton(_ => this.CreateProviderResponsePump<FashionItem>(this.topicAndComputeNodeID));
             services.AddSingleton<IDistributedSearchConfiguration>(_ => this.demoCredential);
 
             services.AddSingleton(_ => this.SendProviderSearchRequest());
@@ -114,12 +114,12 @@
             return searchRequest => requestProducer.SendMessage(searchRequest, requestId: searchRequest.RequestID);
         }
 
-        private IObservable<Message<ProviderSearchResponse<T>>> CreateProviderResponsePump<T>(TopicPartitionID topicPartitionID)
+        private IObservable<Message<ProviderSearchResponse<T>>> CreateProviderResponsePump<T>(TopicAndComputeNodeID topicAndComputeNodeID)
         {
             var messagingClient = MessagingClients
                 .WithStorageOffload<ProviderSearchResponse<T>>(
                     demoCredential: this.demoCredential,
-                    topicPartitionID: topicPartitionID,
+                    topicAndComputeNodeID: topicAndComputeNodeID,
                     storageOffload: this.storageOffloadStorage.ToStorageOffload());
 
             var connectable = messagingClient
@@ -145,9 +145,9 @@
             return () => businessDataUpdates.BusinessData;
         }
 
-        private Func<TopicPartitionID> GetTopicPartitionID() => () =>
+        private Func<TopicAndComputeNodeID> GetTopicAndComputeNodeID() => () =>
         {
-            return this.topicPartitionID;
+            return this.topicAndComputeNodeID;
         };
     }
 }

@@ -1,6 +1,5 @@
 ﻿namespace Mercury.Utils
 {
-    using System.IO;
     using System.Threading;
     using System.Threading.Tasks;
     using Mercury.Utils.Extensions;
@@ -18,15 +17,26 @@
             this.storageOffloadFunctions = storageOffloadFunctions;
         }
 
-        public Task Upload(string blobName, Stream stream, CancellationToken cancellationToken)
-            => this.storageOffloadFunctions.Upload(blobName, stream, cancellationToken);
+        public Task Upload<T>(string blobName, T value, CancellationToken cancellationToken)
+            => this.storageOffloadFunctions.Upload(
+                GetFilename(blobName),
+                value
+                    .AsJSONStream()
+                    .GZipCompress(),
+                cancellationToken);
 
         public async Task<T> Download<T>(string blobName, CancellationToken cancellationToken)
         {
             var stream = await this.storageOffloadFunctions.Download(
-                blobName, cancellationToken);
+                GetFilename(blobName),
+                cancellationToken);
 
-            return await stream.ReadJSON<T>();
+            return await stream
+                .GZipDecompress()
+                .ReadJSON<T>();
         }
+
+        private static string GetFilename(string blobName)
+            => $"{blobName}.json.gz";
     }
 }

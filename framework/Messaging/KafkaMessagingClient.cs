@@ -22,7 +22,7 @@
         private readonly IAdminClient adminClient;
         private readonly Lazy<TopicPartition> topicPartition;
 
-        public KafkaMessagingClient(IDistributedSearchConfiguration demoCredential, TopicPartitionID topicPartitionID)
+        public KafkaMessagingClient(IDistributedSearchConfiguration demoCredential, TopicAndComputeNodeID topicAndComputeNodeID)
         {
             var bootstrapServers = $"{demoCredential.EventHubName}.servicebus.windows.net:9093";
             var saslUsername = "$ConnectionString";
@@ -74,8 +74,8 @@
             }).Build();
 
             this.topicPartition = new Lazy<TopicPartition>(() => new TopicPartition(
-                    topic: topicPartitionID.TopicName,
-                    partition: DeterminePartitionID(this.adminClient, topicPartitionID)));
+                    topic: topicAndComputeNodeID.TopicName,
+                    partition: DeterminePartitionID(this.adminClient, topicAndComputeNodeID)));
         }
 
         public Task<MercuryOffset> SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default)
@@ -164,23 +164,23 @@
             });
         }
 
-        private static Partition DeterminePartitionID(IAdminClient adminClient, TopicPartitionID topicPartitionID)
+        private static Partition DeterminePartitionID(IAdminClient adminClient, TopicAndComputeNodeID topicAndComputeNodeID)
         {
-            bool useSpecificPartition = FSharpOption<int>.get_IsSome(topicPartitionID.ComputeNodeId);
+            bool useSpecificPartition = FSharpOption<int>.get_IsSome(topicAndComputeNodeID.ComputeNodeId);
             if (!useSpecificPartition)
             {
                 return Partition.Any;
             }
 
-            var metadata = adminClient.GetMetadata(topic: topicPartitionID.TopicName, timeout: TimeSpan.FromSeconds(10));
-            var topicMetadata = metadata.Topics.FirstOrDefault(t => t.Topic == topicPartitionID.TopicName);
+            var metadata = adminClient.GetMetadata(topic: topicAndComputeNodeID.TopicName, timeout: TimeSpan.FromSeconds(10));
+            var topicMetadata = metadata.Topics.FirstOrDefault(t => t.Topic == topicAndComputeNodeID.TopicName);
             if (topicMetadata == null)
             {
-                throw new NotSupportedException($"Cannot determine partition count for topic {topicPartitionID.TopicName}");
+                throw new NotSupportedException($"Cannot determine partition count for topic {topicAndComputeNodeID.TopicName}");
             }
 
             int partitionCount = topicMetadata.Partitions.Count;
-            int partitionId = topicPartitionID.ComputeNodeId.Value % partitionCount;
+            int partitionId = topicAndComputeNodeID.ComputeNodeId.Value % partitionCount;
 
             return new Partition(partitionId);
         }
