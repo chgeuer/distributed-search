@@ -1,6 +1,7 @@
 namespace Mercury.UnitTests
 {
     using Mercury.Customer.Fashion;
+    using Mercury.Fundamentals;
     using Mercury.Fundamentals.Extensions;
     using Mercury.Interfaces;
     using Mercury.Utils;

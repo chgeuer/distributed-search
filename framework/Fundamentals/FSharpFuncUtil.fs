@@ -1,12 +1,21 @@
 ﻿namespace Mercury.Fundamentals
 
 open System
+open System.Collections.Generic
 open System.Runtime.CompilerServices
 
 [<Extension>]
 type public FSharpFuncUtil = 
-    // https://blogs.msdn.microsoft.com/jaredpar/2010/07/27/converting-system-funct1-tn-to-fsharpfuncttresult/
+    [<Extension>] 
+    static member ToFSharp<'t> (source: IEnumerable<'t>) : 't list = source |> List.ofSeq
 
+    [<Extension>] 
+    static member OptionEqualsValue<'t when 't : equality> (tOption: 't option) (t: 't) : bool = 
+        match tOption with
+        | Some v -> v.Equals(t)
+        | None -> false
+
+    // https://blogs.msdn.microsoft.com/jaredpar/2010/07/27/converting-system-funct1-tn-to-fsharpfuncttresult/
     [<Extension>] 
     static member ToFSharpFunc<'a,'b> (func: Converter<'a,'b>) = fun x -> func.Invoke(x)
 
