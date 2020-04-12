@@ -15,6 +15,7 @@ namespace Mercury.UnitTests
     using System.Reactive.Linq;
     using System.Threading.Tasks;
     using static Mercury.BusinessLogic.Logic;
+    using static Mercury.BusinessLogic.Logic.PipelineStep;
     using static Mercury.Customer.Fashion.BusinessData;
     using static Mercury.Customer.Fashion.Domain;
     using static Mercury.Fundamentals.Types;
@@ -30,6 +31,20 @@ namespace Mercury.UnitTests
     {
         [SetUp]
         public void Setup() { }
+
+
+        [Test]
+        public void FunctionalPipeline2()
+        {
+            var p = new PipelineSteps2<FashionProcessingContext, FashionItem>(
+                streamingSteps: new PipelineStep<FashionProcessingContext, FashionItem>[]
+                    {
+                        createPredicate((FashionProcessingContext c, FashionItem i) => c.Query.FashionType == i.FashionType),
+                        createProjection((FashionProcessingContext c, FashionItem i) => FashionItemModule.newPrice(i, i.Price + c.BusinessData.DefaultMarkup)),
+                    }.ToFSharp(),
+                sequentialSteps: FSharpList<PipelineStep<FashionProcessingContext, FashionItem>>.Empty
+            );
+        }
 
         [Test]
         public void TestGenericUpdates2()
@@ -98,14 +113,11 @@ namespace Mercury.UnitTests
                      }),
                      defaultMarkup: 1_00);
 
-
-            var ms = new MemoryStream();
-            val.AsJSONStream()
+            var decom = await val
+                .AsJSONStream()
                 .GZipCompress()
-                .CopyTo(ms);
-            ms.Seek(0, SeekOrigin.Begin);
-
-            var decom = await ms.GZipDecompress().ReadJSON<FashionBusinessData>();
+                .GZipDecompress()
+                .ReadJSON<FashionBusinessData>();
 
             Assert.AreEqual(val, decom);
         }

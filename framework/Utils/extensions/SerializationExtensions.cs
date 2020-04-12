@@ -32,24 +32,24 @@
 
         public static Stream GZipCompress(this Stream input)
         {
-            var output = new MemoryStream();
+            using var output = new MemoryStream();
             using (var gzip = new GZipStream(output, CompressionMode.Compress))
             {
                 input.CopyTo(gzip);
             }
 
-            return output;
+            return new MemoryStream(output.ToArray());
         }
 
         public static Stream GZipDecompress(this Stream input)
         {
-            var output = new MemoryStream();
+            using var output = new MemoryStream();
             using (var gzip = new GZipStream(input, CompressionMode.Decompress))
             {
                 gzip.CopyTo(output);
             }
 
-            return output;
+            return new MemoryStream(output.ToArray());
         }
     }
 }

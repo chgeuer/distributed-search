@@ -13,8 +13,14 @@ type FashionItem =
       Description: string
       StockKeepingUnitID: string }
 
+module FashionItem =
+    let newPrice (i: FashionItem, price: decimal) =
+        { i with Price = price }
+        
 let TShirt: FashionType = "T-Shirt"
 let Pullover: FashionType = "Pullover"
 let Shoes: FashionType = "Shoes"
 let Hat: FashionType = "Hat"
 let Throusers: FashionType = "Throusers"
+
+
