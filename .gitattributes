@@ -1,0 +1,6 @@
+*.fs text
+*.cs text
+*.csproj text
+*.fsproj text
+*.sln text eol=crlf
+
