@@ -6,9 +6,9 @@
     <PackageReference Update="FSharp.Core" Version="4.7.1" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Helpers.fs" />
     <Compile Include="Fundamentals.fs" />
     <Compile Include="FundamentalsExtensions.fs" />
     <Compile Include="BusinessLogic.fs" />
+    <Compile Include="FSharpFuncUtil.fs" />
   </ItemGroup>
 </Project>
