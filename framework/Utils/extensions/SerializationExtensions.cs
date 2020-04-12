@@ -1,6 +1,7 @@
 ﻿namespace Mercury.Utils.Extensions
 {
     using System.IO;
+    using System.IO.Compression;
     using System.Text;
     using System.Threading.Tasks;
     using Newtonsoft.Json;
@@ -23,11 +24,32 @@
             await stream.CopyToAsync(ms);
             byte[] bytes = ms.ToArray();
             string s = bytes.ToUTF8String();
-            var o = JsonConvert.DeserializeObject<T>(s, new JsonSerializerSettings
+            return JsonConvert.DeserializeObject<T>(s, new JsonSerializerSettings
             {
                 MissingMemberHandling = MissingMemberHandling.Error,
             });
-            return o;
+        }
+
+        public static Stream GZipCompress(this Stream input)
+        {
+            var output = new MemoryStream();
+            using (var gzip = new GZipStream(output, CompressionMode.Compress))
+            {
+                input.CopyTo(gzip);
+            }
+
+            return output;
+        }
+
+        public static Stream GZipDecompress(this Stream input)
+        {
+            var output = new MemoryStream();
+            using (var gzip = new GZipStream(input, CompressionMode.Decompress))
+            {
+                gzip.CopyTo(output);
+            }
+
+            return output;
         }
     }
 }

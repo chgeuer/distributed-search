@@ -8,6 +8,7 @@
     using Mercury.Utils;
     using Mercury.Utils.Extensions;
     using static Fundamentals.Types;
+    using static Fundamentals.Types.BlobStorageAddressModule;
 
     public class MessagingClientWithStorageOffload<TMessagePayload> : IMessageClient<TMessagePayload>
     {
@@ -30,7 +31,7 @@
                 .SelectMany(async message =>
                 {
                     var payload = await this.storageOffload.Download<TMessagePayload>(
-                        blobName: message.Payload.Address,
+                        blobName: value(message.Payload.Address),
                         cancellationToken: cancellationToken);
 
                     return new Message<TMessagePayload>(
@@ -51,7 +52,7 @@
                 cancellationToken: cancellationToken);
 
             return await this.innerClient.SendMessage(
-                messagePayload: new StorageOffloadReference(address: blobName),
+                messagePayload: new StorageOffloadReference(address: create(blobName)),
                 cancellationToken: cancellationToken);
         }
 
@@ -68,7 +69,7 @@
                 cancellationToken: cancellationToken);
 
             return await this.innerClient.SendMessage(
-                messagePayload: new StorageOffloadReference(address: blobName),
+                messagePayload: new StorageOffloadReference(address: create(blobName)),
                 requestId: requestId,
                 cancellationToken: cancellationToken);
         }

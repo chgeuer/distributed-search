@@ -9,8 +9,10 @@ namespace Mercury.UnitTests
     using NUnit.Framework;
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using System.Reactive.Linq;
+    using System.Threading.Tasks;
     using static Mercury.BusinessLogic.Logic;
     using static Mercury.Customer.Fashion.BusinessData;
     using static Mercury.Customer.Fashion.Domain;
@@ -78,6 +80,33 @@ namespace Mercury.UnitTests
                 .ApplyUpdateOperations(ops);
 
             Assert.AreEqual(expected.DeserializeJSON<FSharpMap<string, int>>(), result);
+        }
+
+        [Test]
+        public async Task TestCompression()
+        {
+            var val = new FashionBusinessData(
+                     markup: new FSharpMap<string, decimal>(new[]
+                     {
+                            Tuple.Create(Hat, 0_12m),
+                            Tuple.Create(Throusers, 1_50m),
+                     }),
+                     brands: new FSharpMap<string, string>(new[]
+                     {
+                          Tuple.Create("DG", "Docker and Galbani")
+                     }),
+                     defaultMarkup: 1_00);
+
+
+            var ms = new MemoryStream();
+            val.AsJSONStream()
+                .GZipCompress()
+                .CopyTo(ms);
+            ms.Seek(0, SeekOrigin.Begin);
+
+            var decom = await ms.GZipDecompress().ReadJSON<FashionBusinessData>();
+
+            Assert.AreEqual(val, decom);
         }
 
         [Test]

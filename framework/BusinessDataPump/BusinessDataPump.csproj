@@ -19,6 +19,7 @@
     <Compile Update="..\..\Properties\stylecop\GlobalStylecopSuppressions.cs" Link="GlobalStylecopSuppressions.cs" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="FSharp.Core" Version="4.7.1" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.118">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

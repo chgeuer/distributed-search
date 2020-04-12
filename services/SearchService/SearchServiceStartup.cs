@@ -7,6 +7,7 @@
     using Mercury.BusinessDataPump;
     using Mercury.Credentials;
     using Mercury.Customer.Fashion;
+    using Mercury.Fundamentals;
     using Mercury.Interfaces;
     using Mercury.Messaging;
     using Mercury.Utils.Extensions;
@@ -34,6 +35,9 @@
             this.Configuration = configuration;
             this.demoCredential = new DemoCredential();
 
+            // TODO Currently this is locked to a partitionId 1
+            this.topicPartitionID = new TopicPartitionID(topicName: this.demoCredential.EventHubTopicNameResponses, partitionId: 1);
+
             this.snapshotContainerClient = new BlobContainerClient(
                 blobContainerUri: new Uri($"https://{this.demoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{this.demoCredential.BusinessDataSnapshotContainerName}/"),
                 credential: this.demoCredential.AADServicePrincipal);
@@ -41,9 +45,6 @@
             this.storageOffloadStorage = new BlobContainerClient(
                blobContainerUri: new Uri($"https://{this.demoCredential.StorageOffloadAccountName}.blob.core.windows.net/{this.demoCredential.StorageOffloadContainerNameResponses}/"),
                credential: this.demoCredential.AADServicePrincipal);
-
-            // TODO Currently this is locked to a partitionId 1
-            this.topicPartitionID = new TopicPartitionID(topicName: this.demoCredential.EventHubTopicNameResponses, partitionId: 1);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -77,9 +78,9 @@
 
         private static Func<PipelineSteps<FashionProcessingContext, FashionItem>> CreatePipelineSteps() => () =>
         {
-            var s1 = PipelineStep<FashionProcessingContext, FashionItem>.NewPredicate(
-                FSharpExtensions.ToFSharpFunc<Tuple<FashionProcessingContext, FashionItem>, bool>(
-                    t => t.Item1.Query.Size == t.Item2.Size));
+            Func<FashionProcessingContext, FashionItem, bool> p = (c, i) => c.Query.Size == i.Size;
+
+            var s1 = PipelineStep<FashionProcessingContext, FashionItem>.NewPredicate(p.ToFSharpFunc());
 
             return new PipelineSteps<FashionProcessingContext, FashionItem>
             {
@@ -98,6 +99,10 @@
             };
         };
 
+        /// <summary>
+        /// A function which can asyncronously send out a provider search request.
+        /// </summary>
+        /// <returns>Returns a function which can asyncronously send out a provider search request.</returns>
         private Func<ProviderSearchRequest<FashionSearchRequest>, Task> SendProviderSearchRequest()
         {
             var requestProducer = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(

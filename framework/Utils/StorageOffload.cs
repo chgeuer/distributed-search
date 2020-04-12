@@ -6,6 +6,9 @@
     using Mercury.Utils.Extensions;
     using static Fundamentals.Types;
 
+    /// <summary>
+    /// Handles upload and download of .NET types as JSON messages.
+    /// </summary>
     public class StorageOffload
     {
         private readonly StorageOffloadFunctions storageOffloadFunctions;

@@ -10,6 +10,7 @@
     using Azure;
     using Azure.Storage.Blobs;
     using Azure.Storage.Blobs.Models;
+    using Mercury.Fundamentals;
     using Mercury.Interfaces;
     using Mercury.Messaging;
     using Mercury.Utils.Extensions;
@@ -62,7 +63,6 @@
 
             BusinessData<TBusinessData> snapshotValue = await this.FetchBusinessDataSnapshot(this.cts.Token);
 
-            // TODO Use curried function / partial application here?
             var updateFunc = this.applyUpdate.ToFSharpFunc();
 
             IConnectableObservable<BusinessData<TBusinessData>> connectableObservable =
@@ -72,7 +72,8 @@
                         cancellationToken: this.cts.Token)
                     .Scan(
                         seed: snapshotValue,
-                        accumulator: (businessData, updateMessage) => updateBusinessData(updateFunc, businessData, updateMessage))
+                        accumulator: (businessData, updateMessage)
+                            => updateBusinessData(updateFunc, businessData, updateMessage))
                     .StartWith(snapshotValue)
                     .Publish(initialValue: snapshotValue);
 

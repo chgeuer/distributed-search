@@ -1,10 +1,10 @@
 ﻿module Mercury.BusinessLogic.Logic
 
 type Predicate<'context, 'item> =
-    'context * 'item -> bool
+    'context -> 'item -> bool
 
 type Projection<'context, 'item> =
-    'context * 'item -> 'item
+    'context -> 'item -> 'item
 
 type PipelineStep<'context, 'item> =
     | Predicate of Predicate<'context, 'item>

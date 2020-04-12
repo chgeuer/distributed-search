@@ -4,6 +4,7 @@ open System.Collections.Generic
 open System.Runtime.CompilerServices
 open Mercury.Customer.Fashion.Domain
 open Mercury.Customer.Fashion.BusinessData
+open Mercury.Fundamentals.Types
 open Mercury.Interfaces
 
 type MarkupAdder() =
@@ -46,22 +47,24 @@ module FashionExtensions =
         { fashionItem with Price = newPrice }
 
     [<Extension>]
-    let ApplyFashionUpdate businessData update =
-        match update with
-        | MarkupUpdate(fashionType, markupPrice) ->
-            match markupPrice with
-            | price when price <= 0m ->
+    let ApplyFashionUpdate : SingleUpdate<FashionBusinessData, FashionBusinessDataUpdate> =
+        fun businessData update ->
+            
+            match update with
+            | MarkupUpdate(fashionType, markupPrice) ->
+                match markupPrice with
+                | price when price <= 0m ->
+                    { businessData with
+                          Markup = businessData.Markup.Remove(fashionType) }
+                | price -> 
+                    { businessData with
+                          Markup = businessData.Markup.Add(fashionType, price) }
+            | BrandUpdate(key, value) ->
                 { businessData with
-                      Markup = businessData.Markup.Remove(fashionType) }
-            | price -> 
+                      Brands = businessData.Brands.Add(key, value) }
+            | SetDefaultMarkup newDefaultPrice ->
                 { businessData with
-                      Markup = businessData.Markup.Add(fashionType, price) }
-        | BrandUpdate(key, value) ->
-            { businessData with
-                  Brands = businessData.Brands.Add(key, value) }
-        | SetDefaultMarkup newDefaultPrice ->
-            { businessData with
-                  DefaultMarkup = newDefaultPrice }
+                      DefaultMarkup = newDefaultPrice }
 
     [<Extension>]
     let ApplyFashionUpdates (businessData: FashionBusinessData) (updates: IEnumerable<FashionBusinessDataUpdate>): FashionBusinessData =

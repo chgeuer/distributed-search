@@ -35,7 +35,16 @@ type ProviderSearchResponse<'item> =
     { RequestID: RequestID
       Response: 'item list }
 
-type BlobStorageAddress = string
+type BlobStorageAddress = BlobStorageAddress of string
+
+module BlobStorageAddress =
+    let create address =
+        if String.IsNullOrEmpty address then
+            failwith "address must not be null or empty"
+        else 
+            BlobStorageAddress address
+    let value (BlobStorageAddress address) =
+        address
 
 type StorageOffloadReference =
     { Address: BlobStorageAddress }
@@ -44,10 +53,11 @@ type BusinessData<'domainSpecificBusinessData> =
     { Data: 'domainSpecificBusinessData
       Offset: Offset }
 
-type singleUpdate<'domainSpecificBusinessData, 'domainSpecificUpdate> = 'domainSpecificBusinessData * 'domainSpecificUpdate -> 'domainSpecificBusinessData
+type SingleUpdate<'domainSpecificBusinessData, 'domainSpecificUpdate> =
+    'domainSpecificBusinessData -> 'domainSpecificUpdate -> 'domainSpecificBusinessData
 
-let updateBusinessData<'domainSpecificBusinessData, 'domainSpecificUpdate> (domainSpecificUpdateFunction: singleUpdate<'domainSpecificBusinessData, 'domainSpecificUpdate>) (businessData: BusinessData<'domainSpecificBusinessData>) (domainSpecificUpdateMessage: Message<'domainSpecificUpdate>): BusinessData<'domainSpecificBusinessData> =
+let updateBusinessData<'domainSpecificBusinessData, 'domainSpecificUpdate> (domainSpecificUpdateFunction: SingleUpdate<'domainSpecificBusinessData, 'domainSpecificUpdate>) (businessData: BusinessData<'domainSpecificBusinessData>) (domainSpecificUpdateMessage: Message<'domainSpecificUpdate>): BusinessData<'domainSpecificBusinessData> =
     { businessData with
         Offset = domainSpecificUpdateMessage.Offset
-        Data = domainSpecificUpdateFunction (businessData.Data, domainSpecificUpdateMessage.Payload) }
+        Data = domainSpecificUpdateFunction businessData.Data domainSpecificUpdateMessage.Payload }
 
