@@ -24,7 +24,7 @@ type Message<'payload> =
 
 type TopicPartitionID =
     { TopicName: string
-      PartitionId: int option }
+      ComputeNodeId: int option }
 
 type ProviderSearchRequest<'searchRequest> =
     { RequestID: RequestID

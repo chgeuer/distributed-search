@@ -19,7 +19,8 @@
     {
         private readonly IProducer<Null, string> producer;
         private readonly IConsumer<Ignore, string> consumer;
-        private readonly TopicPartition topicPartition;
+        private readonly IAdminClient adminClient;
+        private readonly Lazy<TopicPartition> topicPartition;
 
         public KafkaMessagingClient(IDistributedSearchConfiguration demoCredential, TopicPartitionID topicPartitionID)
         {
@@ -63,14 +64,18 @@
                 .SetValueDeserializer(Deserializers.Utf8)
                 .Build();
 
-            bool useSpecificPartition = FSharpOption<int>.get_IsSome(topicPartitionID.PartitionId);
-            var partition = useSpecificPartition
-                ? new Partition(topicPartitionID.PartitionId.Value)
-                : Partition.Any;
+            this.adminClient = new AdminClientBuilder(new AdminClientConfig
+            {
+                BootstrapServers = bootstrapServers,
+                SecurityProtocol = securityProtocol,
+                SaslMechanism = saslMechanism,
+                SaslUsername = saslUsername,
+                SaslPassword = saslPassword,
+            }).Build();
 
-            this.topicPartition = new TopicPartition(
+            this.topicPartition = new Lazy<TopicPartition>(() => new TopicPartition(
                     topic: topicPartitionID.TopicName,
-                    partition: partition);
+                    partition: DeterminePartitionID(this.adminClient, topicPartitionID)));
         }
 
         public Task<MercuryOffset> SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default)
@@ -91,7 +96,7 @@
             }
 
             var report = await this.producer.ProduceAsync(
-                topicPartition: this.topicPartition,
+                topicPartition: this.topicPartition.Value,
                 message: kafkaMessage);
 
             // await Console.Out.WriteLineAsync($"TX {report.Topic}#{report.Partition.Value}#{report.Offset.Value} {messagePayload}");
@@ -102,7 +107,7 @@
         {
             return CreateObservable(
                     consumer: this.consumer,
-                    tp: this.topicPartition,
+                    tp: this.topicPartition.Value,
                     startingPosition: startingPosition,
                     cancellationToken: cancellationToken)
                 .Select(consumeResult => new Message<TMessagePayload>(
@@ -159,14 +164,33 @@
             });
         }
 
-        private static readonly string RequestIdPropertyName = "requestIDString";
+        private static Partition DeterminePartitionID(IAdminClient adminClient, TopicPartitionID topicPartitionID)
+        {
+            bool useSpecificPartition = FSharpOption<int>.get_IsSome(topicPartitionID.ComputeNodeId);
+            if (!useSpecificPartition)
+            {
+                return Partition.Any;
+            }
+
+            var metadata = adminClient.GetMetadata(topic: topicPartitionID.TopicName, timeout: TimeSpan.FromSeconds(10));
+            var topicMetadata = metadata.Topics.FirstOrDefault(t => t.Topic == topicPartitionID.TopicName);
+            if (topicMetadata == null)
+            {
+                throw new NotSupportedException($"Cannot determine partition count for topic {topicPartitionID.TopicName}");
+            }
+
+            int partitionCount = topicMetadata.Partitions.Count;
+            int partitionId = topicPartitionID.ComputeNodeId.Value % partitionCount;
+
+            return new Partition(partitionId);
+        }
+
+        private const string RequestIdPropertyName = "requestIDString";
 
         private static FSharpOption<string> GetRequestID(Headers headers)
-        {
-            return headers.TryGetLastBytes(RequestIdPropertyName, out var bytes)
+            => headers.TryGetLastBytes(RequestIdPropertyName, out var bytes)
                 ? FSharpOption<string>.Some(bytes.ToUTF8String())
                 : FSharpOption<string>.None;
-        }
 
         private static void SetRequestID(Headers headers, string requestId)
             => headers.Add(RequestIdPropertyName, requestId.ToUTF8Bytes());

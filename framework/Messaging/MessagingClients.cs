@@ -6,22 +6,22 @@
 
     public static class MessagingClients
     {
-        public static IMessageClient<T> Updates<T>(IDistributedSearchConfiguration demoCredential, int? partitionId = null)
+        public static IMessageClient<T> Updates<T>(IDistributedSearchConfiguration demoCredential, int? computeNodeId = null)
             => Create<T>(
                 demoCredential: demoCredential,
                 topicPartitionID: new TopicPartitionID(
                     topicName: demoCredential.EventHubTopicNameBusinessDataUpdates,
-                    partitionId: partitionId));
+                    computeNodeId: computeNodeId));
 
-        public static IMessageClient<T> Requests<T>(IDistributedSearchConfiguration demoCredential, int? partitionId = null)
+        public static IMessageClient<T> Requests<T>(IDistributedSearchConfiguration demoCredential, int? computeNodeId = null)
             => Create<T>(
                 demoCredential: demoCredential,
                 topicPartitionID: new TopicPartitionID(
                     topicName: demoCredential.EventHubTopicNameRequests,
-                    partitionId: partitionId));
+                    computeNodeId: computeNodeId));
 
-        public static IMessageClient<T> Responses<T>(IDistributedSearchConfiguration demoCredential, string responseTopicName, int partitionId)
-            => Create<T>(demoCredential: demoCredential, new TopicPartitionID(topicName: responseTopicName, partitionId: partitionId));
+        public static IMessageClient<T> Responses<T>(IDistributedSearchConfiguration demoCredential, string responseTopicName, int computeNodeId)
+            => Create<T>(demoCredential: demoCredential, new TopicPartitionID(topicName: responseTopicName, computeNodeId: computeNodeId));
 
         public static IMessageClient<T> WithStorageOffload<T>(IDistributedSearchConfiguration demoCredential, TopicPartitionID topicPartitionID, StorageOffload storageOffload)
         {

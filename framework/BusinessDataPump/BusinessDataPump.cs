@@ -38,7 +38,7 @@
             this.updateMessagingClient =
                 MessagingClients.Updates<TBusinessDataUpdate>(
                     demoCredential: demoCredential,
-                    partitionId: 0); // TODO
+                    computeNodeId: null);
             this.snapshotContainerClient = snapshotContainerClient;
         }
 

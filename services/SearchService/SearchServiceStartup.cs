@@ -35,8 +35,11 @@
             this.Configuration = configuration;
             this.demoCredential = new DemoCredential();
 
-            // TODO Currently this is locked to a partitionId 1
-            this.topicPartitionID = new TopicPartitionID(topicName: this.demoCredential.EventHubTopicNameResponses, partitionId: 1);
+            var computeNodeId = 100;
+
+            this.topicPartitionID = new TopicPartitionID(
+                topicName: this.demoCredential.EventHubTopicNameResponses,
+                computeNodeId: computeNodeId);
 
             this.snapshotContainerClient = new BlobContainerClient(
                 blobContainerUri: new Uri($"https://{this.demoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{this.demoCredential.BusinessDataSnapshotContainerName}/"),
@@ -106,7 +109,7 @@
         private Func<ProviderSearchRequest<FashionSearchRequest>, Task> SendProviderSearchRequest()
         {
             var requestProducer = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(
-                demoCredential: this.demoCredential, partitionId: null);
+                demoCredential: this.demoCredential, computeNodeId: null);
 
             return searchRequest => requestProducer.SendMessage(searchRequest, requestId: searchRequest.RequestID);
         }
