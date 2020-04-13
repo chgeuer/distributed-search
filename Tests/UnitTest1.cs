@@ -13,12 +13,13 @@ namespace Mercury.UnitTests
     using Mercury.Utils.Extensions;
     using Microsoft.FSharp.Collections;
     using NUnit.Framework;
+    using static Mercury.Fundamentals.BusinessData;
     using static Mercury.Fundamentals.BusinessLogic;
     using static Mercury.Fundamentals.BusinessLogic.PipelineStep;
-    using static Mercury.Customer.Fashion.BusinessData;
-    using static Mercury.Customer.Fashion.Domain;
-    using static Mercury.Fundamentals.BusinessData;
     using static Mercury.Fundamentals.Types;
+    using static Mercury.Customer.Fashion.BusinessData;
+    using static Mercury.Customer.Fashion.BusinessData.FashionBusinessDataExtensions;
+    using static Mercury.Customer.Fashion.Domain;
 
     public class VersionedDictionary<T>
     {
@@ -31,7 +32,6 @@ namespace Mercury.UnitTests
     {
         [SetUp]
         public void Setup() { }
-
 
         [Test]
         public void FunctionalPipeline2()

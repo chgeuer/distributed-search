@@ -16,9 +16,10 @@
 
         public static IEnumerable<TItem> ApplyStep<TContext, TItem>(this IEnumerable<TItem> items, TContext ctx, IBusinessLogicStep<TContext, TItem> step) => step switch
         {
-            IBusinessLogicFilterPredicate<TContext, TItem> predicate => items.Where(item => predicate.Matches(ctx, item)),
-            IBusinessLogicFilterProjection<TContext, TItem> mapper => items.Select(item => mapper.Map(ctx, item)),
-            IBusinessLogicOrderStep<TContext, TItem> orderer => orderer.Order(ctx, items),
+            IBusinessLogicPredicate<TContext, TItem> predicate => items.Where(item => predicate.Matches(ctx, item)),
+            IBusinessLogicProjection<TContext, TItem> mapper => items.Select(item => mapper.Map(ctx, item)),
+            IBusinessLogicEnumerableProcessor<TContext, TItem> processor => processor.Process(ctx, items),
+            IBusinessLogicObservableProcessor<TContext, TItem> processor => processor.Stream(ctx, items.ToObservable()).ToEnumerable(),
             _ => throw new NotSupportedException(message: $"Unclear how to handle {step.GetType().FullName}"),
         };
 
@@ -27,8 +28,10 @@
 
         public static IObservable<TItem> ApplyStep<TContext, TItem>(this IObservable<TItem> items, TContext ctx, IBusinessLogicStep<TContext, TItem> step) => step switch
         {
-            IBusinessLogicFilterProjection<TContext, TItem> mapper => items.Select(item => mapper.Map(ctx, item)),
-            IBusinessLogicFilterPredicate<TContext, TItem> predicate => items.Where(item => predicate.Matches(ctx, item)),
+            IBusinessLogicProjection<TContext, TItem> mapper => items.Select(item => mapper.Map(ctx, item)),
+            IBusinessLogicPredicate<TContext, TItem> predicate => items.Where(item => predicate.Matches(ctx, item)),
+            IBusinessLogicObservableProcessor<TContext, TItem> processor => processor.Stream(ctx, items),
+            IBusinessLogicEnumerableProcessor<TContext, TItem> processor => processor.Process(ctx, items.ToEnumerable()).ToObservable(),
             _ => throw new NotSupportedException(message: $"Unclear how to handle {step.GetType().FullName}"),
         };
     }

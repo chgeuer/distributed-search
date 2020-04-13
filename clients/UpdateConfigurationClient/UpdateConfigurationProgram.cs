@@ -22,7 +22,7 @@
             var businessDataUpdates = new BusinessDataPump<FashionBusinessData, FashionBusinessDataUpdate>(
                 demoCredential: demoCredential,
                 createEmptyBusinessData: newFashionBusinessData,
-                applyUpdate: FashionExtensions.ApplyFashionUpdate,
+                applyUpdate: FashionBusinessDataExtensions.ApplyFashionUpdate,
                 snapshotContainerClient: new BlobContainerClient(
                     blobContainerUri: new Uri($"https://{demoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{demoCredential.BusinessDataSnapshotContainerName}/"),
                     credential: demoCredential.AADServicePrincipal));

@@ -104,7 +104,7 @@
             var sufficientlyGoodHatButTooExpensive = new FashionItem(size: 16, fashionType: Hat, price: 12_50, description: "A very same nice large hat", stockKeepingUnitID: sufficientlyGoodHat.StockKeepingUnitID);
             var someThrouser = new FashionItem(size: 54, fashionType: Throusers, price: 120_00, description: "A blue Jeans", stockKeepingUnitID: Guid.NewGuid().ToString());
             var aHatButTooSmall = new FashionItem(size: 15, fashionType: Hat, price: 13_00, description: "A smaller hat", stockKeepingUnitID: Guid.NewGuid().ToString());
-            var someDifferentHat = new FashionItem(size: 16, fashionType: Hat, price: 12_00, description: "A different large hat", stockKeepingUnitID: Guid.NewGuid().ToString());
+            var someDifferentHat = new FashionItem(size: 16, fashionType: Hat, price: 14_00, description: "A different large hat", stockKeepingUnitID: Guid.NewGuid().ToString());
 
             return
                 sufficientlyGoodHat.EmitIn(TimeSpan.FromSeconds(0.8))

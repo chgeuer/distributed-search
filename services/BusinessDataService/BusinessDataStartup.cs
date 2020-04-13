@@ -4,7 +4,6 @@ namespace Mercury.BusinessDataService
     using Azure.Storage.Blobs;
     using Mercury.BusinessDataPump;
     using Mercury.Credentials;
-    using Mercury.Customer.Fashion;
     using Mercury.Interfaces;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
@@ -14,7 +13,6 @@ namespace Mercury.BusinessDataService
     using Microsoft.Extensions.Hosting;
     using static Mercury.Customer.Fashion.BusinessData;
     using static Mercury.Fundamentals.BusinessData;
-    using static Mercury.Fundamentals.Types;
 
     public class BusinessDataStartup
     {
@@ -31,7 +29,7 @@ namespace Mercury.BusinessDataService
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton(_ => this.GetCurrentBusinessData<FashionBusinessData, FashionBusinessDataUpdate>(
-                newFashionBusinessData, FashionExtensions.ApplyFashionUpdate));
+                newFashionBusinessData, FashionBusinessDataExtensions.ApplyFashionUpdate));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

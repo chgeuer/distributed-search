@@ -6,7 +6,7 @@
     using Microsoft.FSharp.Core;
     using static Mercury.Fundamentals.BusinessLogic;
 
-    public class GenericFilter<TContext, TItem> : IBusinessLogicFilterPredicate<TContext, TItem>, IPredicate<TContext, TItem>
+    public class GenericFilter<TContext, TItem> : IBusinessLogicPredicate<TContext, TItem>, IPredicate<TContext, TItem>
     {
         public Func<TContext, TItem, bool> Match { get; }
 
@@ -15,7 +15,7 @@
             this.Match = match;
         }
 
-        bool IBusinessLogicFilterPredicate<TContext, TItem>.Matches(TContext ctx, TItem item) => this.Match(ctx, item);
+        bool IBusinessLogicPredicate<TContext, TItem>.Matches(TContext ctx, TItem item) => this.Match(ctx, item);
 
         FSharpFunc<TContext, FSharpFunc<TItem, bool>> IPredicate<TContext, TItem>.Matches => this.Match.ToFSharpFunc();
     }

@@ -77,7 +77,7 @@
             services.AddSingleton(_ => this.SendProviderSearchRequest());
             services.AddSingleton(_ => CreatePipelineSteps());
             services.AddSingleton(_ => this.GetCurrentBusinessData<FashionBusinessData, FashionBusinessDataUpdate>(
-                newFashionBusinessData, FashionExtensions.ApplyFashionUpdate));
+                newFashionBusinessData, FashionBusinessDataExtensions.ApplyFashionUpdate));
         }
 
         private static Func<PipelineSteps<FashionProcessingContext, FashionItem>> CreatePipelineSteps() => () =>
@@ -99,7 +99,10 @@
                     new FashionTypeFilter(),
                     new MarkupAdder(),
                 },
-                FinalSteps = Array.Empty<IBusinessLogicStep<FashionProcessingContext, FashionItem>>(),
+                FinalSteps = new IBusinessLogicStep<FashionProcessingContext, FashionItem>[]
+                {
+                    new OrderByPriceFilter(),
+                },
             };
         };
 
