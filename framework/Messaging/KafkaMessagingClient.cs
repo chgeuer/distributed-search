@@ -7,12 +7,15 @@
     using System.Threading;
     using System.Threading.Tasks;
     using Confluent.Kafka;
+    using Mercury.Fundamentals;
     using Mercury.Interfaces;
     using Mercury.Utils.Extensions;
     using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
     using ConfluentKafkaOffset = Confluent.Kafka.Offset;
     using MercuryOffset = Mercury.Fundamentals.Types.Offset;
+    using ConfluentPartition = Confluent.Kafka.Partition;
+    using MercuryPartition = Mercury.Fundamentals.Types.Partition;
 
     // A purely internal implementation dealing with Kafka. No Confluent data types outside this file and on public APIs.
     internal class KafkaMessagingClient<TMessagePayload> : IMessageClient<TMessagePayload>
@@ -164,25 +167,38 @@
             });
         }
 
-        private static Partition DeterminePartitionID(IAdminClient adminClient, TopicAndComputeNodeID topicAndComputeNodeID)
+        private static Func<string, FSharpOption<int>> GetPartitionCount(IAdminClient adminClient) => (string topicName) =>
         {
-            bool useSpecificPartition = FSharpOption<int>.get_IsSome(topicAndComputeNodeID.ComputeNodeId);
-            if (!useSpecificPartition)
-            {
-                return new Partition(0); // Partition.Any;
-            }
+            var metadata = adminClient.GetMetadata(
+                topic: topicName,
+                timeout: TimeSpan.FromSeconds(10));
 
-            var metadata = adminClient.GetMetadata(topic: topicAndComputeNodeID.TopicName, timeout: TimeSpan.FromSeconds(10));
-            var topicMetadata = metadata.Topics.FirstOrDefault(t => t.Topic == topicAndComputeNodeID.TopicName);
+            var topicMetadata = metadata.Topics.FirstOrDefault(t => t.Topic == topicName);
             if (topicMetadata == null)
             {
-                throw new NotSupportedException($"Cannot determine partition count for topic {topicAndComputeNodeID.TopicName}");
+                return FSharpOption<int>.None;
             }
 
-            int partitionCount = topicMetadata.Partitions.Count;
-            int partitionId = topicAndComputeNodeID.ComputeNodeId.Value % partitionCount;
+            return FSharpOption<int>.Some(topicMetadata.Partitions.Count);
+        };
 
-            return new Partition(partitionId);
+        private static ConfluentPartition DeterminePartitionID(IAdminClient adminClient, TopicAndComputeNodeID topicAndComputeNodeID)
+        {
+            MercuryPartition partitionId = determinePartitionID(
+                determinePartitionCount: GetPartitionCount(adminClient).ToFSharpFunc(),
+                topicAndComputeNodeID: topicAndComputeNodeID);
+
+            Console.WriteLine($"CCC {partitionId}");
+
+            return partitionId switch
+            {
+                MercuryPartition.Partition x => new ConfluentPartition(x.Item),
+                _ => ConfluentPartition.Any,
+            };
+
+            // return partitionId.IsAny
+            //    ? ConfluentPartition.Any
+            //    : new ConfluentPartition((partitionId as MercuryPartition.Partition).Item);
         }
 
         private const string RequestIdPropertyName = "requestIDString";
