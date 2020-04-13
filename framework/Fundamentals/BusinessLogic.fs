@@ -2,32 +2,32 @@
 
 open Mercury.Fundamentals
 
-type Predicate<'context, 'item> =
-    'context -> 'item -> bool
+type Predicate<'businessData, 'searchRequest, 'item> =
+    'businessData -> 'searchRequest -> 'item -> bool
 
-type Projection<'context, 'item> =
-    'context -> 'item -> 'item
+type Projection<'businessData, 'searchRequest, 'item> =
+    'businessData -> 'searchRequest -> 'item -> 'item
 
-type IPredicate<'context, 'item> =
-    abstract member Matches : Predicate<'context, 'item>
+type IPredicate<'businessData, 'searchRequest, 'item> =
+    abstract member Matches : Predicate<'businessData, 'searchRequest, 'item>
 
-type IProjection<'context, 'item> =
-    abstract member Map: Projection<'context, 'item>
+type IProjection<'businessData, 'searchRequest, 'item> =
+    abstract member Map: Projection<'businessData, 'searchRequest, 'item>
 
-type PipelineStep<'context, 'item> =
-    | Predicate of Predicate<'context, 'item>
-    | Projection of Projection<'context, 'item>
+type PipelineStep<'businessData, 'searchRequest, 'item> =
+    | Predicate of Predicate<'businessData, 'searchRequest, 'item>
+    | Projection of Projection<'businessData, 'searchRequest, 'item>
 
 module PipelineStep =
-    let createPredicate<'context,'item> (f: System.Func<'context,'item,bool>) : PipelineStep<'context, 'item> =
+    let createPredicate<'businessData, 'searchRequest,'item> (f: System.Func<'businessData, 'searchRequest,'item,bool>) : PipelineStep<'businessData, 'searchRequest, 'item> =
         f |> FSharpFuncUtil.ToFSharpFunc |> Predicate
 
-    let createProjection<'context,'item> (f: System.Func<'context,'item,'item>) : PipelineStep<'context, 'item> =
+    let createProjection<'businessData, 'searchRequest,'item> (f: System.Func<'businessData, 'searchRequest,'item,'item>) : PipelineStep<'businessData, 'searchRequest, 'item> =
         f |> FSharpFuncUtil.ToFSharpFunc |> Projection
 
-type PipelineSteps2<'context, 'item> =
-    { StreamingSteps:  PipelineStep<'context, 'item> list
-      SequentialSteps: PipelineStep<'context, 'item> list }
+type PipelineSteps2<'businessData, 'searchRequest, 'item> =
+    { StreamingSteps:  PipelineStep<'businessData, 'searchRequest, 'item> list
+      SequentialSteps: PipelineStep<'businessData, 'searchRequest, 'item> list }
 
 type ComparisonResult =
     | NotComparable = 0

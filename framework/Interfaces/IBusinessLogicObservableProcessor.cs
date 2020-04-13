@@ -2,8 +2,8 @@
 {
     using System;
 
-    public interface IBusinessLogicObservableProcessor<TContext, TItem> : IBusinessLogicStep<TContext, TItem>
+    public interface IBusinessLogicObservableProcessor<TBusinessData, TSearchRequest, TItem> : IBusinessLogicStep<TBusinessData, TSearchRequest, TItem>
     {
-        IObservable<TItem> Stream(TContext context, IObservable<TItem> items);
+        IObservable<TItem> Stream(TBusinessData businessData, TSearchRequest searchRequest, IObservable<TItem> items);
     }
 }

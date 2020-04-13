@@ -6,17 +6,17 @@
     using Microsoft.FSharp.Core;
     using static Mercury.Fundamentals.BusinessLogic;
 
-    public class GenericProjection<TContext, TItem> : IBusinessLogicProjection<TContext, TItem>, IProjection<TContext, TItem>
+    public class GenericProjection<TBusinessData, TSearchRequest, TItem> : IBusinessLogicProjection<TBusinessData, TSearchRequest, TItem>, IProjection<TBusinessData, TSearchRequest, TItem>
     {
-        public Func<TContext, TItem, TItem> Map { get; }
+        public Func<TBusinessData, TSearchRequest, TItem, TItem> Map { get; }
 
-        public GenericProjection(Func<TContext, TItem, TItem> map)
+        public GenericProjection(Func<TBusinessData, TSearchRequest, TItem, TItem> map)
         {
             this.Map = map;
         }
 
-        TItem IBusinessLogicProjection<TContext, TItem>.Map(TContext ctx, TItem item) => this.Map(ctx, item);
+        TItem IBusinessLogicProjection<TBusinessData, TSearchRequest, TItem>.Map(TBusinessData businessData, TSearchRequest searchRequest, TItem item) => this.Map(businessData, searchRequest, item);
 
-        FSharpFunc<TContext, FSharpFunc<TItem, TItem>> IProjection<TContext, TItem>.Map => this.Map.ToFSharpFunc();
+        FSharpFunc<TBusinessData, FSharpFunc<TSearchRequest, FSharpFunc<TItem, TItem>>> IProjection<TBusinessData, TSearchRequest, TItem>.Map => this.Map.ToFSharpFunc();
     }
 }

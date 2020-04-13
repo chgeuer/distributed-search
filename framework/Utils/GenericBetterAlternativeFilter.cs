@@ -5,13 +5,13 @@
     using Mercury.Interfaces;
     using static Mercury.Fundamentals.BusinessLogic;
 
-    public class GenericBetterAlternativeFilter<TContext, TItem> : IBusinessLogicFilterStatefulPredicate<TContext, TItem>
+    public class GenericBetterAlternativeFilter<TBusinessData, TSearchRequest, TItem> : IBusinessLogicFilterStatefulPredicate<TBusinessData, TSearchRequest, TItem>
     {
-        public static GenericBetterAlternativeFilter<TContext, TItem> FilterCheaperPrice<TIdentity, TPrice>(
+        public static GenericBetterAlternativeFilter<TBusinessData, TSearchRequest, TItem> FilterCheaperPrice<TIdentity, TPrice>(
             Func<TItem, TIdentity> identity, Func<TItem, TPrice> price)
             where TPrice : IComparable
         {
-            ComparisonResult Compare(TContext ignoredContext, TItem existingItem, TItem newItem)
+            ComparisonResult Compare(TBusinessData businessData, TSearchRequest searchRequest, TItem existingItem, TItem newItem)
             {
                 if (!identity(existingItem).Equals(identity(newItem)))
                 {
@@ -26,24 +26,24 @@
                     ComparisonResult.NotBetterAlternative;
             }
 
-            return new GenericBetterAlternativeFilter<TContext, TItem>(Compare);
+            return new GenericBetterAlternativeFilter<TBusinessData, TSearchRequest, TItem>(Compare);
         }
 
-        public Func<TContext, TItem, TItem, ComparisonResult> CompareTo { get; }
+        public Func<TBusinessData, TSearchRequest, TItem, TItem, ComparisonResult> CompareTo { get; }
 
-        public GenericBetterAlternativeFilter(Func<TContext, TItem, TItem, ComparisonResult> compareTo)
+        public GenericBetterAlternativeFilter(Func<TBusinessData, TSearchRequest, TItem, TItem, ComparisonResult> compareTo)
         {
             this.CompareTo = compareTo;
         }
 
         private readonly List<TItem> previouslySeenItems = new List<TItem>();
 
-        ReplaceableOption<TItem> IBusinessLogicFilterStatefulPredicate<TContext, TItem>.BetterMatch(TContext context, TItem newItem)
+        ReplaceableOption<TItem> IBusinessLogicFilterStatefulPredicate<TBusinessData, TSearchRequest, TItem>.BetterMatch(TBusinessData businessData, TSearchRequest searchRequest, TItem newItem)
         {
             for (var i = 0; i < this.previouslySeenItems.Count; i++)
             {
                 TItem previouslySeenItem = this.previouslySeenItems[i];
-                switch (this.CompareTo(context, previouslySeenItem, newItem))
+                switch (this.CompareTo(businessData, searchRequest, previouslySeenItem, newItem))
                 {
                     case ComparisonResult.NotComparable:
                         continue;

@@ -1,12 +1,11 @@
 ﻿namespace Mercury.Clients.UpdateConfiguration
 {
+    using System;
+    using System.Threading.Tasks;
     using Azure.Storage.Blobs;
     using Mercury.BusinessDataPump;
     using Mercury.Credentials;
-    using Mercury.Customer.Fashion;
     using Mercury.Interfaces;
-    using System;
-    using System.Threading.Tasks;
     using static Mercury.Customer.Fashion.BusinessData;
 
     // A simple client, which sends update commands *directly* into Kafka. 
@@ -49,9 +48,9 @@
 
                 // Here, we're directly dropping the update in Kafka.
                 // This must be replaced with a secured HTTP request.
-                await businessDataUpdates.SendUpdate(update);
+                var offset = await businessDataUpdates.SendUpdate(update);
 
-                await Console.Out.WriteLineAsync($"Update sent for {newMarkup}");
+                await Console.Out.WriteLineAsync($"Update sent for {newMarkup} (#{offset.Item})");
             }
         }
     }

@@ -99,7 +99,7 @@
                 topicPartition: this.topicPartition.Value,
                 message: kafkaMessage);
 
-            // await Console.Out.WriteLineAsync($"TX {report.Topic}#{report.Partition.Value}#{report.Offset.Value} {messagePayload}");
+            await Console.Out.WriteLineAsync($"Sent {report.Topic}#{report.Partition.Value}#{report.Offset.Value} {messagePayload}");
             return MercuryOffset.NewOffset(report.Offset.Value);
         }
 
@@ -143,7 +143,7 @@
                         }
                         else
                         {
-                            // Console.Out.WriteLine($"consumerAssign(topic={tpo.Topic} partition={tpo.Partition.Value} offset={tpo.Offset.Value})");
+                            Console.Out.WriteLine($"consumerAssign(topic={tpo.Topic} partition={tpo.Partition.Value} offset={tpo.Offset.Value})");
                             consumer.Assign(tpo);
                         }
 
@@ -151,7 +151,7 @@
                         {
                             var msg = consumer.Consume(innerCancellationToken);
 
-                            // Console.WriteLine($"RX {msg.Topic}#{msg.Partition.Value}#{msg.Offset.Value}: {msg.Message.Value}");
+                            Console.WriteLine($"Received {msg.Topic}#{msg.Partition.Value}#{msg.Offset.Value}: {msg.Message.Value}");
                             o.OnNext(msg);
                             innerCancellationToken.ThrowIfCancellationRequested();
                         }
@@ -169,7 +169,7 @@
             bool useSpecificPartition = FSharpOption<int>.get_IsSome(topicAndComputeNodeID.ComputeNodeId);
             if (!useSpecificPartition)
             {
-                return Partition.Any;
+                return new Partition(0); // Partition.Any;
             }
 
             var metadata = adminClient.GetMetadata(topic: topicAndComputeNodeID.TopicName, timeout: TimeSpan.FromSeconds(10));

@@ -1,7 +1,7 @@
 ﻿namespace Mercury.Interfaces
 {
-    public interface IBusinessLogicProjection<TContext, TItem> : IBusinessLogicStep<TContext, TItem>
+    public interface IBusinessLogicProjection<TBusinessData, TSearchRequest, TItem> : IBusinessLogicStep<TBusinessData, TSearchRequest, TItem>
     {
-        TItem Map(TContext context, TItem item);
+        TItem Map(TBusinessData businessData, TSearchRequest searchRequest, TItem item);
     }
 }

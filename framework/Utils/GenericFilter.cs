@@ -6,17 +6,17 @@
     using Microsoft.FSharp.Core;
     using static Mercury.Fundamentals.BusinessLogic;
 
-    public class GenericFilter<TContext, TItem> : IBusinessLogicPredicate<TContext, TItem>, IPredicate<TContext, TItem>
+    public class GenericFilter<TBusinessData, TSearchRequest, TItem> : IBusinessLogicPredicate<TBusinessData, TSearchRequest, TItem>, IPredicate<TBusinessData, TSearchRequest, TItem>
     {
-        public Func<TContext, TItem, bool> Match { get; }
+        public Func<TBusinessData, TSearchRequest, TItem, bool> Match { get; }
 
-        public GenericFilter(Func<TContext, TItem, bool> match)
+        public GenericFilter(Func<TBusinessData, TSearchRequest, TItem, bool> match)
         {
             this.Match = match;
         }
 
-        bool IBusinessLogicPredicate<TContext, TItem>.Matches(TContext ctx, TItem item) => this.Match(ctx, item);
+        bool IBusinessLogicPredicate<TBusinessData, TSearchRequest, TItem>.Matches(TBusinessData businessData, TSearchRequest searchRequest, TItem item) => this.Match(businessData, searchRequest, item);
 
-        FSharpFunc<TContext, FSharpFunc<TItem, bool>> IPredicate<TContext, TItem>.Matches => this.Match.ToFSharpFunc();
+        FSharpFunc<TBusinessData, FSharpFunc<TSearchRequest, FSharpFunc<TItem, bool>>> IPredicate<TBusinessData, TSearchRequest, TItem>.Matches => this.Match.ToFSharpFunc();
     }
 }

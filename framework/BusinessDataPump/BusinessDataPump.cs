@@ -37,9 +37,7 @@
             this.applyUpdate = applyUpdate;
             this.createEmptyBusinessData = createEmptyBusinessData;
             this.updateMessagingClient =
-                MessagingClients.Updates<TBusinessDataUpdate>(
-                    demoCredential: demoCredential,
-                    computeNodeId: null);
+                MessagingClients.Updates<TBusinessDataUpdate>(demoCredential: demoCredential);
             this.snapshotContainerClient = snapshotContainerClient;
         }
 
@@ -83,7 +81,7 @@
             return connectableObservable.AsObservable();
         }
 
-        public Task SendUpdate(TBusinessDataUpdate update, CancellationToken cancellationToken = default)
+        public Task<Offset> SendUpdate(TBusinessDataUpdate update, CancellationToken cancellationToken = default)
             => this.updateMessagingClient.SendMessage(update, cancellationToken);
 
         public async Task<BusinessData<TBusinessData>> FetchBusinessDataSnapshot(CancellationToken cancellationToken)

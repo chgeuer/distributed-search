@@ -23,7 +23,7 @@
         private readonly Func<BusinessData<FashionBusinessData>> getBusinessData;
         private readonly Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest;
         private readonly IObservable<Message<ProviderSearchResponse<FashionItem>>> providerResponsePump;
-        private readonly Func<PipelineSteps<FashionProcessingContext, FashionItem>> createPipelineSteps;
+        private readonly Func<PipelineSteps<FashionBusinessData, FashionSearchRequest, FashionItem>> createPipelineSteps;
         private readonly Func<TopicAndComputeNodeID> getTopicAndComputeNodeID;
 
         /// <summary>
@@ -39,7 +39,7 @@
             IDistributedSearchConfiguration searchConfiguration,
             IObservable<Message<ProviderSearchResponse<FashionItem>>> providerResponsePump,
             Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest,
-            Func<PipelineSteps<FashionProcessingContext, FashionItem>> createPipelineSteps,
+            Func<PipelineSteps<FashionBusinessData, FashionSearchRequest, FashionItem>> createPipelineSteps,
             Func<BusinessData<FashionBusinessData>> getBusinessData,
             Func<TopicAndComputeNodeID> getTopicAndComputeNodeID)
         {
@@ -72,14 +72,13 @@
             stopwatch.Start();
 
             var pipelineSteps = this.createPipelineSteps();
-            var processingContext = new FashionProcessingContext(searchRequest, businessData.Data);
 
             // Subscribe and start processing inbound stream. This is a non-blocking call.
             IObservable<FashionItem> responses =
                 this.providerResponsePump
                     .Where(t => t.RequestID.OptionEqualsValue(t.RequestID.Value))
                     .SelectMany(providerSearchResponse => providerSearchResponse.Payload.Response)
-                    .ApplySteps(processingContext, pipelineSteps.StreamingSteps)
+                    .ApplySteps(businessData.Data, searchRequest, pipelineSteps.StreamingSteps)
                     .TakeUntil(responseMustBeReadyBy);
 
             // Send search provider request into requests topic.
@@ -90,7 +89,7 @@
             // Aggregate all things we have, by when `responseMustBeReadyBy` fires
             FashionItem[] items = responses
                 .ToEnumerable()
-                .ApplySteps(processingContext, pipelineSteps.FinalSteps)
+                .ApplySteps(businessData.Data, searchRequest, pipelineSteps.FinalSteps)
                 .ToArray();
 
             stopwatch.Stop();

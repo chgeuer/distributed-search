@@ -6,27 +6,27 @@ open Mercury.Customer.Fashion.BusinessData
 open Mercury.Interfaces
 
 type MarkupAdder() =
-    interface IBusinessLogicProjection<FashionProcessingContext, FashionItem> with
-        member this.Map(ctx, item) =
+    interface IBusinessLogicProjection<FashionBusinessData, FashionSearchRequest, FashionItem> with
+        member this.Map(businessData, _, item) =
             let markup =
-                match ctx.BusinessData.Markup.TryFind(item.FashionType) with
+                match businessData.Markup.TryFind(item.FashionType) with
                 | Some value -> value
-                | None       -> ctx.BusinessData.DefaultMarkup
+                | None       -> businessData.DefaultMarkup
             let newPrice = item.Price + markup
 
             { item with Price = newPrice }
 
 type SizeFilter() =
-    interface IBusinessLogicPredicate<FashionProcessingContext, FashionItem> with
-        member this.Matches(ctx, item) = ctx.Query.Size = item.Size
+    interface IBusinessLogicPredicate<FashionBusinessData, FashionSearchRequest, FashionItem> with
+        member this.Matches(_, searchRequest, item) = searchRequest.Size = item.Size
 
 type FashionTypeFilter() =
-    interface IBusinessLogicPredicate<FashionProcessingContext, FashionItem> with
-        member this.Matches(ctx, item) = ctx.Query.FashionType = item.FashionType
+    interface IBusinessLogicPredicate<FashionBusinessData, FashionSearchRequest, FashionItem> with
+        member this.Matches(_, searchRequest, item) = searchRequest.FashionType = item.FashionType
 
 type OrderByPriceFilter() =
-    interface IBusinessLogicEnumerableProcessor<FashionProcessingContext, FashionItem> with
-        member this.Process(ctx, items) = 
+    interface IBusinessLogicEnumerableProcessor<FashionBusinessData, FashionSearchRequest, FashionItem> with
+        member this.Process(_, _, items) = 
             items
             |> List.ofSeq
             |> List.sortBy (fun (x: FashionItem) -> x.Price)

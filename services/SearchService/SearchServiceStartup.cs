@@ -80,26 +80,26 @@
                 newFashionBusinessData, FashionBusinessDataExtensions.ApplyFashionUpdate));
         }
 
-        private static Func<PipelineSteps<FashionProcessingContext, FashionItem>> CreatePipelineSteps() => () =>
+        private static Func<PipelineSteps<FashionBusinessData, FashionSearchRequest, FashionItem>> CreatePipelineSteps() => () =>
         {
-            Func<FashionProcessingContext, FashionItem, bool> p = (c, i) => c.Query.Size == i.Size;
+            Func<FashionBusinessData, FashionSearchRequest, FashionItem, bool> p = (bd, sr, i) => sr.Size == i.Size;
 
-            var s1 = PipelineStep<FashionProcessingContext, FashionItem>.NewPredicate(p.ToFSharpFunc());
+            var s1 = PipelineStep<FashionBusinessData, FashionSearchRequest, FashionItem>.NewPredicate(p.ToFSharpFunc());
 
-            return new PipelineSteps<FashionProcessingContext, FashionItem>
+            return new PipelineSteps<FashionBusinessData, FashionSearchRequest, FashionItem>
             {
-                StreamingSteps = new IBusinessLogicStep<FashionProcessingContext, FashionItem>[]
+                StreamingSteps = new IBusinessLogicStep<FashionBusinessData, FashionSearchRequest, FashionItem>[]
                 {
                     // new StatefulMixAndMatchFilter(),
-                    // new GenericFilter<FashionProcessingContext, FashionItem>((c, i) => c.Query.Size == i.Size),
-                    // new GenericFilter<FashionProcessingContext, FashionItem>((c,i) => c.Query.FashionType == i.FashionType),
+                    // new GenericFilter<FashionBusinessData, FashionSearchRequest, FashionItem>((bd, sr, i) => sr.Size == i.Size),
+                    // new GenericFilter<FashionBusinessData, FashionSearchRequest, FashionItem>((bd, sr, i) => sr.FashionType == i.FashionType),
                     new SizeFilter(),
 
-                    // GenericBetterAlternativeFilter<FashionProcessingContext, FashionItem>.FilterCheaperPrice(fi => fi.StockKeepingUnitID, fi => fi.Price),
+                    // GenericBetterAlternativeFilter<FashionBusinessData, FashionSearchRequest, FashionItem>.FilterCheaperPrice(fi => fi.StockKeepingUnitID, fi => fi.Price),
                     new FashionTypeFilter(),
                     new MarkupAdder(),
                 },
-                FinalSteps = new IBusinessLogicStep<FashionProcessingContext, FashionItem>[]
+                FinalSteps = new IBusinessLogicStep<FashionBusinessData, FashionSearchRequest, FashionItem>[]
                 {
                     new OrderByPriceFilter(),
                 },
@@ -112,8 +112,7 @@
         /// <returns>Returns a function which can asyncronously send out a provider search request.</returns>
         private Func<ProviderSearchRequest<FashionSearchRequest>, Task> SendProviderSearchRequest()
         {
-            var requestProducer = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(
-                demoCredential: this.demoCredential, computeNodeId: null);
+            var requestProducer = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(this.demoCredential);
 
             return searchRequest => requestProducer.SendMessage(searchRequest, requestId: searchRequest.RequestID);
         }

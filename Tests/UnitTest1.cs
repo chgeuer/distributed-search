@@ -36,17 +36,17 @@ namespace Mercury.UnitTests
         [Test]
         public void FunctionalPipeline2()
         {
-            var size = new GenericFilter<FashionProcessingContext, FashionItem>((c, i) => c.Query.Size == i.Size) 
-                as IPredicate<FashionProcessingContext, FashionItem>;
+            var size = new GenericFilter<FashionBusinessData, FashionSearchRequest, FashionItem>((bd, sr, i) => sr.Size == i.Size) 
+                as IPredicate<FashionBusinessData, FashionSearchRequest, FashionItem>;
             
-            var p = new PipelineSteps2<FashionProcessingContext, FashionItem>(
-                streamingSteps: new PipelineStep<FashionProcessingContext, FashionItem>[]
+            var p = new PipelineSteps2<FashionBusinessData, FashionSearchRequest, FashionItem>(
+                streamingSteps: new PipelineStep<FashionBusinessData, FashionSearchRequest, FashionItem>[]
                     {
-                        PipelineStep<FashionProcessingContext, FashionItem>.NewPredicate(size.Matches),
-                        createPredicate((FashionProcessingContext c, FashionItem i) => c.Query.FashionType == i.FashionType),
-                        createProjection((FashionProcessingContext c, FashionItem i) => FashionItemModule.newPrice(i, i.Price + c.BusinessData.DefaultMarkup)),
+                        PipelineStep<FashionBusinessData, FashionSearchRequest, FashionItem>.NewPredicate(size.Matches),
+                        createPredicate((FashionBusinessData bd, FashionSearchRequest sr, FashionItem i) => sr.FashionType == i.FashionType),
+                        createProjection((FashionBusinessData bd, FashionSearchRequest sr, FashionItem i) => FashionItemModule.newPrice(i, i.Price + bd.DefaultMarkup)),
                     }.ToFSharp(),
-                sequentialSteps: FSharpList<PipelineStep<FashionProcessingContext, FashionItem>>.Empty
+                sequentialSteps: FSharpList<PipelineStep<FashionBusinessData, FashionSearchRequest, FashionItem>>.Empty
             );
         }
 
@@ -197,10 +197,10 @@ namespace Mercury.UnitTests
         [Test]
         public void Test1()
         {
-            static Func<FashionProcessingContext, FashionItem, bool> NewStatefulFilter()
+            static Func<FashionBusinessData, FashionSearchRequest, FashionItem, bool> NewStatefulFilter()
             {
                 var bySizeDict = new Dictionary<int, FashionItem>();
-                bool emitNewEntry(FashionProcessingContext _, FashionItem i)
+                bool emitNewEntry(FashionBusinessData _bd, FashionSearchRequest _sr, FashionItem i)
                 {
                     var alreadyEmitted = bySizeDict.ContainsKey(i.Size);
                     if (!alreadyEmitted)
@@ -212,9 +212,9 @@ namespace Mercury.UnitTests
                 return emitNewEntry;
             }
 
-            IBusinessLogicFilterStatefulPredicate<FashionProcessingContext, FashionItem> createF()
+            IBusinessLogicFilterStatefulPredicate<FashionBusinessData, FashionSearchRequest, FashionItem> createF()
             {
-                static ComparisonResult comparePrice(FashionProcessingContext _, FashionItem existingItem, FashionItem newItem)
+                static ComparisonResult comparePrice(FashionBusinessData _bd, FashionSearchRequest _sr, FashionItem existingItem, FashionItem newItem)
                 {
                     if (existingItem.StockKeepingUnitID != newItem.StockKeepingUnitID)
                     {
@@ -226,14 +226,14 @@ namespace Mercury.UnitTests
                         : ComparisonResult.NotBetterAlternative;
                 }
 
-                return new GenericBetterAlternativeFilter<FashionProcessingContext, FashionItem>(comparePrice);
+                return new GenericBetterAlternativeFilter<FashionBusinessData, FashionSearchRequest, FashionItem>(comparePrice);
             }
 
-            IEnumerable<IBusinessLogicStep<FashionProcessingContext, FashionItem>> CreatePipeline() =>
-                new IBusinessLogicStep<FashionProcessingContext, FashionItem>[]
+            IEnumerable<IBusinessLogicStep<FashionBusinessData, FashionSearchRequest, FashionItem>> CreatePipeline() =>
+                new IBusinessLogicStep<FashionBusinessData, FashionSearchRequest, FashionItem>[]
                 {
-                    new GenericFilter<FashionProcessingContext, FashionItem>((c,i) => c.Query.Size == i.Size),
-                    new GenericFilter<FashionProcessingContext, FashionItem>(NewStatefulFilter()),
+                    new GenericFilter<FashionBusinessData, FashionSearchRequest, FashionItem>((bd, sr, i) => sr.Size == i.Size),
+                    new GenericFilter<FashionBusinessData, FashionSearchRequest, FashionItem>(NewStatefulFilter()),
                     new MarkupAdder(),
                 };
 
@@ -253,7 +253,6 @@ namespace Mercury.UnitTests
                 Offset.NewOffset(1));
 
             var query = new FashionSearchRequest(size: 16, fashionType: Hat);
-            var ctx2 = new FashionProcessingContext(query: query, businessData: fashionBusinessData);
 
             var sufficientlyGoodHat = new FashionItem(size: 16, fashionType: Hat, price: 12_00, description: "A nice large hat", stockKeepingUnitID: Guid.NewGuid().ToString());
             var sufficientlyGoodHatButTooExpensive = new FashionItem(size: 16, fashionType: Hat, price: 12_50, description: "A nice large hat", stockKeepingUnitID: sufficientlyGoodHat.StockKeepingUnitID);
@@ -264,7 +263,7 @@ namespace Mercury.UnitTests
             var funcItems = new[] { sufficientlyGoodHat, someThrouser, aHatButTooSmall, someDifferentHat, sufficientlyGoodHatButTooExpensive };
 
             var list = funcItems
-                .ApplySteps(ctx2, CreatePipeline())
+                .ApplySteps(fashionBusinessData, query, CreatePipeline())
                 .ToList();
             Assert.AreEqual(list.Count, 1, "list.Count");
             Assert.AreEqual(list[0].StockKeepingUnitID, sufficientlyGoodHat.StockKeepingUnitID, "list[0].StockKeepingUnitID, sufficientlyGoodHat.StockKeepingUnitID");
@@ -274,7 +273,7 @@ namespace Mercury.UnitTests
 
             var list2 = funcItems
                 .ToObservable()
-                .ApplySteps(ctx2, CreatePipeline())
+                .ApplySteps(fashionBusinessData, query, CreatePipeline())
                 .ToEnumerable().ToList();
 
             Assert.AreEqual(list2.Count, 1, "list.Count");
