@@ -55,14 +55,15 @@
              **/
 
             // snap a copy of the business data early in the process
-            var businessData = this.getBusinessData();
+            BusinessData<FashionBusinessData> businessData = this.getBusinessData();
 
             var responseMustBeReadyBy = DateTimeOffset.Now.Add(TimeSpan.FromMilliseconds(timeout));
 
             static string AssignNewRequestID() => Guid.NewGuid().ToString();
 
+            var requestID = AssignNewRequestID();
             var providerSearchRequest = new ProviderSearchRequest<FashionSearchRequest>(
-                requestID: AssignNewRequestID(),
+                requestID: requestID,
                 responseTopic: this.getTopicAndPartition(),
                 searchRequest: searchRequest);
 
@@ -74,7 +75,7 @@
             // Subscribe and start processing inbound stream. This is a non-blocking call.
             IObservable<FashionItem> responses =
                 this.providerResponsePump
-                    .Where(t => t.RequestID.OptionEqualsValue(t.RequestID.Value))
+                    .Where(t => t.RequestID.OptionEqualsValue(requestID))
                     .SelectMany(providerSearchResponseMessage =>
                     {
                         ProviderSearchResponse<FashionItem> payload = providerSearchResponseMessage.Payload;
