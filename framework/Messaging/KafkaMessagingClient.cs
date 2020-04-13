@@ -13,8 +13,8 @@
     using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
     using ConfluentKafkaOffset = Confluent.Kafka.Offset;
-    using MercuryOffset = Mercury.Fundamentals.Types.Offset;
     using ConfluentPartition = Confluent.Kafka.Partition;
+    using MercuryOffset = Mercury.Fundamentals.Types.Offset;
     using MercuryPartition = Mercury.Fundamentals.Types.Partition;
 
     // A purely internal implementation dealing with Kafka. No Confluent data types outside this file and on public APIs.

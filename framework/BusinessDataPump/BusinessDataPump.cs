@@ -84,6 +84,11 @@
         public Task<Offset> SendUpdate(TBusinessDataUpdate update, CancellationToken cancellationToken = default)
             => this.updateMessagingClient.SendMessage(update, cancellationToken);
 
+        /// <summary>
+        /// Fetches a business data snapshot from blob storage
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
         public async Task<BusinessData<TBusinessData>> FetchBusinessDataSnapshot(CancellationToken cancellationToken)
         {
             FSharpOption<(Offset, string)> someOffsetAndName = await this.GetLatestSnapshotID(cancellationToken);

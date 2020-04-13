@@ -29,7 +29,7 @@
         private readonly IDistributedSearchConfiguration demoCredential;
         private readonly BlobContainerClient snapshotContainerClient;
         private readonly BlobContainerClient storageOffloadStorage;
-        private readonly TopicAndPartition topicAndPartition;
+        private readonly TopicAndPartition responseTopicAndPartition;
 
         public SearchServiceStartup(IConfiguration configuration)
         {
@@ -38,7 +38,7 @@
 
             var computeNodeId = 100;
 
-            this.topicAndPartition = new TopicAndPartition(
+            this.responseTopicAndPartition = new TopicAndPartition(
                 topicName: this.demoCredential.EventHubTopicNameResponses,
                 partitionSpecification: PartitionSpecification.NewComputeNodeID(computeNodeId));
 
@@ -71,10 +71,10 @@
             services.AddControllers();
 
             services.AddSingleton(_ => this.GetTopicAndComputeNodeID());
-            services.AddSingleton(_ => this.CreateProviderResponsePump<FashionItem>(this.topicAndPartition));
+            services.AddSingleton(_ => this.SendProviderSearchRequest());
+            services.AddSingleton(_ => this.CreateProviderResponsePump<FashionItem>(this.responseTopicAndPartition));
             services.AddSingleton<IDistributedSearchConfiguration>(_ => this.demoCredential);
 
-            services.AddSingleton(_ => this.SendProviderSearchRequest());
             services.AddSingleton(_ => CreatePipelineSteps());
             services.AddSingleton(_ => this.GetCurrentBusinessData<FashionBusinessData, FashionBusinessDataUpdate>(
                 newFashionBusinessData, FashionBusinessDataExtensions.ApplyFashionUpdate));
@@ -82,10 +82,8 @@
 
         private static Func<PipelineSteps<FashionBusinessData, FashionSearchRequest, FashionItem>> CreatePipelineSteps() => () =>
         {
-            Func<FashionBusinessData, FashionSearchRequest, FashionItem, bool> p = (bd, sr, i) => sr.Size == i.Size;
-
-            var s1 = PipelineStep<FashionBusinessData, FashionSearchRequest, FashionItem>.NewPredicate(p.ToFSharpFunc());
-
+            // Func<FashionBusinessData, FashionSearchRequest, FashionItem, bool> p = (bd, sr, i) => sr.Size == i.Size;
+            // var s1 = PipelineStep<FashionBusinessData, FashionSearchRequest, FashionItem>.NewPredicate(p.ToFSharpFunc());
             return new PipelineSteps<FashionBusinessData, FashionSearchRequest, FashionItem>
             {
                 StreamingSteps = new IBusinessLogicStep<FashionBusinessData, FashionSearchRequest, FashionItem>[]
@@ -150,7 +148,7 @@
 
         private Func<TopicAndPartition> GetTopicAndComputeNodeID() => () =>
         {
-            return this.topicAndPartition;
+            return this.responseTopicAndPartition;
         };
     }
 }
