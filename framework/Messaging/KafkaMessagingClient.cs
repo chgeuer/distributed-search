@@ -25,7 +25,7 @@
         private readonly IAdminClient adminClient;
         private readonly Lazy<TopicPartition> topicPartition;
 
-        public KafkaMessagingClient(IDistributedSearchConfiguration demoCredential, TopicAndComputeNodeID topicAndComputeNodeID)
+        public KafkaMessagingClient(IDistributedSearchConfiguration demoCredential, TopicAndPartition topicAndPartition)
         {
             var bootstrapServers = $"{demoCredential.EventHubName}.servicebus.windows.net:9093";
             var saslUsername = "$ConnectionString";
@@ -77,8 +77,8 @@
             }).Build();
 
             this.topicPartition = new Lazy<TopicPartition>(() => new TopicPartition(
-                    topic: topicAndComputeNodeID.TopicName,
-                    partition: DeterminePartitionID(this.adminClient, topicAndComputeNodeID)));
+                    topic: topicAndPartition.TopicName,
+                    partition: DeterminePartitionID(this.adminClient, topicAndPartition)));
         }
 
         public Task<MercuryOffset> SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default)
@@ -182,11 +182,11 @@
             return FSharpOption<int>.Some(topicMetadata.Partitions.Count);
         };
 
-        private static ConfluentPartition DeterminePartitionID(IAdminClient adminClient, TopicAndComputeNodeID topicAndComputeNodeID)
+        private static ConfluentPartition DeterminePartitionID(IAdminClient adminClient, TopicAndPartition topicAndPartition)
         {
             MercuryPartition partitionId = determinePartitionID(
                 determinePartitionCount: GetPartitionCount(adminClient).ToFSharpFunc(),
-                topicAndComputeNodeID: topicAndComputeNodeID);
+                topicAndPartition: topicAndPartition);
 
             return partitionId switch
             {

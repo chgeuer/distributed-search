@@ -27,20 +27,20 @@
 
             var cts = new CancellationTokenSource();
 
-            var clients = new Dictionary<TopicAndComputeNodeID, IMessageClient<ProviderSearchResponse<FashionItem>>>();
-            IMessageClient<ProviderSearchResponse<FashionItem>> getMessageClient(TopicAndComputeNodeID tpid)
+            var clients = new Dictionary<TopicAndPartition, IMessageClient<ProviderSearchResponse<FashionItem>>>();
+            IMessageClient<ProviderSearchResponse<FashionItem>> getMessageClient(TopicAndPartition tpid)
             {
                 lock (clients)
                 {
                     if (!clients.ContainsKey(tpid))
                     {
                         var blobContainerClient = new BlobContainerClient(
-                            blobContainerUri: new Uri($"https://{demoCredential.StorageOffloadAccountName}.blob.core.windows.net/{demoCredential.StorageOffloadContainerNameResponses}/"),
+                            blobContainerUri: new Uri($"https://{demoCredential.StorageOffloadAccountName}.blob.core.windows.net/{demoCredential.StorageOffloadContainerName}/"),
                             credential: demoCredential.AADServicePrincipal);
 
                         var client = MessagingClients.WithStorageOffload<ProviderSearchResponse<FashionItem>>(
                             demoCredential: demoCredential,
-                            topicAndComputeNodeID: tpid,
+                            topicAndPartition: tpid,
                             storageOffload: blobContainerClient.ToStorageOffload());
 
                         clients.Add(tpid, client);

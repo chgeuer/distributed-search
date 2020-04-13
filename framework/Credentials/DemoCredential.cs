@@ -14,36 +14,28 @@ namespace Mercury.Credentials
 
         public string EventHubName { get => this.ProjectConfig.eventHubName; }
 
-        public string EntityPath { get => this.ProjectConfig.entityPath; }
-
-        public string EventHubNamespaceName { get => this.EntityPath; }
+        public string EventHubNamespaceName { get => this.ProjectConfig.eventHubName; }
 
         public string EventHubTopicNameRequests { get => this.ProjectConfig.topicNames.requests; }
 
-        public string EventHubTopicNameBusinessDataUpdates { get => this.ProjectConfig.topicNames.businessdataupdates; }
-
         public string EventHubTopicNameResponses { get => this.ProjectConfig.topicNames.responses; }
 
-        public string EventHubConnectionString { get => this.ProjectConfig.sharedAccessConnectionStringRoot; }
+        public string EventHubTopicNameBusinessDataUpdates { get => this.ProjectConfig.topicNames.businessdataupdates; }
 
-        public string EventHubCaptureStorageAccountConnectionString { get => this.ProjectConfig.capture.storageConnectionString; }
-
-        public string EventHubCaptureStorageAccountContainerName { get => this.ProjectConfig.capture.containerName; }
+        public string EventHubConnectionString { get => this.ProjectConfig.eventHubConnectionString; }
 
         public string StorageOffloadAccountName { get => this.ProjectConfig.storageOffload.storageAccountName; }
 
-        public string BusinessDataSnapshotAccountName { get => this.StorageOffloadAccountName; }
+        public string StorageOffloadContainerName { get => this.ProjectConfig.storageOffload.containerName; }
 
-        public string BusinessDataSnapshotContainerName { get => this.ProjectConfig.snapshotStorageContainer; }
+        public string BusinessDataSnapshotAccountName { get => this.ProjectConfig.snapshotStorage.storageAccountName; }
 
-        public string StorageOffloadContainerNameRequests { get => this.ProjectConfig.storageOffload.containerName.requests; }
-
-        public string StorageOffloadContainerNameResponses { get => this.ProjectConfig.storageOffload.containerName.responses; }
+        public string BusinessDataSnapshotContainerName { get => this.ProjectConfig.snapshotStorage.containerName; }
 
         public TokenCredential AADServicePrincipal
         {
             get => new ClientSecretCredential(
-                tenantId: (string)this.data.azure.tenantId,
+                tenantId: (string)this.ProjectConfig.servicePrincipal.tenantId,
                 clientId: (string)this.ProjectConfig.servicePrincipal.clientId,
                 clientSecret: (string)this.ProjectConfig.servicePrincipal.clientSecret);
         }

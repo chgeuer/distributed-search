@@ -29,7 +29,7 @@
         private readonly IDistributedSearchConfiguration demoCredential;
         private readonly BlobContainerClient snapshotContainerClient;
         private readonly BlobContainerClient storageOffloadStorage;
-        private readonly TopicAndComputeNodeID topicAndComputeNodeID;
+        private readonly TopicAndPartition topicAndPartition;
 
         public SearchServiceStartup(IConfiguration configuration)
         {
@@ -38,7 +38,7 @@
 
             var computeNodeId = 100;
 
-            this.topicAndComputeNodeID = new TopicAndComputeNodeID(
+            this.topicAndPartition = new TopicAndPartition(
                 topicName: this.demoCredential.EventHubTopicNameResponses,
                 partitionSpecification: PartitionSpecification.NewComputeNodeID(computeNodeId));
 
@@ -47,7 +47,7 @@
                 credential: this.demoCredential.AADServicePrincipal);
 
             this.storageOffloadStorage = new BlobContainerClient(
-               blobContainerUri: new Uri($"https://{this.demoCredential.StorageOffloadAccountName}.blob.core.windows.net/{this.demoCredential.StorageOffloadContainerNameResponses}/"),
+               blobContainerUri: new Uri($"https://{this.demoCredential.StorageOffloadAccountName}.blob.core.windows.net/{this.demoCredential.StorageOffloadContainerName}/"),
                credential: this.demoCredential.AADServicePrincipal);
         }
 
@@ -71,7 +71,7 @@
             services.AddControllers();
 
             services.AddSingleton(_ => this.GetTopicAndComputeNodeID());
-            services.AddSingleton(_ => this.CreateProviderResponsePump<FashionItem>(this.topicAndComputeNodeID));
+            services.AddSingleton(_ => this.CreateProviderResponsePump<FashionItem>(this.topicAndPartition));
             services.AddSingleton<IDistributedSearchConfiguration>(_ => this.demoCredential);
 
             services.AddSingleton(_ => this.SendProviderSearchRequest());
@@ -117,12 +117,12 @@
             return searchRequest => requestProducer.SendMessage(searchRequest, requestId: searchRequest.RequestID);
         }
 
-        private IObservable<Message<ProviderSearchResponse<T>>> CreateProviderResponsePump<T>(TopicAndComputeNodeID topicAndComputeNodeID)
+        private IObservable<Message<ProviderSearchResponse<T>>> CreateProviderResponsePump<T>(TopicAndPartition topicAndPartition)
         {
             var messagingClient = MessagingClients
                 .WithStorageOffload<ProviderSearchResponse<T>>(
                     demoCredential: this.demoCredential,
-                    topicAndComputeNodeID: topicAndComputeNodeID,
+                    topicAndPartition: topicAndPartition,
                     storageOffload: this.storageOffloadStorage.ToStorageOffload());
 
             var connectable = messagingClient
@@ -148,9 +148,9 @@
             return () => businessDataUpdates.BusinessData;
         }
 
-        private Func<TopicAndComputeNodeID> GetTopicAndComputeNodeID() => () =>
+        private Func<TopicAndPartition> GetTopicAndComputeNodeID() => () =>
         {
-            return this.topicAndComputeNodeID;
+            return this.topicAndPartition;
         };
     }
 }

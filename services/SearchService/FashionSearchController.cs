@@ -19,32 +19,29 @@
     [Route("[controller]")]
     public class FashionSearchController : ControllerBase
     {
-        private readonly IDistributedSearchConfiguration searchConfiguration;
         private readonly Func<BusinessData<FashionBusinessData>> getBusinessData;
         private readonly Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest;
         private readonly IObservable<Message<ProviderSearchResponse<FashionItem>>> providerResponsePump;
         private readonly Func<PipelineSteps<FashionBusinessData, FashionSearchRequest, FashionItem>> createPipelineSteps;
-        private readonly Func<TopicAndComputeNodeID> getTopicAndComputeNodeID;
+        private readonly Func<TopicAndPartition> getTopicAndPartition;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FashionSearchController"/> class.
         /// </summary>
-        /// <param name="searchConfiguration">The configuration.</param>
         /// <param name="providerResponsePump">Pumps provider search responses into the compute node.</param>
         /// <param name="sendProviderSearchRequest">Sends a provider search request to the requests topic.</param>
         /// <param name="createPipelineSteps">Creates the processing pipeline steps.</param>
         /// <param name="getBusinessData">Returns the most recent business data.</param>
-        /// <param name="getTopicAndComputeNodeID">Returns the <see cref="TopicAndComputeNodeID"/>.</param>
+        /// <param name="getTopicAndPartition">Returns the <see cref="TopicAndPartition"/>.</param>
         public FashionSearchController(
-            IDistributedSearchConfiguration searchConfiguration,
             IObservable<Message<ProviderSearchResponse<FashionItem>>> providerResponsePump,
             Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest,
             Func<PipelineSteps<FashionBusinessData, FashionSearchRequest, FashionItem>> createPipelineSteps,
             Func<BusinessData<FashionBusinessData>> getBusinessData,
-            Func<TopicAndComputeNodeID> getTopicAndComputeNodeID)
+            Func<TopicAndPartition> getTopicAndPartition)
         {
-            (this.providerResponsePump, this.sendProviderSearchRequest, this.createPipelineSteps, this.getBusinessData, this.searchConfiguration, this.getTopicAndComputeNodeID) =
-                (providerResponsePump, sendProviderSearchRequest, createPipelineSteps, getBusinessData, searchConfiguration, getTopicAndComputeNodeID);
+            (this.providerResponsePump, this.sendProviderSearchRequest, this.createPipelineSteps, this.getBusinessData, this.getTopicAndPartition) =
+                (providerResponsePump, sendProviderSearchRequest, createPipelineSteps, getBusinessData, getTopicAndPartition);
         }
 
         [HttpGet]
@@ -60,12 +57,13 @@
             // snap a copy of the business data early in the process
             var businessData = this.getBusinessData();
 
-            var responseMustBeReadyBy = DateTimeOffset.Now.Add(
-                TimeSpan.FromMilliseconds(timeout));
+            var responseMustBeReadyBy = DateTimeOffset.Now.Add(TimeSpan.FromMilliseconds(timeout));
+
+            static string AssignNewRequestID() => Guid.NewGuid().ToString();
 
             var providerSearchRequest = new ProviderSearchRequest<FashionSearchRequest>(
-                requestID: Guid.NewGuid().ToString(),
-                responseTopic: this.getTopicAndComputeNodeID(),
+                requestID: AssignNewRequestID(),
+                responseTopic: this.getTopicAndPartition(),
                 searchRequest: searchRequest);
 
             var stopwatch = new Stopwatch();
@@ -77,8 +75,16 @@
             IObservable<FashionItem> responses =
                 this.providerResponsePump
                     .Where(t => t.RequestID.OptionEqualsValue(t.RequestID.Value))
-                    .SelectMany(providerSearchResponse => providerSearchResponse.Payload.Response)
-                    .ApplySteps(businessData.Data, searchRequest, pipelineSteps.StreamingSteps)
+                    .SelectMany(providerSearchResponseMessage =>
+                    {
+                        ProviderSearchResponse<FashionItem> payload = providerSearchResponseMessage.Payload;
+                        var fashionItemList = payload.Response;
+                        return fashionItemList;
+                    })
+                    .ApplySteps(
+                        businessData: businessData.Data,
+                        searchRequest: searchRequest,
+                        steps: pipelineSteps.StreamingSteps)
                     .TakeUntil(responseMustBeReadyBy);
 
             // Send search provider request into requests topic.
@@ -89,7 +95,10 @@
             // Aggregate all things we have, by when `responseMustBeReadyBy` fires
             FashionItem[] items = responses
                 .ToEnumerable()
-                .ApplySteps(businessData.Data, searchRequest, pipelineSteps.FinalSteps)
+                .ApplySteps(
+                    businessData: businessData.Data,
+                    searchRequest: searchRequest,
+                    steps: pipelineSteps.FinalSteps)
                 .ToArray();
 
             stopwatch.Stop();

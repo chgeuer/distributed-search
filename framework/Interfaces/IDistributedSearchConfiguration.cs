@@ -6,31 +6,25 @@
     {
         string EventHubName { get; }
 
-        string EntityPath { get; }
-
         string EventHubNamespaceName { get; }
 
-        string EventHubTopicNameRequests { get; }
-
         string EventHubTopicNameBusinessDataUpdates { get; }
+
+        string EventHubTopicNameRequests { get; }
 
         string EventHubTopicNameResponses { get; }
 
         string EventHubConnectionString { get; }
 
-        string EventHubCaptureStorageAccountConnectionString { get; }
-
-        string EventHubCaptureStorageAccountContainerName { get; }
-
-        string StorageOffloadAccountName { get; }
-
+        // Snapshot Storage
         string BusinessDataSnapshotAccountName { get; }
 
         string BusinessDataSnapshotContainerName { get; }
 
-        string StorageOffloadContainerNameRequests { get; }
+        // Storage Offload
+        string StorageOffloadAccountName { get; }
 
-        string StorageOffloadContainerNameResponses { get; }
+        string StorageOffloadContainerName { get; }
 
         TokenCredential AADServicePrincipal { get; }
     }

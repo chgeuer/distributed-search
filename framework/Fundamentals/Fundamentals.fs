@@ -29,7 +29,7 @@ type PartitionSpecification =
     | PartitionID of int
     | RoundRobin
 
-type TopicAndComputeNodeID =
+type TopicAndPartition =
     { TopicName: TopicName
       PartitionSpecification: PartitionSpecification }
 
@@ -37,10 +37,10 @@ type Partition =
     | Partition of int
     | Any
 
-let determinePartitionID (determinePartitionCount: TopicName -> int option) (topicAndComputeNodeID: TopicAndComputeNodeID) : Partition =
-    match topicAndComputeNodeID.PartitionSpecification with
+let determinePartitionID (determinePartitionCount: TopicName -> int option) (topicAndPartition: TopicAndPartition) : Partition =
+    match topicAndPartition.PartitionSpecification with
     | ComputeNodeID computeNodeId ->
-        match determinePartitionCount topicAndComputeNodeID.TopicName with
+        match determinePartitionCount topicAndPartition.TopicName with
         | Some count -> Partition (computeNodeId % count)
         | None -> Any
     | PartitionID partitionID ->
@@ -49,7 +49,7 @@ let determinePartitionID (determinePartitionCount: TopicName -> int option) (top
 
 type ProviderSearchRequest<'searchRequest> =
     { RequestID: RequestID
-      ResponseTopic: TopicAndComputeNodeID
+      ResponseTopic: TopicAndPartition
       SearchRequest: 'searchRequest }
 
 type ProviderSearchResponse<'item> =
