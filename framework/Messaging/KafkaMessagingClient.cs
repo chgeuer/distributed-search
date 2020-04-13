@@ -188,17 +188,11 @@
                 determinePartitionCount: GetPartitionCount(adminClient).ToFSharpFunc(),
                 topicAndComputeNodeID: topicAndComputeNodeID);
 
-            Console.WriteLine($"CCC {partitionId}");
-
             return partitionId switch
             {
                 MercuryPartition.Partition x => new ConfluentPartition(x.Item),
                 _ => ConfluentPartition.Any,
             };
-
-            // return partitionId.IsAny
-            //    ? ConfluentPartition.Any
-            //    : new ConfluentPartition((partitionId as MercuryPartition.Partition).Item);
         }
 
         private const string RequestIdPropertyName = "requestIDString";

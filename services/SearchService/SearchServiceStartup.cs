@@ -40,7 +40,7 @@
 
             this.topicAndComputeNodeID = new TopicAndComputeNodeID(
                 topicName: this.demoCredential.EventHubTopicNameResponses,
-                computeNodeId: computeNodeId);
+                partitionSpecification: PartitionSpecification.NewComputeNodeID(computeNodeId));
 
             this.snapshotContainerClient = new BlobContainerClient(
                 blobContainerUri: new Uri($"https://{this.demoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{this.demoCredential.BusinessDataSnapshotContainerName}/"),

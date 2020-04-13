@@ -24,30 +24,28 @@ type Message<'payload> =
 
 type TopicName = string
 
-//type PartitionSpecification =
-//    | PartitionID of int
-//    | ComputeNodeID of int
-//    | RoundRobin
+type PartitionSpecification =
+    | ComputeNodeID of int
+    | PartitionID of int
+    | RoundRobin
 
 type TopicAndComputeNodeID =
     { TopicName: TopicName
-      /// If a node expects responses in a particular partition,
-      /// specify a node ID number here. This node ID will be used
-      /// modulo the number of partitions, to determine the
-      /// precise partition.
-      ComputeNodeId: int option }
+      PartitionSpecification: PartitionSpecification }
 
 type Partition =
     | Partition of int
     | Any
 
 let determinePartitionID (determinePartitionCount: TopicName -> int option) (topicAndComputeNodeID: TopicAndComputeNodeID) : Partition =
-    match topicAndComputeNodeID.ComputeNodeId with
-    | Some computeNodeId ->
+    match topicAndComputeNodeID.PartitionSpecification with
+    | ComputeNodeID computeNodeId ->
         match determinePartitionCount topicAndComputeNodeID.TopicName with
         | Some count -> Partition (computeNodeId % count)
         | None -> Any
-    | None -> Any
+    | PartitionID partitionID ->
+        Partition partitionID
+    | RoundRobin -> Any
 
 type ProviderSearchRequest<'searchRequest> =
     { RequestID: RequestID
