@@ -11,6 +11,11 @@ type StorageOffloadFunctions =
 
 type Offset = Offset of int64
 
+type Offset with
+    member this.Add increment =
+        let (Offset offsetValue) = this
+        Offset(offsetValue + increment)
+
 type SeekPosition =
     | FromOffset of Offset: Offset 
     | FromTail

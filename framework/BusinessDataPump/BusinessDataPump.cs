@@ -17,6 +17,7 @@
     using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
     using static Mercury.Fundamentals.BusinessData;
+    using static Mercury.Fundamentals.BusinessData.BusinessDataUpdateError;
 
     public class BusinessDataPump<TBusinessData, TBusinessDataUpdate>
     {
@@ -60,21 +61,27 @@
                 sleepTime: TimeSpan.FromMinutes(1),
                 cancellationToken: this.cts.Token));
 
-            BusinessData<TBusinessData> snapshotValue = await this.FetchBusinessDataSnapshot(this.cts.Token);
-
             var updateFunc = this.applyUpdate.ToFSharpFunc();
+
+            FSharpResult<BusinessData<TBusinessData>, BusinessDataUpdateError> snapshotResult = await this.FetchBusinessDataSnapshot(this.cts.Token);
+            if (snapshotResult.IsError)
+            {
+                return Observable.Throw<BusinessData<TBusinessData>>(((BusinessDataUpdateError.SnapshotDownloadError)snapshotResult.ErrorValue).Item);
+            }
 
             IConnectableObservable<BusinessData<TBusinessData>> connectableObservable =
                 this.updateMessagingClient
                     .CreateObervable(
-                        startingPosition: SeekPosition.NewFromOffset(snapshotValue.Offset),
+                        startingPosition: SeekPosition.NewFromOffset(
+                            snapshotResult.ResultValue.Offset.Add(1)),
                         cancellationToken: this.cts.Token)
                     .Scan(
-                        seed: snapshotValue,
+                        seed: snapshotResult,
                         accumulator: (businessData, updateMessage)
-                            => updateBusinessData(updateFunc, businessData, updateMessage))
-                    .StartWith(snapshotValue)
-                    .Publish(initialValue: snapshotValue);
+                            => updateBusinessData(updateFunc, businessData, updateMessage)) // .Where(d => d.IsOk)
+                    .Select(d => d.ResultValue)
+                    .StartWith(snapshotResult.ResultValue)
+                    .Publish(initialValue: snapshotResult.ResultValue);
 
             _ = connectableObservable.Connect();
 
@@ -85,27 +92,38 @@
             => this.updateMessagingClient.SendMessage(update, cancellationToken);
 
         /// <summary>
-        /// Fetches a business data snapshot from blob storage
+        /// Fetches a business data snapshot from blob storage.
         /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        public async Task<BusinessData<TBusinessData>> FetchBusinessDataSnapshot(CancellationToken cancellationToken)
+        /// <param name="cancellationToken">the CancellationToken.</param>
+        /// <returns>the most recent snapshot.</returns>
+        public async Task<FSharpResult<BusinessData<TBusinessData>, BusinessDataUpdateError>> FetchBusinessDataSnapshot(CancellationToken cancellationToken)
         {
-            FSharpOption<(Offset, string)> someOffsetAndName = await this.GetLatestSnapshotID(cancellationToken);
-
-            if (FSharpOption<(Offset, string)>.get_IsNone(someOffsetAndName))
+            try
             {
-                return new BusinessData<TBusinessData>(
-                    data: this.createEmptyBusinessData(),
-                    offset: Offset.NewOffset(-1));
+                FSharpOption<(Offset, string)> someOffsetAndName = await this.GetLatestSnapshotID(cancellationToken);
+
+                if (FSharpOption<(Offset, string)>.get_IsNone(someOffsetAndName))
+                {
+                    return FSharpResult<BusinessData<TBusinessData>, BusinessDataUpdateError>.NewOk(
+                        new BusinessData<TBusinessData>(
+                            data: this.createEmptyBusinessData(),
+                            offset: Offset.NewOffset(-1)));
+                }
+
+                var (offset, blobName) = someOffsetAndName.Value;
+                await Console.Out.WriteLineAsync($"Loading snapshot offset {offset.Item} from {blobName}");
+
+                var blobClient = this.snapshotContainerClient.GetBlobClient(blobName: blobName);
+                var result = await blobClient.DownloadAsync(cancellationToken: cancellationToken);
+                var val = await result.Value.Content.ReadJSON<BusinessData<TBusinessData>>();
+
+                return FSharpResult<BusinessData<TBusinessData>, BusinessDataUpdateError>.NewOk(val);
             }
-
-            var (offset, blobName) = someOffsetAndName.Value;
-            await Console.Out.WriteLineAsync($"Loading snapshot offset {offset.Item} from {blobName}");
-
-            var blobClient = this.snapshotContainerClient.GetBlobClient(blobName: blobName);
-            var result = await blobClient.DownloadAsync(cancellationToken: cancellationToken);
-            return await result.Value.Content.ReadJSON<BusinessData<TBusinessData>>();
+            catch (Exception ex)
+            {
+                return FSharpResult<BusinessData<TBusinessData>, BusinessDataUpdateError>.NewError(
+                    BusinessDataUpdateError.NewSnapshotDownloadError(ex));
+            }
         }
 
         public async Task<string> WriteBusinessDataSnapshot(BusinessData<TBusinessData> businessData, CancellationToken cancellationToken = default)
@@ -168,7 +186,8 @@
 
             return items
                 .OrderBy(i => i.Item2)
-                .SkipLast(5);
+                .Where(i => i.Item1.Item % 10 == 0)
+                .SkipLast(10);
         }
 
         private async Task<IEnumerable<string>> GetBlobNames(CancellationToken cancellationToken)
