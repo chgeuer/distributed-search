@@ -7,7 +7,6 @@
     using Mercury.BusinessDataPump;
     using Mercury.Credentials;
     using Mercury.Customer.Fashion;
-    using Mercury.Fundamentals;
     using Mercury.Interfaces;
     using Mercury.Messaging;
     using Mercury.Utils.Extensions;
@@ -20,7 +19,6 @@
     using static Mercury.Customer.Fashion.BusinessData;
     using static Mercury.Customer.Fashion.Domain;
     using static Mercury.Fundamentals.BusinessData;
-    using static Mercury.Fundamentals.BusinessLogic;
 
     public class SearchServiceStartup
     {
