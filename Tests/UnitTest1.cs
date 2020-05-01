@@ -54,7 +54,7 @@ namespace Mercury.UnitTests
         public void TestGenericUpdates2()
         {
             var data = new UpdateableData(
-                offset: Offset.NewOffset(0),
+                watermark: Watermark.NewWatermark(0),
                 data: new FSharpMap<string, FSharpMap<string, string>>(
                     Array.Empty<Tuple<string, FSharpMap<string, string>>>()));
             Assert.AreEqual(0, data.Data.Count);
@@ -63,11 +63,11 @@ namespace Mercury.UnitTests
             static UpdateOperation<string, string> Remove(string key) => UpdateOperation<string, string>.NewRemove(key);
 
             var updates = new[] {
-                //new Update(offset: Offset.NewOffset(15), updateArea: "currencyExchange", Add("USD-to-GBP", "1.2")),
-                //new Update(offset: Offset.NewOffset(15), updateArea: "airports", Add("HLR", "{  'legalName' = 'London Heathrow'   }")),
-                new Update(offset: Offset.NewOffset(20), updateArea: "brands", Add("DG", "Docker and Gabana")),
-                new Update(offset: Offset.NewOffset(23), updateArea: "brands", Add("DÖ", "Diöhr")),
-                new Update(offset: Offset.NewOffset(24), updateArea: "brands", Remove("DG")),
+                //new Update(watermark: Watermark.NewWatermark(15), updateArea: "currencyExchange", Add("USD-to-GBP", "1.2")),
+                //new Update(watermark: Watermark.NewWatermark(15), updateArea: "airports", Add("HLR", "{  'legalName' = 'London Heathrow'   }")),
+                new Update(watermark: Watermark.NewWatermark(20), updateArea: "brands", Add("DG", "Docker and Gabana")),
+                new Update(watermark: Watermark.NewWatermark(23), updateArea: "brands", Add("DÖ", "Diöhr")),
+                new Update(watermark: Watermark.NewWatermark(24), updateArea: "brands", Remove("DG")),
             }.ToFSharp();
 
             var updatedData = data.ApplyUpdates(updates);
@@ -133,12 +133,12 @@ namespace Mercury.UnitTests
             static UpdateOperation<string, string> Remove(string key) => UpdateOperation<string, string>.NewRemove(key);
 
             var updates = new[]{
-                new Update(offset: Offset.NewOffset(2), "f", Add("f3", "f4")),
-                new Update(offset: Offset.NewOffset(3), "f", Remove("f1"))
+                new Update(watermark: Watermark.NewWatermark(2), "f", Add("f3", "f4")),
+                new Update(watermark: Watermark.NewWatermark(3), "f", Remove("f1"))
             }.ToFSharp();
 
             var data = new UpdateableData(
-                offset: Offset.NewOffset(1),
+                watermark: Watermark.NewWatermark(1),
                 data: new[] {
                     ("f", new[] { ("f1", "f2") }),
                     ("a", new[] { ("a1", "a2"), ("a3", "a4") }),
@@ -250,7 +250,7 @@ namespace Mercury.UnitTests
 
             var businessData = new BusinessData<FashionBusinessData>(
                 fashionBusinessData,
-                Offset.NewOffset(1));
+                Watermark.NewWatermark(1));
 
             var query = new FashionSearchRequest(size: 16, fashionType: Hat);
 

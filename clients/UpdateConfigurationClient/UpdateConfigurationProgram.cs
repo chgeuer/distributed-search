@@ -48,9 +48,9 @@
 
                 // Here, we're directly dropping the update in Kafka.
                 // This must be replaced with a secured HTTP request.
-                var offset = await businessDataUpdates.SendUpdate(update);
+                var watermark = await businessDataUpdates.SendUpdate(update);
 
-                await Console.Out.WriteLineAsync($"Update sent for {newMarkup} (#{offset.Item})");
+                await Console.Out.WriteLineAsync($"Update sent for {newMarkup} (#{watermark.Item})");
             }
         }
     }

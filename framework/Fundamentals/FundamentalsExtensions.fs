@@ -4,7 +4,7 @@ open System.Runtime.CompilerServices
 open Mercury.Fundamentals.Types
 
 type Configuration<'k, 'v when 'k: comparison> =
-    { Offset: Offset
+    { Watermark: Watermark
       Data: Map<'k, 'v> }
 
 type UpdateOperation<'k, 'v> =
@@ -12,12 +12,12 @@ type UpdateOperation<'k, 'v> =
     | Remove of Key: 'k
 
 type Update =
-    { Offset: Offset
+    { Watermark: Watermark
       UpdateArea: string
       Operation: UpdateOperation<string, string> }
 
 type UpdateableData =
-    { Offset: Offset
+    { Watermark: Watermark
       Data: Map<string, Map<string, string>> }
 
 [<Extension>]
@@ -38,7 +38,7 @@ module UpdateExtensions =
             then update.Operation |> ApplyUpdateOperation(data.Data.Item(update.UpdateArea))
             else Map.empty
         { data with
-              Offset = update.Offset
+              Watermark = update.Watermark
               Data = data.Data.Add(update.UpdateArea, map) }
 
     [<Extension>]

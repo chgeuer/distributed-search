@@ -34,12 +34,12 @@
                         cancellationToken: cancellationToken);
 
                     return new Message<TMessagePayload>(
-                        offset: message.Offset,
+                        watermark: message.Watermark,
                         requestID: message.RequestID,
                         payload: payload);
                 });
 
-        public async Task<Offset> SendMessage(
+        public async Task<Watermark> SendMessage(
             TMessagePayload messagePayload,
             CancellationToken cancellationToken = default)
         {
@@ -55,7 +55,7 @@
                 cancellationToken: cancellationToken);
         }
 
-        public async Task<Offset> SendMessage(
+        public async Task<Watermark> SendMessage(
             TMessagePayload messagePayload,
             string requestId,
             CancellationToken cancellationToken = default)

@@ -9,8 +9,8 @@ module BusinessData =
     open Mercury.Fundamentals.Types
 
     type UpdateOutOfOrderError =
-        { DataOffset: Offset 
-          UpdateOffset: Offset }
+        { DataWatermark: Watermark 
+          UpdateWatermark: Watermark }
 
     type BusinessDataUpdateError = 
         | UpdateOutOfOrderError of UpdateOutOfOrderError
@@ -18,7 +18,7 @@ module BusinessData =
 
     type BusinessData<'domainSpecificBusinessData> =
         { Data: 'domainSpecificBusinessData
-          Offset: Offset }
+          Watermark: Watermark }
 
     type SingleUpdate<'domainSpecificBusinessData, 'domainSpecificUpdate> =
         'domainSpecificBusinessData -> 'domainSpecificUpdate -> 'domainSpecificBusinessData
@@ -28,16 +28,16 @@ module BusinessData =
         | Error e -> Error e
         | Ok data ->
             let newVersion = 
-                match (data.Offset, um.Offset) with
-                | (dataOffset, updateOffset) when dataOffset.Add(1L) <> updateOffset -> 
-                    Error { DataOffset = dataOffset; UpdateOffset = updateOffset }
-                | (_, updateOffset) -> Ok updateOffset
+                match (data.Watermark, um.Watermark) with
+                | (dataWatermark, updateWatermark) when dataWatermark.Add(1L) <> updateWatermark -> 
+                    Error { DataWatermark = dataWatermark; UpdateWatermark= updateWatermark }
+                | (_, updateWatermark) -> Ok updateWatermark
 
             match newVersion with
                 | Error e -> Error (UpdateOutOfOrderError e)
                 | Ok newVersion -> 
                     let newData = func data.Data um.Payload
-                    Ok { data with Offset = newVersion; Data = newData }
+                    Ok { data with Watermark = newVersion; Data = newData }
 
     //[<Extension>]
     //let ApplyUpdates (data: UpdateableData) (updates: Update list): UpdateableData =

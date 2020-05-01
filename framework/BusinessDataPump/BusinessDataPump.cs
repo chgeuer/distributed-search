@@ -26,7 +26,7 @@
         private readonly IMessageClient<TBusinessDataUpdate> updateMessagingClient;
         private readonly BlobContainerClient snapshotContainerClient;
         private CancellationTokenSource cts;
-        private Offset lastWrittenOffset = Offset.NewOffset(-1);
+        private Watermark lastWrittenWatermark = Watermark.NewWatermark(-1);
         private Task deletetionTask;
 
         public BusinessDataPump(
@@ -72,8 +72,8 @@
             IConnectableObservable<BusinessData<TBusinessData>> connectableObservable =
                 this.updateMessagingClient
                     .CreateObervable(
-                        startingPosition: SeekPosition.NewFromOffset(
-                            snapshotResult.ResultValue.Offset.Add(1)),
+                        startingPosition: SeekPosition.NewFromWatermark(
+                            snapshotResult.ResultValue.Watermark.Add(1)),
                         cancellationToken: this.cts.Token)
                     .Scan(
                         seed: snapshotResult,
@@ -88,7 +88,7 @@
             return connectableObservable.AsObservable();
         }
 
-        public Task<Offset> SendUpdate(TBusinessDataUpdate update, CancellationToken cancellationToken = default)
+        public Task<Watermark> SendUpdate(TBusinessDataUpdate update, CancellationToken cancellationToken = default)
             => this.updateMessagingClient.SendMessage(update, cancellationToken);
 
         /// <summary>
@@ -100,18 +100,18 @@
         {
             try
             {
-                FSharpOption<(Offset, string)> someOffsetAndName = await this.GetLatestSnapshotID(cancellationToken);
+                FSharpOption<(Watermark, string)> someWatermarkAndName = await this.GetLatestSnapshotID(cancellationToken);
 
-                if (FSharpOption<(Offset, string)>.get_IsNone(someOffsetAndName))
+                if (FSharpOption<(Watermark, string)>.get_IsNone(someWatermarkAndName))
                 {
                     return FSharpResult<BusinessData<TBusinessData>, BusinessDataUpdateError>.NewOk(
                         new BusinessData<TBusinessData>(
                             data: this.createEmptyBusinessData(),
-                            offset: Offset.NewOffset(-1)));
+                            watermark: Watermark.NewWatermark(-1)));
                 }
 
-                var (offset, blobName) = someOffsetAndName.Value;
-                await Console.Out.WriteLineAsync($"Loading snapshot offset {offset.Item} from {blobName}");
+                var (watermark, blobName) = someWatermarkAndName.Value;
+                await Console.Out.WriteLineAsync($"Loading snapshot watermark {watermark.Item} from {blobName}");
 
                 var blobClient = this.snapshotContainerClient.GetBlobClient(blobName: blobName);
                 var result = await blobClient.DownloadAsync(cancellationToken: cancellationToken);
@@ -128,10 +128,10 @@
 
         public async Task<string> WriteBusinessDataSnapshot(BusinessData<TBusinessData> businessData, CancellationToken cancellationToken = default)
         {
-            var blobName = OffsetToBlobName(businessData);
+            var blobName = WatermarkToBlobName(businessData);
             var blobClient = this.snapshotContainerClient.GetBlobClient(blobName: blobName);
 
-            if (businessData.Offset == this.lastWrittenOffset)
+            if (businessData.Watermark == this.lastWrittenWatermark)
             {
                 await Console.Error.WriteLineAsync($"Skip writing {blobClient.Name} (no change)");
                 return blobClient.Name;
@@ -140,7 +140,7 @@
             try
             {
                 _ = await blobClient.UploadAsync(content: businessData.AsJSONStream(), overwrite: false, cancellationToken: cancellationToken);
-                this.lastWrittenOffset = businessData.Offset;
+                this.lastWrittenWatermark = businessData.Watermark;
             }
             catch (RequestFailedException rfe) when (rfe.ErrorCode == "BlobAlreadyExists")
             {
@@ -158,7 +158,7 @@
                 {
                     await Console.Out.WriteLineAsync($"Delete snapshot {snapshot.Item1} from {snapshot.Item2}");
                     await this.snapshotContainerClient.DeleteBlobIfExistsAsync(
-                        blobName: OffsetToBlobName(snapshot.Item1),
+                        blobName: WatermarkToBlobName(snapshot.Item1),
                         snapshotsOption: DeleteSnapshotsOption.IncludeSnapshots,
                         cancellationToken: cancellationToken);
                 }
@@ -167,19 +167,19 @@
             }
         }
 
-        public async Task<IEnumerable<(Offset, DateTimeOffset)>> GetOldSnapshots(TimeSpan maxAge, CancellationToken cancellationToken)
+        public async Task<IEnumerable<(Watermark, DateTimeOffset)>> GetOldSnapshots(TimeSpan maxAge, CancellationToken cancellationToken)
         {
             var blobs = this.snapshotContainerClient.GetBlobsAsync(traits: BlobTraits.Metadata, cancellationToken: cancellationToken);
-            var items = new List<(Offset, DateTimeOffset)>();
+            var items = new List<(Watermark, DateTimeOffset)>();
             await foreach (var blob in blobs)
             {
-                var someUpdateOffset = ParseOffsetFromBlobName(blob.Name);
+                var someUpdateWatermark = ParseWatermarkFromBlobName(blob.Name);
 
-                if (FSharpOption<Offset>.get_IsSome(someUpdateOffset) &&
+                if (FSharpOption<Watermark>.get_IsSome(someUpdateWatermark) &&
                     blob.Properties.LastModified.HasValue &&
                     blob.Properties.LastModified.Value < DateTime.UtcNow.Subtract(maxAge))
                 {
-                    var v = (someUpdateOffset.Value, blob.Properties.LastModified.Value);
+                    var v = (someUpdateWatermark.Value, blob.Properties.LastModified.Value);
                     items.Add(v);
                 }
             }
@@ -202,37 +202,37 @@
             return items;
         }
 
-        private async Task<FSharpOption<(Offset, string)>> GetLatestSnapshotID(CancellationToken cancellationToken)
+        private async Task<FSharpOption<(Watermark, string)>> GetLatestSnapshotID(CancellationToken cancellationToken)
         {
             var names = await this.GetBlobNames(cancellationToken);
-            var items = new List<(Offset, string)>();
+            var items = new List<(Watermark, string)>();
 
             foreach (var name in names)
             {
-                var someUpdateOffset = ParseOffsetFromBlobName(name);
+                var someUpdateWatermark = ParseWatermarkFromBlobName(name);
 
-                if (FSharpOption<Offset>.get_IsSome(someUpdateOffset))
+                if (FSharpOption<Watermark>.get_IsSome(someUpdateWatermark))
                 {
-                    var v = (someUpdateOffset.Value, name);
+                    var v = (someUpdateWatermark.Value, name);
                     items.Add(v);
                 }
             }
 
             if (items.Count == 0)
             {
-                return FSharpOption<(Offset, string)>.None;
+                return FSharpOption<(Watermark, string)>.None;
             }
 
-            return FSharpOption<(Offset, string)>.Some(items.OrderByDescending(_ => _.Item1).First());
+            return FSharpOption<(Watermark, string)>.Some(items.OrderByDescending(_ => _.Item1).First());
         }
 
-        private static FSharpOption<Offset> ParseOffsetFromBlobName(string n)
-            => long.TryParse(n.Replace(".json", string.Empty), out long offset)
-               ? FSharpOption<Offset>.Some(Offset.NewOffset(offset))
-               : FSharpOption<Offset>.None;
+        private static FSharpOption<Watermark> ParseWatermarkFromBlobName(string n)
+            => long.TryParse(n.Replace(".json", string.Empty), out long watermark)
+               ? FSharpOption<Watermark>.Some(Watermark.NewWatermark(watermark))
+               : FSharpOption<Watermark>.None;
 
-        private static string OffsetToBlobName(Offset offset) => $"{offset.Item}.json";
+        private static string WatermarkToBlobName(Watermark watermark) => $"{watermark.Item}.json";
 
-        private static string OffsetToBlobName(BusinessData<TBusinessData> businessData) => OffsetToBlobName(businessData.Offset);
+        private static string WatermarkToBlobName(BusinessData<TBusinessData> businessData) => WatermarkToBlobName(businessData.Watermark);
     }
 }

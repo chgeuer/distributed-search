@@ -19,14 +19,14 @@
         }
 
         [HttpPost]
-        public async Task<(Offset, FashionBusinessData)> Post(FashionBusinessDataUpdate bdu)
+        public async Task<(Watermark, FashionBusinessData)> Post(FashionBusinessDataUpdate bdu)
         {
             await Task.Delay(TimeSpan.FromSeconds(1));
-            return (Offset.NewOffset(-1), null);
+            return (Watermark.NewWatermark(-1), null);
         }
 
         [HttpGet]
-        public async Task<FashionBusinessData> Get(Offset offset)
+        public async Task<FashionBusinessData> Get(Watermark watermark)
         {
             await Task.Delay(TimeSpan.FromSeconds(1));
             throw new NotSupportedException();

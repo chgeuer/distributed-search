@@ -9,22 +9,22 @@ type StorageOffloadFunctions =
     { Upload: Func<string, Stream, CancellationToken, Task> 
       Download: Func<string, CancellationToken, Task<Stream>> }
 
-type Offset = Offset of int64
+type Watermark = Watermark of int64
 
-type Offset with
+type Watermark with
     member this.Add increment =
-        let (Offset offsetValue) = this
-        Offset(offsetValue + increment)
+        let (Watermark watermarkValue) = this
+        Watermark(watermarkValue + increment)
 
 type SeekPosition =
-    | FromOffset of Offset: Offset 
+    | FromWatermark of Watermark: Watermark 
     | FromTail
 
 type RequestID = string
 
 type Message<'payload> =
     { RequestID: RequestID option
-      Offset: Offset
+      Watermark: Watermark
       Payload: 'payload }
 
 type TopicName = string

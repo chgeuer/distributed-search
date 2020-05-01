@@ -8,6 +8,7 @@
     using System.Threading.Tasks;
     using Mercury.Fundamentals;
     using Mercury.Interfaces;
+    using Mercury.ServiceImplementation;
     using Mercury.Utils.Extensions;
     using Microsoft.AspNetCore.Mvc;
     using static Fundamentals.Types;
@@ -37,11 +38,11 @@
             IObservable<Message<ProviderSearchResponse<FashionItem>>> providerResponsePump,
             Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest,
             Func<PipelineSteps<FashionBusinessData, FashionSearchRequest, FashionItem>> createPipelineSteps,
-            Func<BusinessData<FashionBusinessData>> getBusinessData,
+            BusinessDataPumpBackgroundService<FashionBusinessData, FashionBusinessDataUpdate> getBusinessData,
             Func<TopicAndPartition> getTopicAndPartition)
         {
             (this.providerResponsePump, this.sendProviderSearchRequest, this.createPipelineSteps, this.getBusinessData, this.getTopicAndPartition) =
-                (providerResponsePump, sendProviderSearchRequest, createPipelineSteps, getBusinessData, getTopicAndPartition);
+                (providerResponsePump, sendProviderSearchRequest, createPipelineSteps, () => getBusinessData.BusinessData, getTopicAndPartition);
         }
 
         [HttpGet]
@@ -108,7 +109,7 @@
                 RequestID = providerSearchRequest.RequestID,
                 Items = items,
                 Timing = $"Duration: {stopwatch.Elapsed.TotalSeconds:N3}",
-                Version = businessData.Offset.Item,
+                Version = businessData.Watermark.Item,
                 BusinessData = businessData.Data,
             };
         }

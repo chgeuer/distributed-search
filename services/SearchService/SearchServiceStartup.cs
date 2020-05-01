@@ -9,6 +9,7 @@
     using Mercury.Customer.Fashion;
     using Mercury.Interfaces;
     using Mercury.Messaging;
+    using Mercury.ServiceImplementation;
     using Mercury.Utils.Extensions;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
@@ -67,15 +68,18 @@
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
-
             services.AddSingleton(_ => this.GetTopicAndComputeNodeID());
             services.AddSingleton(_ => this.SendProviderSearchRequest());
             services.AddSingleton(_ => this.CreateProviderResponsePump<FashionItem>(this.responseTopicAndPartition));
             services.AddSingleton<IDistributedSearchConfiguration>(_ => this.demoCredential);
 
             services.AddSingleton(_ => CreatePipelineSteps());
-            services.AddSingleton(_ => this.GetCurrentBusinessData<FashionBusinessData, FashionBusinessDataUpdate>(
-                newFashionBusinessData, FashionBusinessDataExtensions.ApplyFashionUpdate));
+
+            // services.AddSingleton(_ => this.GetCurrentBusinessData<FashionBusinessData, FashionBusinessDataUpdate>(
+            //    newFashionBusinessData, FashionBusinessDataExtensions.ApplyFashionUpdate));
+            services.AddHostedService(_ =>
+               this.CreateBusinessDataPumpBackgroundService<FashionBusinessData, FashionBusinessDataUpdate>(
+                   newFashionBusinessData, FashionBusinessDataExtensions.ApplyFashionUpdate));
         }
 
         private static Func<PipelineSteps<FashionBusinessData, FashionSearchRequest, FashionItem>> CreatePipelineSteps() => () =>
@@ -142,6 +146,19 @@
 
             businessDataUpdates.StartUpdateProcess().Wait();
             return () => businessDataUpdates.BusinessData;
+        }
+
+        private BusinessDataPumpBackgroundService<TBusinessData, TBusinessDataUpdate> CreateBusinessDataPumpBackgroundService<TBusinessData, TBusinessDataUpdate>(
+            Func<TBusinessData> createEmptyBusinessData,
+            Func<TBusinessData, TBusinessDataUpdate, TBusinessData> applyUpdate)
+        {
+            var pump = new BusinessDataPump<TBusinessData, TBusinessDataUpdate>(
+               demoCredential: this.demoCredential,
+               createEmptyBusinessData: createEmptyBusinessData,
+               applyUpdate: applyUpdate,
+               snapshotContainerClient: this.snapshotContainerClient);
+
+            return new BusinessDataPumpBackgroundService<TBusinessData, TBusinessDataUpdate>(pump);
         }
 
         private Func<TopicAndPartition> GetTopicAndComputeNodeID() => () =>

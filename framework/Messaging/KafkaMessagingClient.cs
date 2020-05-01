@@ -14,7 +14,7 @@
     using static Fundamentals.Types;
     using ConfluentKafkaOffset = Confluent.Kafka.Offset;
     using ConfluentPartition = Confluent.Kafka.Partition;
-    using MercuryOffset = Mercury.Fundamentals.Types.Offset;
+    using MercuryOffset = Mercury.Fundamentals.Types.Watermark;
     using MercuryPartition = Mercury.Fundamentals.Types.Partition;
 
     // A purely internal implementation dealing with Kafka. No Confluent data types outside this file and on public APIs.
@@ -103,7 +103,7 @@
                 message: kafkaMessage);
 
             await Console.Out.WriteLineAsync($"Sent {report.Topic}#{report.Partition.Value}#{report.Offset.Value} {messagePayload}");
-            return MercuryOffset.NewOffset(report.Offset.Value);
+            return MercuryOffset.NewWatermark(report.Offset.Value);
         }
 
         public IObservable<Message<TMessagePayload>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default)
@@ -114,7 +114,7 @@
                     startingPosition: startingPosition,
                     cancellationToken: cancellationToken)
                 .Select(consumeResult => new Message<TMessagePayload>(
-                    offset: MercuryOffset.NewOffset(consumeResult.Offset.Value),
+                    watermark: MercuryOffset.NewWatermark(consumeResult.Offset.Value),
                     requestID: GetRequestID(consumeResult.Message.Headers),
                     payload: consumeResult.Message.Value.DeserializeJSON<TMessagePayload>()));
         }
@@ -135,7 +135,7 @@
                     {
                         ConfluentKafkaOffset confluentKafkaOffset = startingPosition switch
                         {
-                            SeekPosition.FromOffset o => new ConfluentKafkaOffset(o.Offset.Item),
+                            SeekPosition.FromWatermark o => new ConfluentKafkaOffset(o.Watermark.Item),
                             _ => ConfluentKafkaOffset.End,
                         };
                         var tpo = new TopicPartitionOffset(tp, confluentKafkaOffset);
