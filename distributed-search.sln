@@ -49,8 +49,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Messaging", "framework\Mess
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Service.BusinessData", "services\BusinessDataService\Service.BusinessData.csproj", "{1FC26B26-5534-44D5-B1B2-C2556846E308}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ServiceImplementations", "framework\ServiceImplementations\ServiceImplementations.csproj", "{73C8A092-131D-4E68-B808-BC0A0A277D6A}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -113,10 +111,6 @@ Global
 		{1FC26B26-5534-44D5-B1B2-C2556846E308}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1FC26B26-5534-44D5-B1B2-C2556846E308}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1FC26B26-5534-44D5-B1B2-C2556846E308}.Release|Any CPU.Build.0 = Release|Any CPU
-		{73C8A092-131D-4E68-B808-BC0A0A277D6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{73C8A092-131D-4E68-B808-BC0A0A277D6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{73C8A092-131D-4E68-B808-BC0A0A277D6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{73C8A092-131D-4E68-B808-BC0A0A277D6A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -136,7 +130,6 @@ Global
 		{56DBC553-4E15-4BD3-96B5-128001A45EA9} = {7215F4AB-5CBC-41AF-B553-98CEF7EA1CF9}
 		{0C8E6BD9-BDE8-4879-B35B-739FCEBD3F82} = {7215F4AB-5CBC-41AF-B553-98CEF7EA1CF9}
 		{1FC26B26-5534-44D5-B1B2-C2556846E308} = {8845B943-00ED-4F7C-9AE8-C2C08E98A838}
-		{73C8A092-131D-4E68-B808-BC0A0A277D6A} = {7215F4AB-5CBC-41AF-B553-98CEF7EA1CF9}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4D4C50E1-A8D3-4A1B-B38A-300F5E906227}

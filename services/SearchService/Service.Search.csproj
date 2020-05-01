@@ -32,7 +32,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\framework\BusinessDataPump\BusinessDataPump.csproj" />
     <ProjectReference Include="..\..\framework\Credentials\Credentials.csproj" />
-    <ProjectReference Include="..\..\framework\ServiceImplementations\ServiceImplementations.csproj" />
     <ProjectReference Include="..\..\framework\Utils\Utils.csproj" />
     <ProjectReference Include="..\..\framework\Messaging\Messaging.csproj" />
     <ProjectReference Include="..\..\customer\Customer.Domain.Fashion\Customer.Domain.Fashion.fsproj" />

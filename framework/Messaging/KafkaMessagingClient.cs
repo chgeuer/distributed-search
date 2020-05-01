@@ -14,11 +14,10 @@
     using static Fundamentals.Types;
     using ConfluentKafkaOffset = Confluent.Kafka.Offset;
     using ConfluentPartition = Confluent.Kafka.Partition;
-    using MercuryOffset = Mercury.Fundamentals.Types.Watermark;
     using MercuryPartition = Mercury.Fundamentals.Types.Partition;
 
     // A purely internal implementation dealing with Kafka. No Confluent data types outside this file and on public APIs.
-    internal class KafkaMessagingClient<TMessagePayload> : IMessageClient<TMessagePayload>
+    internal class KafkaMessagingClient<TMessagePayload> : IWatermarkMessageClient<TMessagePayload>, IRequestResponseMessageClient<TMessagePayload>
     {
         private readonly IProducer<Null, string> producer;
         private readonly IConsumer<Ignore, string> consumer;
@@ -81,10 +80,41 @@
                     partition: DeterminePartitionID(this.adminClient, topicAndPartition)));
         }
 
-        public Task<MercuryOffset> SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default)
-            => this.SendMessage(messagePayload: messagePayload, requestId: null, cancellationToken);
+        IObservable<WatermarkMessage<TMessagePayload>> IWatermarkMessageClient<TMessagePayload>.CreateWatermarkObervable(SeekPosition startingPosition, CancellationToken cancellationToken)
+        {
+            return CreateObservable(
+                   consumer: this.consumer,
+                   tp: this.topicPartition.Value,
+                   startingPosition: startingPosition,
+                   cancellationToken: cancellationToken)
+               .Select(consumeResult => new WatermarkMessage<TMessagePayload>(
+                   watermark: Watermark.NewWatermark(consumeResult.Offset.Value),
+                   payload: consumeResult.Message.Value.DeserializeJSON<TMessagePayload>()));
+        }
 
-        public async Task<MercuryOffset> SendMessage(TMessagePayload messagePayload, string requestId, CancellationToken cancellationToken = default)
+        Task<Watermark> IWatermarkMessageClient<TMessagePayload>.SendWatermarkMessage(TMessagePayload messagePayload, CancellationToken cancellationToken)
+        {
+            return this.SendMessage(messagePayload: messagePayload, requestId: null, cancellationToken);
+        }
+
+        IObservable<RequestResponseMessage<TMessagePayload>> IRequestResponseMessageClient<TMessagePayload>.CreateWatermarkObervable(SeekPosition startingPosition, CancellationToken cancellationToken)
+        {
+            return CreateObservable(
+                   consumer: this.consumer,
+                   tp: this.topicPartition.Value,
+                   startingPosition: startingPosition,
+                   cancellationToken: cancellationToken)
+               .Select(consumeResult => new RequestResponseMessage<TMessagePayload>(
+                   requestID: GetRequestID(consumeResult.Message.Headers),
+                   payload: consumeResult.Message.Value.DeserializeJSON<TMessagePayload>()));
+        }
+
+        Task IRequestResponseMessageClient<TMessagePayload>.SendRequestResponseMessage(TMessagePayload messagePayload, string requestId, CancellationToken cancellationToken)
+        {
+            return this.SendMessage(messagePayload: messagePayload, requestId: requestId, cancellationToken);
+        }
+
+        private async Task<Watermark> SendMessage(TMessagePayload messagePayload, string requestId, CancellationToken cancellationToken = default)
         {
             var kafkaMessage = new Message<Null, string>
             {
@@ -103,22 +133,10 @@
                 message: kafkaMessage);
 
             await Console.Out.WriteLineAsync($"Sent {report.Topic}#{report.Partition.Value}#{report.Offset.Value} {messagePayload}");
-            return MercuryOffset.NewWatermark(report.Offset.Value);
+            return Watermark.NewWatermark(report.Offset.Value);
         }
 
-        public IObservable<WatermarkMessage<TMessagePayload>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default)
-        {
-            return CreateObservable(
-                    consumer: this.consumer,
-                    tp: this.topicPartition.Value,
-                    startingPosition: startingPosition,
-                    cancellationToken: cancellationToken)
-                .Select(consumeResult => new WatermarkMessage<TMessagePayload>(
-                    watermark: MercuryOffset.NewWatermark(consumeResult.Offset.Value),
-                    requestID: GetRequestID(consumeResult.Message.Headers),
-                    payload: consumeResult.Message.Value.DeserializeJSON<TMessagePayload>()));
-        }
-
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.OrderingRules", "SA1204:Static elements should appear before instance elements", Justification = "<Pending>")]
         private static IObservable<ConsumeResult<TKey, TValue>> CreateObservable<TKey, TValue>(
             IConsumer<TKey, TValue> consumer,
             TopicPartition tp,
@@ -195,12 +213,13 @@
             };
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("StyleCop.CSharp.OrderingRules", "SA1203:Constants should appear before fields", Justification = "<Pending>")]
         private const string RequestIdPropertyName = "requestIDString";
 
-        private static FSharpOption<string> GetRequestID(Headers headers)
+        private static string GetRequestID(Headers headers)
             => headers.TryGetLastBytes(RequestIdPropertyName, out var bytes)
-                ? FSharpOption<string>.Some(bytes.ToUTF8String())
-                : FSharpOption<string>.None;
+                ? bytes.ToUTF8String()
+                : string.Empty;
 
         private static void SetRequestID(Headers headers, string requestId)
             => headers.Add(RequestIdPropertyName, requestId.ToUTF8Bytes());

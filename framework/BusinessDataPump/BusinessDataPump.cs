@@ -22,7 +22,7 @@
     {
         private readonly Func<TBusinessData, TBusinessDataUpdate, TBusinessData> applyUpdate;
         private readonly Func<TBusinessData> createEmptyBusinessData;
-        private readonly IMessageClient<TBusinessDataUpdate> updateMessagingClient;
+        private readonly IWatermarkMessageClient<TBusinessDataUpdate> updateMessagingClient;
         private readonly BlobContainerClient snapshotContainerClient;
         private CancellationTokenSource cts;
         private Watermark lastWrittenWatermark = Watermark.NewWatermark(-1);
@@ -72,7 +72,7 @@
 
             IConnectableObservable<BusinessData<TBusinessData>> connectableObservable =
                 this.updateMessagingClient
-                    .CreateObervable(
+                    .CreateWatermarkObervable(
                         startingPosition: SeekPosition.NewFromWatermark(
                             snapshot.Watermark.Add(1)),
                         cancellationToken: this.cts.Token)
@@ -90,7 +90,7 @@
         }
 
         public Task<Watermark> SendUpdate(TBusinessDataUpdate update, CancellationToken cancellationToken = default)
-            => this.updateMessagingClient.SendMessage(update, cancellationToken);
+            => this.updateMessagingClient.SendWatermarkMessage(update, cancellationToken);
 
         /// <summary>
         /// Fetches a business data snapshot from blob storage.

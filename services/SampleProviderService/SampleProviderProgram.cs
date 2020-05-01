@@ -1,6 +1,5 @@
 ﻿namespace Mercury.Services.SampleProvider
 {
-    using Azure.Storage.Blobs;
     using Credentials;
     using Interfaces;
     using Mercury.Utils.Extensions;
@@ -26,22 +25,16 @@
             var requestsClient = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(demoCredential);
 
             var cts = new CancellationTokenSource();
-
-            var clients = new Dictionary<TopicAndPartition, IMessageClient<ProviderSearchResponse<FashionItem>>>();
-            IMessageClient<ProviderSearchResponse<FashionItem>> getMessageClient(TopicAndPartition tpid)
+            
+            var clients = new Dictionary<TopicAndPartition, IRequestResponseMessageClient<ProviderSearchResponse<FashionItem>>>();
+            IRequestResponseMessageClient<ProviderSearchResponse<FashionItem>> getMessageClient(TopicAndPartition tpid)
             {
                 lock (clients)
                 {
                     if (!clients.ContainsKey(tpid))
                     {
-                        var blobContainerClient = new BlobContainerClient(
-                            blobContainerUri: new Uri($"https://{demoCredential.StorageOffloadAccountName}.blob.core.windows.net/{demoCredential.StorageOffloadContainerName}/"),
-                            credential: demoCredential.AADServicePrincipal);
-
-                        var client = MessagingClients.WithStorageOffload<ProviderSearchResponse<FashionItem>>(
-                            demoCredential: demoCredential,
-                            topicAndPartition: tpid,
-                            storageOffload: blobContainerClient.ToStorageOffload());
+                        var client = MessagingClients.Responses<ProviderSearchResponse<FashionItem>>(
+                            demoCredential: demoCredential, topicAndPartition: tpid);
 
                         clients.Add(tpid, client);
                     }
@@ -50,7 +43,7 @@
             }
 
             requestsClient
-                .CreateObervable(SeekPosition.FromTail, cts.Token)
+                .CreateWatermarkObervable(SeekPosition.FromTail, cts.Token)
                 .Subscribe(
                     onNext: async providerSearchRequestMessage =>
                     {
@@ -65,14 +58,14 @@
 
                         GetResponses()
                             .Select(foundFashionItem => new ProviderSearchResponse<FashionItem>(
-                                requestID: requestId.Value,
+                                requestID: requestId,
                                 response: ListModule.OfArray(new[] { foundFashionItem })))
                             .Subscribe(
                                 onNext: async (responsePayload) =>
                                 {
-                                    await responseProducer.SendMessage(
+                                    await responseProducer.SendRequestResponseMessage(
                                         messagePayload: responsePayload,
-                                        requestId: requestId.Value,
+                                        requestId: requestId,
                                         cancellationToken: cts.Token);
 
                                     // await Console.Out.WriteLineAsync($"{requestId}: Sending {responsePayload.Response.Head.Description}");

@@ -6,9 +6,7 @@
     using System.Linq;
     using System.Reactive.Linq;
     using System.Threading.Tasks;
-    using Mercury.Fundamentals;
     using Mercury.Interfaces;
-    using Mercury.ServiceImplementation;
     using Mercury.Utils.Extensions;
     using Microsoft.AspNetCore.Mvc;
     using static Fundamentals.Types;
@@ -22,7 +20,7 @@
     {
         private readonly Func<BusinessData<FashionBusinessData>> getBusinessData;
         private readonly Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest;
-        private readonly IObservable<WatermarkMessage<ProviderSearchResponse<FashionItem>>> providerResponsePump;
+        private readonly IObservable<RequestResponseMessage<ProviderSearchResponse<FashionItem>>> providerResponsePump;
         private readonly Func<PipelineSteps<FashionBusinessData, FashionSearchRequest, FashionItem>> createPipelineSteps;
         private readonly Func<TopicAndPartition> getTopicAndPartition;
 
@@ -35,14 +33,14 @@
         /// <param name="getBusinessData">Returns the most recent business data.</param>
         /// <param name="getTopicAndPartition">Returns the <see cref="TopicAndPartition"/>.</param>
         public FashionSearchController(
-            IObservable<WatermarkMessage<ProviderSearchResponse<FashionItem>>> providerResponsePump,
+            IObservable<RequestResponseMessage<ProviderSearchResponse<FashionItem>>> providerResponsePump,
             Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest,
             Func<PipelineSteps<FashionBusinessData, FashionSearchRequest, FashionItem>> createPipelineSteps,
-            BusinessDataPumpBackgroundService<FashionBusinessData, FashionBusinessDataUpdate> getBusinessData,
+            Func<BusinessData<FashionBusinessData>> getBusinessData,
             Func<TopicAndPartition> getTopicAndPartition)
         {
             (this.providerResponsePump, this.sendProviderSearchRequest, this.createPipelineSteps, this.getBusinessData, this.getTopicAndPartition) =
-                (providerResponsePump, sendProviderSearchRequest, createPipelineSteps, () => getBusinessData.BusinessData, getTopicAndPartition);
+                (providerResponsePump, sendProviderSearchRequest, createPipelineSteps, getBusinessData, getTopicAndPartition);
         }
 
         [HttpGet]
@@ -76,7 +74,7 @@
             // Subscribe and start processing inbound stream. This is a non-blocking call.
             IObservable<FashionItem> responses =
                 this.providerResponsePump
-                    .Where(t => t.RequestID.OptionEqualsValue(requestID))
+                    .Where(t => t.RequestID == requestID)
                     .SelectMany(providerSearchResponseMessage =>
                     {
                         ProviderSearchResponse<FashionItem> payload = providerSearchResponseMessage.Payload;

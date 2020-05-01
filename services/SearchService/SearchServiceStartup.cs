@@ -9,8 +9,6 @@
     using Mercury.Customer.Fashion;
     using Mercury.Interfaces;
     using Mercury.Messaging;
-    using Mercury.ServiceImplementation;
-    using Mercury.Utils.Extensions;
     using Microsoft.AspNetCore.Builder;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.Extensions.Configuration;
@@ -75,11 +73,8 @@
 
             services.AddSingleton(_ => CreatePipelineSteps());
 
-            // services.AddSingleton(_ => this.GetCurrentBusinessData<FashionBusinessData, FashionBusinessDataUpdate>(
-            //    newFashionBusinessData, FashionBusinessDataExtensions.ApplyFashionUpdate));
-            services.AddHostedService(_ =>
-               this.CreateBusinessDataPumpBackgroundService<FashionBusinessData, FashionBusinessDataUpdate>(
-                   newFashionBusinessData, FashionBusinessDataExtensions.ApplyFashionUpdate));
+            services.AddSingleton(_ => this.GetCurrentBusinessData<FashionBusinessData, FashionBusinessDataUpdate>(
+               newFashionBusinessData, FashionBusinessDataExtensions.ApplyFashionUpdate));
         }
 
         private static Func<PipelineSteps<FashionBusinessData, FashionSearchRequest, FashionItem>> CreatePipelineSteps() => () =>
@@ -114,19 +109,18 @@
         {
             var requestProducer = MessagingClients.Requests<ProviderSearchRequest<FashionSearchRequest>>(this.demoCredential);
 
-            return searchRequest => requestProducer.SendMessage(searchRequest, requestId: searchRequest.RequestID);
+            return searchRequest => requestProducer.SendRequestResponseMessage(searchRequest, requestId: searchRequest.RequestID);
         }
 
-        private IObservable<WatermarkMessage<ProviderSearchResponse<T>>> CreateProviderResponsePump<T>(TopicAndPartition topicAndPartition)
+        private IObservable<RequestResponseMessage<ProviderSearchResponse<T>>> CreateProviderResponsePump<T>(TopicAndPartition topicAndPartition)
         {
             var messagingClient = MessagingClients
-                .WithStorageOffload<ProviderSearchResponse<T>>(
+                .Responses<ProviderSearchResponse<T>>(
                     demoCredential: this.demoCredential,
-                    topicAndPartition: topicAndPartition,
-                    storageOffload: this.storageOffloadStorage.ToStorageOffload());
+                    topicAndPartition: topicAndPartition);
 
             var connectable = messagingClient
-                .CreateObervable(SeekPosition.FromTail)
+                .CreateWatermarkObervable(SeekPosition.FromTail)
                 .Publish();
 
             connectable.Connect();
@@ -135,8 +129,8 @@
         }
 
         private Func<BusinessData<TBusinessData>> GetCurrentBusinessData<TBusinessData, TBusinessDataUpdate>(
-            Func<TBusinessData> createEmptyBusinessData,
-            Func<TBusinessData, TBusinessDataUpdate, TBusinessData> applyUpdate)
+          Func<TBusinessData> createEmptyBusinessData,
+          Func<TBusinessData, TBusinessDataUpdate, TBusinessData> applyUpdate)
         {
             var businessDataUpdates = new BusinessDataPump<TBusinessData, TBusinessDataUpdate>(
                 demoCredential: this.demoCredential,
@@ -146,19 +140,6 @@
 
             businessDataUpdates.StartUpdateProcess().Wait();
             return () => businessDataUpdates.BusinessData;
-        }
-
-        private BusinessDataPumpBackgroundService<TBusinessData, TBusinessDataUpdate> CreateBusinessDataPumpBackgroundService<TBusinessData, TBusinessDataUpdate>(
-            Func<TBusinessData> createEmptyBusinessData,
-            Func<TBusinessData, TBusinessDataUpdate, TBusinessData> applyUpdate)
-        {
-            var pump = new BusinessDataPump<TBusinessData, TBusinessDataUpdate>(
-               demoCredential: this.demoCredential,
-               createEmptyBusinessData: createEmptyBusinessData,
-               applyUpdate: applyUpdate,
-               snapshotContainerClient: this.snapshotContainerClient);
-
-            return new BusinessDataPumpBackgroundService<TBusinessData, TBusinessDataUpdate>(pump);
         }
 
         private Func<TopicAndPartition> GetTopicAndComputeNodeID() => () =>

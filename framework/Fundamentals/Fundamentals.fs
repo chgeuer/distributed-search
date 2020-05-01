@@ -23,9 +23,12 @@ type SeekPosition =
 type RequestID = string
 
 type WatermarkMessage<'payload> =
-    { RequestID: RequestID option
-      Watermark: Watermark
-      Payload: 'payload }
+    { Payload: 'payload 
+      Watermark: Watermark }
+
+type RequestResponseMessage<'payload> =
+    { Payload: 'payload
+      RequestID: RequestID }
 
 type TopicName = string
 
