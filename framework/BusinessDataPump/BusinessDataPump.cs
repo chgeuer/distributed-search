@@ -17,7 +17,6 @@
     using Microsoft.FSharp.Core;
     using static Fundamentals.Types;
     using static Mercury.Fundamentals.BusinessData;
-    using static Mercury.Fundamentals.BusinessData.BusinessDataUpdateError;
 
     public class BusinessDataPump<TBusinessData, TBusinessDataUpdate>
     {
@@ -69,19 +68,21 @@
                 return Observable.Throw<BusinessData<TBusinessData>>(((BusinessDataUpdateError.SnapshotDownloadError)snapshotResult.ErrorValue).Item);
             }
 
+            var snapshot = snapshotResult.ResultValue;
+
             IConnectableObservable<BusinessData<TBusinessData>> connectableObservable =
                 this.updateMessagingClient
                     .CreateObervable(
                         startingPosition: SeekPosition.NewFromWatermark(
-                            snapshotResult.ResultValue.Watermark.Add(1)),
+                            snapshot.Watermark.Add(1)),
                         cancellationToken: this.cts.Token)
                     .Scan(
                         seed: snapshotResult,
                         accumulator: (businessData, updateMessage)
                             => updateBusinessData(updateFunc, businessData, updateMessage)) // .Where(d => d.IsOk)
                     .Select(d => d.ResultValue)
-                    .StartWith(snapshotResult.ResultValue)
-                    .Publish(initialValue: snapshotResult.ResultValue);
+                    .StartWith(snapshot)
+                    .Publish(initialValue: snapshot);
 
             _ = connectableObservable.Connect();
 
@@ -104,10 +105,11 @@
 
                 if (FSharpOption<(Watermark, string)>.get_IsNone(someWatermarkAndName))
                 {
-                    return FSharpResult<BusinessData<TBusinessData>, BusinessDataUpdateError>.NewOk(
-                        new BusinessData<TBusinessData>(
+                    var emptyBusinessData = new BusinessData<TBusinessData>(
                             data: this.createEmptyBusinessData(),
-                            watermark: Watermark.NewWatermark(-1)));
+                            watermark: Watermark.NewWatermark(-1));
+
+                    return FSharpResult<BusinessData<TBusinessData>, BusinessDataUpdateError>.NewOk(emptyBusinessData);
                 }
 
                 var (watermark, blobName) = someWatermarkAndName.Value;
