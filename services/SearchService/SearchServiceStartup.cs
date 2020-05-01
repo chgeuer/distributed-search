@@ -117,7 +117,7 @@
             return searchRequest => requestProducer.SendMessage(searchRequest, requestId: searchRequest.RequestID);
         }
 
-        private IObservable<Message<ProviderSearchResponse<T>>> CreateProviderResponsePump<T>(TopicAndPartition topicAndPartition)
+        private IObservable<WatermarkMessage<ProviderSearchResponse<T>>> CreateProviderResponsePump<T>(TopicAndPartition topicAndPartition)
         {
             var messagingClient = MessagingClients
                 .WithStorageOffload<ProviderSearchResponse<T>>(

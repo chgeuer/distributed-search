@@ -106,14 +106,14 @@
             return MercuryOffset.NewWatermark(report.Offset.Value);
         }
 
-        public IObservable<Message<TMessagePayload>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default)
+        public IObservable<WatermarkMessage<TMessagePayload>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default)
         {
             return CreateObservable(
                     consumer: this.consumer,
                     tp: this.topicPartition.Value,
                     startingPosition: startingPosition,
                     cancellationToken: cancellationToken)
-                .Select(consumeResult => new Message<TMessagePayload>(
+                .Select(consumeResult => new WatermarkMessage<TMessagePayload>(
                     watermark: MercuryOffset.NewWatermark(consumeResult.Offset.Value),
                     requestID: GetRequestID(consumeResult.Message.Headers),
                     payload: consumeResult.Message.Value.DeserializeJSON<TMessagePayload>()));

@@ -22,7 +22,7 @@ type SeekPosition =
 
 type RequestID = string
 
-type Message<'payload> =
+type WatermarkMessage<'payload> =
     { RequestID: RequestID option
       Watermark: Watermark
       Payload: 'payload }

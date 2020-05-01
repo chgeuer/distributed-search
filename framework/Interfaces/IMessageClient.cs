@@ -7,7 +7,7 @@
 
     public interface IMessageClient<TMessagePayload>
     {
-        IObservable<Message<TMessagePayload>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default);
+        IObservable<WatermarkMessage<TMessagePayload>> CreateObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default);
 
         Task<Watermark> SendMessage(TMessagePayload messagePayload, CancellationToken cancellationToken = default);
 

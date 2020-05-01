@@ -22,7 +22,7 @@
     {
         private readonly Func<BusinessData<FashionBusinessData>> getBusinessData;
         private readonly Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest;
-        private readonly IObservable<Message<ProviderSearchResponse<FashionItem>>> providerResponsePump;
+        private readonly IObservable<WatermarkMessage<ProviderSearchResponse<FashionItem>>> providerResponsePump;
         private readonly Func<PipelineSteps<FashionBusinessData, FashionSearchRequest, FashionItem>> createPipelineSteps;
         private readonly Func<TopicAndPartition> getTopicAndPartition;
 
@@ -35,7 +35,7 @@
         /// <param name="getBusinessData">Returns the most recent business data.</param>
         /// <param name="getTopicAndPartition">Returns the <see cref="TopicAndPartition"/>.</param>
         public FashionSearchController(
-            IObservable<Message<ProviderSearchResponse<FashionItem>>> providerResponsePump,
+            IObservable<WatermarkMessage<ProviderSearchResponse<FashionItem>>> providerResponsePump,
             Func<ProviderSearchRequest<FashionSearchRequest>, Task> sendProviderSearchRequest,
             Func<PipelineSteps<FashionBusinessData, FashionSearchRequest, FashionItem>> createPipelineSteps,
             BusinessDataPumpBackgroundService<FashionBusinessData, FashionBusinessDataUpdate> getBusinessData,

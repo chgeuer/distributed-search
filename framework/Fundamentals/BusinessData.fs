@@ -23,7 +23,7 @@ module BusinessData =
     type SingleUpdate<'domainSpecificBusinessData, 'domainSpecificUpdate> =
         'domainSpecificBusinessData -> 'domainSpecificUpdate -> 'domainSpecificBusinessData
 
-    let updateBusinessData<'domainSpecificBusinessData, 'domainSpecificUpdate> (func: SingleUpdate<'domainSpecificBusinessData, 'domainSpecificUpdate>) (data: Result<BusinessData<'domainSpecificBusinessData>, BusinessDataUpdateError>) (um: Message<'domainSpecificUpdate>): Result<BusinessData<'domainSpecificBusinessData>, BusinessDataUpdateError> =
+    let updateBusinessData<'domainSpecificBusinessData, 'domainSpecificUpdate> (func: SingleUpdate<'domainSpecificBusinessData, 'domainSpecificUpdate>) (data: Result<BusinessData<'domainSpecificBusinessData>, BusinessDataUpdateError>) (um: WatermarkMessage<'domainSpecificUpdate>): Result<BusinessData<'domainSpecificBusinessData>, BusinessDataUpdateError> =
         match data with
         | Error e -> Error e
         | Ok data ->

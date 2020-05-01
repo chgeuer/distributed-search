@@ -20,7 +20,7 @@
             this.storageOffload = storageOffload;
         }
 
-        public IObservable<Message<TMessagePayload>> CreateObervable(
+        public IObservable<WatermarkMessage<TMessagePayload>> CreateObervable(
             SeekPosition startingPosition,
             CancellationToken cancellationToken = default)
             => this.innerClient
@@ -33,7 +33,7 @@
                         blobName: value(message.Payload.Address),
                         cancellationToken: cancellationToken);
 
-                    return new Message<TMessagePayload>(
+                    return new WatermarkMessage<TMessagePayload>(
                         watermark: message.Watermark,
                         requestID: message.RequestID,
                         payload: payload);
