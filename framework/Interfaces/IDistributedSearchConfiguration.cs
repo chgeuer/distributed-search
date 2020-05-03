@@ -10,21 +10,20 @@
 
         string EventHubTopicNameBusinessDataUpdates { get; }
 
-        string EventHubTopicNameRequests { get; }
+        string ServiceBusTopicNameRequests { get; }
+
+        string ProviderName { get; }
 
         string EventHubTopicNameResponses { get; }
 
         string EventHubConnectionString { get; }
 
+        string ServiceBusConnectionString { get; }
+
         // Snapshot Storage
         string BusinessDataSnapshotAccountName { get; }
 
         string BusinessDataSnapshotContainerName { get; }
-
-        // Storage Offload
-        string StorageOffloadAccountName { get; }
-
-        string StorageOffloadContainerName { get; }
 
         TokenCredential AADServicePrincipal { get; }
     }

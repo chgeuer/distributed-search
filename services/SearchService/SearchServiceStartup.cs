@@ -25,7 +25,6 @@
 
         private readonly IDistributedSearchConfiguration demoCredential;
         private readonly BlobContainerClient snapshotContainerClient;
-        private readonly BlobContainerClient storageOffloadStorage;
         private readonly TopicAndPartition responseTopicAndPartition;
 
         public SearchServiceStartup(IConfiguration configuration)
@@ -42,10 +41,6 @@
             this.snapshotContainerClient = new BlobContainerClient(
                 blobContainerUri: new Uri($"https://{this.demoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{this.demoCredential.BusinessDataSnapshotContainerName}/"),
                 credential: this.demoCredential.AADServicePrincipal);
-
-            this.storageOffloadStorage = new BlobContainerClient(
-               blobContainerUri: new Uri($"https://{this.demoCredential.StorageOffloadAccountName}.blob.core.windows.net/{this.demoCredential.StorageOffloadContainerName}/"),
-               credential: this.demoCredential.AADServicePrincipal);
         }
 
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -120,7 +115,7 @@
                     topicAndPartition: topicAndPartition);
 
             var connectable = messagingClient
-                .CreateWatermarkObervable(SeekPosition.FromTail)
+                .CreateObervable()
                 .Publish();
 
             connectable.Connect();

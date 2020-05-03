@@ -7,8 +7,8 @@
 
     public interface IRequestResponseMessageClient<TMessagePayload>
     {
-        IObservable<RequestResponseMessage<TMessagePayload>> CreateWatermarkObervable(SeekPosition startingPosition, CancellationToken cancellationToken = default);
-
         Task SendRequestResponseMessage(TMessagePayload messagePayload, string requestId, CancellationToken cancellationToken = default);
+
+        IObservable<RequestResponseMessage<TMessagePayload>> CreateObervable(CancellationToken cancellationToken = default);
     }
 }

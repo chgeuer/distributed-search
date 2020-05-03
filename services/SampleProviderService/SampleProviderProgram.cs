@@ -43,7 +43,7 @@
             }
 
             requestsClient
-                .CreateWatermarkObervable(SeekPosition.FromTail, cts.Token)
+                .CreateObervable(cts.Token)
                 .Subscribe(
                     onNext: async providerSearchRequestMessage =>
                     {

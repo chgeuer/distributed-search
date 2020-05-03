@@ -97,12 +97,12 @@
             return this.SendMessage(messagePayload: messagePayload, requestId: null, cancellationToken);
         }
 
-        IObservable<RequestResponseMessage<TMessagePayload>> IRequestResponseMessageClient<TMessagePayload>.CreateWatermarkObervable(SeekPosition startingPosition, CancellationToken cancellationToken)
+        IObservable<RequestResponseMessage<TMessagePayload>> IRequestResponseMessageClient<TMessagePayload>.CreateObervable(CancellationToken cancellationToken)
         {
             return CreateObservable(
                    consumer: this.consumer,
                    tp: this.topicPartition.Value,
-                   startingPosition: startingPosition,
+                   startingPosition: SeekPosition.FromTail,
                    cancellationToken: cancellationToken)
                .Select(consumeResult => new RequestResponseMessage<TMessagePayload>(
                    requestID: GetRequestID(consumeResult.Message.Headers),

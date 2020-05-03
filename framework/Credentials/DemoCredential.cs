@@ -16,17 +16,17 @@ namespace Mercury.Credentials
 
         public string EventHubNamespaceName { get => this.ProjectConfig.eventHubName; }
 
-        public string EventHubTopicNameRequests { get => this.ProjectConfig.topicNames.requests; }
-
         public string EventHubTopicNameResponses { get => this.ProjectConfig.topicNames.responses; }
 
         public string EventHubTopicNameBusinessDataUpdates { get => this.ProjectConfig.topicNames.businessdataupdates; }
 
         public string EventHubConnectionString { get => this.ProjectConfig.eventHubConnectionString; }
 
-        public string StorageOffloadAccountName { get => this.ProjectConfig.storageOffload.storageAccountName; }
+        public string ServiceBusConnectionString { get => this.ProjectConfig.serviceBusConnectionString; }
 
-        public string StorageOffloadContainerName { get => this.ProjectConfig.storageOffload.containerName; }
+        public string ProviderName { get => this.ProjectConfig.providerName; }
+
+        public string ServiceBusTopicNameRequests { get => this.ProjectConfig.topicNames.requests; }
 
         public string BusinessDataSnapshotAccountName { get => this.ProjectConfig.snapshotStorage.storageAccountName; }
 
