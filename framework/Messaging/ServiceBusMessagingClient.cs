@@ -5,97 +5,87 @@
     using System.Reactive.Linq;
     using System.Threading;
     using System.Threading.Tasks;
+    using Azure.Messaging.ServiceBus;
     using Mercury.Interfaces;
     using Mercury.Utils.Extensions;
-    using Microsoft.Azure.ServiceBus;
     using static Mercury.Fundamentals.Types;
 
     internal class ServiceBusMessagingClient<TMessagePayload> : IRequestResponseMessageClient<TMessagePayload>
     {
         private readonly IDistributedSearchConfiguration configuration;
 
-        private readonly TopicClient topicClient;
+        private readonly ServiceBusClient serviceBusClient;
 
-        private readonly SubscriptionClient subscriptionClient;
+        private readonly ServiceBusSender topicClient;
+
+        private readonly ServiceBusProcessor subscriptionClient;
 
         private static byte[] BytesFromPayLoad(TMessagePayload messagePayload) => messagePayload.AsJSON().ToUTF8Bytes();
 
         private static TMessagePayload PayLoadFromBytes(byte[] bytes) => bytes.ToUTF8String().DeserializeJSON<TMessagePayload>();
 
-        private static void SetRequestIDOnMessage(Message message, string requestID) => message.UserProperties.Add("RequestID", requestID);
+        private static void SetRequestIDOnMessage(ServiceBusMessage message, string requestID) => message.ApplicationProperties.Add("RequestID", requestID);
 
-        private static string GetRequestIDFromMessage(Message message) => message.UserProperties["RequestID"] as string;
+        private static string GetRequestIDFromMessage(ServiceBusReceivedMessage message) => message.ApplicationProperties["RequestID"] as string;
 
         public ServiceBusMessagingClient(IDistributedSearchConfiguration demoCredential)
         {
             this.configuration = demoCredential;
 
-            this.topicClient = new TopicClient(
-                connectionString: demoCredential.ServiceBusConnectionString,
-                entityPath: demoCredential.ServiceBusTopicNameRequests);
+            this.serviceBusClient = new ServiceBusClient(
+                connectionString: demoCredential.ServiceBusConnectionString);
 
-            this.subscriptionClient = new SubscriptionClient(
-                connectionString: demoCredential.ServiceBusConnectionString,
-                topicPath: demoCredential.ServiceBusTopicNameRequests,
+            this.topicClient = this.serviceBusClient.CreateSender(
+                queueOrTopicName: demoCredential.ServiceBusTopicNameRequests);
+
+            this.subscriptionClient = this.serviceBusClient.CreateProcessor(
+                topicName: demoCredential.ServiceBusTopicNameRequests,
                 subscriptionName: demoCredential.ProviderName,
-                receiveMode: ReceiveMode.ReceiveAndDelete);
+                options: new ServiceBusProcessorOptions
+                {
+                    ReceiveMode = ServiceBusReceiveMode.ReceiveAndDelete,
+                });
         }
 
         Task IRequestResponseMessageClient<TMessagePayload>.SendRequestResponseMessage(TMessagePayload messagePayload, string requestId, CancellationToken cancellationToken)
         {
             var bytes = BytesFromPayLoad(messagePayload);
-            var requestMessage = new Message(body: bytes);
+            var requestMessage = new ServiceBusMessage(body: bytes);
             SetRequestIDOnMessage(requestMessage, requestId);
-            return this.topicClient.SendAsync(requestMessage);
+            return this.topicClient.SendMessageAsync(requestMessage);
         }
 
         IObservable<RequestResponseMessage<TMessagePayload>> IRequestResponseMessageClient<TMessagePayload>.CreateObervable(CancellationToken cancellationToken)
         {
-            // var managementClient = new ManagementClient(
-            //    connectionString: this.configuration.ServiceBusConnectionString);
-            // managementClient.CreateSubscriptionAsync(
-            //    subscriptionDescription: new SubscriptionDescription(
-            //        topicPath: this.configuration.ServiceBusTopicNameRequests,
-            //        subscriptionName: this.configuration.ProviderName)
-            //    {
-            //        MaxDeliveryCount = 3,
-            //    },
-            //    cancellationToken: cancellationToken).Wait();
             var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var innerCancellationToken = cts.Token;
 
             innerCancellationToken.Register(() =>
             {
-                Console.Error.WriteLine("Calling this.subscriptionClient.CloseAsync().Wait()");
-
                 this.subscriptionClient.CloseAsync().Wait();
             });
 
             return Observable.Create<RequestResponseMessage<TMessagePayload>>(observer =>
             {
-                Task Handle(Message serviceBusMessage, CancellationToken ct)
+                Task Handle(ProcessMessageEventArgs args)
                 {
-                    var requestID = GetRequestIDFromMessage(serviceBusMessage);
-                    var payload = PayLoadFromBytes(serviceBusMessage.Body);
+                    var requestID = GetRequestIDFromMessage(args.Message);
+                    var payload = PayLoadFromBytes(args.Message.Body.ToArray());
 
                     observer.OnNext(new RequestResponseMessage<TMessagePayload>(payload, requestID));
 
                     return Task.CompletedTask;
                 }
 
-                Task HandleError(ExceptionReceivedEventArgs args)
+                Task HandleError(ProcessErrorEventArgs args)
                 {
                     observer.OnError(args.Exception);
 
                     return Task.CompletedTask;
                 }
 
-                this.subscriptionClient.RegisterMessageHandler(
-                    handler: Handle,
-                    messageHandlerOptions: new MessageHandlerOptions(exceptionReceivedHandler: HandleError)
-                        {
-                            MaxConcurrentCalls = 1,
-                        });
+                this.subscriptionClient.ProcessMessageAsync += Handle;
+                this.subscriptionClient.ProcessErrorAsync += HandleError;
 
                 return new CancellationDisposable(cts);
             });
