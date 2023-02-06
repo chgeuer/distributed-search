@@ -1,6 +1,5 @@
-﻿namespace Mercury.Interfaces
+﻿namespace Mercury.Interfaces;
+
+public interface IBusinessLogicStep<TBusinessData, TSearchRequest, TItem>
 {
-    public interface IBusinessLogicStep<TBusinessData, TSearchRequest, TItem>
-    {
-    }
 }

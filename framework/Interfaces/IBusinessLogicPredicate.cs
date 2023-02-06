@@ -1,7 +1,6 @@
-﻿namespace Mercury.Interfaces
+﻿namespace Mercury.Interfaces;
+
+public interface IBusinessLogicPredicate<TBusinessData, TSearchRequest, TItem> : IBusinessLogicStep<TBusinessData, TSearchRequest, TItem>
 {
-    public interface IBusinessLogicPredicate<TBusinessData, TSearchRequest, TItem> : IBusinessLogicStep<TBusinessData, TSearchRequest, TItem>
-    {
-        bool Matches(TBusinessData businessData, TSearchRequest searchRequest, TItem item);
-    }
+    bool Matches(TBusinessData businessData, TSearchRequest searchRequest, TItem item);
 }

@@ -16,7 +16,7 @@ type FashionItem =
 module FashionItem =
     let newPrice (i: FashionItem, price: decimal) =
         { i with Price = price }
-        
+
 let TShirt: FashionType = "T-Shirt"
 let Pullover: FashionType = "Pullover"
 let Shoes: FashionType = "Shoes"

@@ -1,70 +1,69 @@
-namespace Mercury.BusinessDataService
+namespace Mercury.BusinessDataService;
+
+using Azure.Storage.Blobs;
+using Mercury.BusinessDataPump;
+using Mercury.Credentials;
+using Mercury.Interfaces;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using System;
+using static Mercury.Customer.Fashion.BusinessData;
+using static Mercury.Fundamentals.BusinessData;
+
+public class BusinessDataStartup
 {
-    using System;
-    using Azure.Storage.Blobs;
-    using Mercury.BusinessDataPump;
-    using Mercury.Credentials;
-    using Mercury.Interfaces;
-    using Microsoft.AspNetCore.Builder;
-    using Microsoft.AspNetCore.Hosting;
-    using Microsoft.AspNetCore.Http;
-    using Microsoft.Extensions.Configuration;
-    using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Hosting;
-    using static Mercury.Customer.Fashion.BusinessData;
-    using static Mercury.Fundamentals.BusinessData;
+    public IConfiguration Configuration { get; }
 
-    public class BusinessDataStartup
+    private readonly IDistributedSearchConfiguration demoCredential;
+
+    public BusinessDataStartup(IConfiguration configuration)
     {
-        public IConfiguration Configuration { get; }
+        this.Configuration = configuration;
+        this.demoCredential = new DemoCredential();
+    }
 
-        private readonly IDistributedSearchConfiguration demoCredential;
+    public void ConfigureServices(IServiceCollection services)
+    {
+        services.AddSingleton(_ => this.GetCurrentBusinessData<FashionBusinessData, FashionBusinessDataUpdate>(
+            newFashionBusinessData, FashionBusinessDataExtensions.ApplyFashionUpdate));
+    }
 
-        public BusinessDataStartup(IConfiguration configuration)
+    // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+    public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+    {
+        if (env.IsDevelopment())
         {
-            this.Configuration = configuration;
-            this.demoCredential = new DemoCredential();
+            app.UseDeveloperExceptionPage();
         }
 
-        public void ConfigureServices(IServiceCollection services)
+        app.UseRouting();
+
+        app.UseEndpoints(endpoints =>
         {
-            services.AddSingleton(_ => this.GetCurrentBusinessData<FashionBusinessData, FashionBusinessDataUpdate>(
-                newFashionBusinessData, FashionBusinessDataExtensions.ApplyFashionUpdate));
-        }
-
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
-        {
-            if (env.IsDevelopment())
+            endpoints.MapGet("/", async context =>
             {
-                app.UseDeveloperExceptionPage();
-            }
-
-            app.UseRouting();
-
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapGet("/", async context =>
-                {
-                    await context.Response.WriteAsync("Hello World!");
-                });
+                await context.Response.WriteAsync("Hello World!");
             });
-        }
+        });
+    }
 
-        internal Func<BusinessData<TBusinessData>> GetCurrentBusinessData<TBusinessData, TBusinessDataUpdate>(
-            Func<TBusinessData> createEmptyBusinessData,
-            Func<TBusinessData, TBusinessDataUpdate, TBusinessData> applyUpdate)
-        {
-            var businessDataUpdates = new BusinessDataPump<TBusinessData, TBusinessDataUpdate>(
-                demoCredential: this.demoCredential,
-                createEmptyBusinessData: createEmptyBusinessData,
-                applyUpdate: applyUpdate,
-                snapshotContainerClient: new BlobContainerClient(
-                    blobContainerUri: new Uri($"https://{this.demoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{this.demoCredential.BusinessDataSnapshotContainerName}/"),
-                    credential: this.demoCredential.AADServicePrincipal));
+    internal Func<BusinessData<TBusinessData>> GetCurrentBusinessData<TBusinessData, TBusinessDataUpdate>(
+        Func<TBusinessData> createEmptyBusinessData,
+        Func<TBusinessData, TBusinessDataUpdate, TBusinessData> applyUpdate)
+    {
+        var businessDataUpdates = new BusinessDataPump<TBusinessData, TBusinessDataUpdate>(
+            demoCredential: this.demoCredential,
+            createEmptyBusinessData: createEmptyBusinessData,
+            applyUpdate: applyUpdate,
+            snapshotContainerClient: new BlobContainerClient(
+                blobContainerUri: new Uri($"https://{this.demoCredential.BusinessDataSnapshotAccountName}.blob.core.windows.net/{this.demoCredential.BusinessDataSnapshotContainerName}/"),
+                credential: this.demoCredential.AADServicePrincipal));
 
-            businessDataUpdates.StartUpdateProcess().Wait();
-            return () => businessDataUpdates.BusinessData;
-        }
+        businessDataUpdates.StartUpdateProcess().Wait();
+        return () => businessDataUpdates.BusinessData;
     }
 }

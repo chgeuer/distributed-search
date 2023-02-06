@@ -1,42 +1,41 @@
-﻿namespace Mercury.Utils
+﻿namespace Mercury.Utils;
+
+using Mercury.Utils.Extensions;
+using System.Threading;
+using System.Threading.Tasks;
+using static Fundamentals.Types;
+
+/// <summary>
+/// Handles upload and download of .NET types as JSON messages.
+/// </summary>
+public class StorageOffload
 {
-    using System.Threading;
-    using System.Threading.Tasks;
-    using Mercury.Utils.Extensions;
-    using static Fundamentals.Types;
+    private readonly StorageOffloadFunctions storageOffloadFunctions;
 
-    /// <summary>
-    /// Handles upload and download of .NET types as JSON messages.
-    /// </summary>
-    public class StorageOffload
+    public StorageOffload(StorageOffloadFunctions storageOffloadFunctions)
     {
-        private readonly StorageOffloadFunctions storageOffloadFunctions;
-
-        public StorageOffload(StorageOffloadFunctions storageOffloadFunctions)
-        {
-            this.storageOffloadFunctions = storageOffloadFunctions;
-        }
-
-        public Task Upload<T>(string blobName, T value, CancellationToken cancellationToken)
-            => this.storageOffloadFunctions.Upload(
-                GetFilename(blobName),
-                value
-                    .AsJSONStream()
-                    .GZipCompress(),
-                cancellationToken);
-
-        public async Task<T> Download<T>(string blobName, CancellationToken cancellationToken)
-        {
-            var stream = await this.storageOffloadFunctions.Download(
-                GetFilename(blobName),
-                cancellationToken);
-
-            return await stream
-                .GZipDecompress()
-                .ReadJSON<T>();
-        }
-
-        private static string GetFilename(string blobName)
-            => $"{blobName}.json.gz";
+        this.storageOffloadFunctions = storageOffloadFunctions;
     }
+
+    public Task Upload<T>(string blobName, T value, CancellationToken cancellationToken)
+        => this.storageOffloadFunctions.Upload(
+            GetFilename(blobName),
+            value
+                .AsJSONStream()
+                .GZipCompress(),
+            cancellationToken);
+
+    public async Task<T> Download<T>(string blobName, CancellationToken cancellationToken)
+    {
+        var stream = await this.storageOffloadFunctions.Download(
+            GetFilename(blobName),
+            cancellationToken);
+
+        return await stream
+            .GZipDecompress()
+            .ReadJSON<T>();
+    }
+
+    private static string GetFilename(string blobName)
+        => $"{blobName}.json.gz";
 }

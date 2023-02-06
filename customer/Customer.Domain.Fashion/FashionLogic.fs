@@ -26,7 +26,7 @@ type FashionTypeFilter() =
 
 type OrderByPriceFilter() =
     interface IBusinessLogicEnumerableProcessor<FashionBusinessData, FashionSearchRequest, FashionItem> with
-        member this.Process(_, _, items) = 
+        member this.Process(_, _, items) =
             items
             |> List.ofSeq
             |> List.sortBy (fun (x: FashionItem) -> x.Price)

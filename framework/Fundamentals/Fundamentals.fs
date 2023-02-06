@@ -6,7 +6,7 @@ open System.Threading
 open System.Threading.Tasks
 
 type StorageOffloadFunctions =
-    { Upload: Func<string, Stream, CancellationToken, Task> 
+    { Upload: Func<string, Stream, CancellationToken, Task>
       Download: Func<string, CancellationToken, Task<Stream>> }
 
 type Watermark = Watermark of int64
@@ -17,13 +17,13 @@ type Watermark with
         Watermark(watermarkValue + increment)
 
 type SeekPosition =
-    | FromWatermark of Watermark: Watermark 
+    | FromWatermark of Watermark: Watermark
     | FromTail
 
 type RequestID = string
 
 type WatermarkMessage<'payload> =
-    { Payload: 'payload 
+    { Payload: 'payload
       Watermark: Watermark }
 
 type RequestResponseMessage<'payload> =
@@ -70,7 +70,7 @@ module BlobStorageAddress =
     let create address =
         if String.IsNullOrEmpty address then
             failwith "address must not be null or empty"
-        else 
+        else
             BlobStorageAddress address
     let value (BlobStorageAddress address) =
         address

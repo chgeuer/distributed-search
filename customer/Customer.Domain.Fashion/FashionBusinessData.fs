@@ -25,14 +25,14 @@ module FashionBusinessDataExtensions =
     [<Extension>]
     let ApplyFashionUpdate : SingleUpdate<FashionBusinessData, FashionBusinessDataUpdate> =
         fun businessData update ->
-            
+
             match update with
             | MarkupUpdate(fashionType, markupPrice) ->
                 match markupPrice with
                 | price when price <= 0m ->
                     { businessData with
                           Markup = businessData.Markup.Remove(fashionType) }
-                | price -> 
+                | price ->
                     { businessData with
                           Markup = businessData.Markup.Add(fashionType, price) }
             | BrandUpdate(key, value) ->

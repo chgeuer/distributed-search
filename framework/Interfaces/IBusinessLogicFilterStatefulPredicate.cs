@@ -1,9 +1,8 @@
-﻿namespace Mercury.Interfaces
-{
-    using static Mercury.Fundamentals.BusinessLogic;
+﻿namespace Mercury.Interfaces;
 
-    public interface IBusinessLogicFilterStatefulPredicate<TBusinessData, TSearchRequest, TItem> : IBusinessLogicStep<TBusinessData, TSearchRequest, TItem>
-    {
-        ReplaceableOption<TItem> BetterMatch(TBusinessData businessData, TSearchRequest searchRequest, TItem item);
-    }
+using static Mercury.Fundamentals.BusinessLogic;
+
+public interface IBusinessLogicFilterStatefulPredicate<TBusinessData, TSearchRequest, TItem> : IBusinessLogicStep<TBusinessData, TSearchRequest, TItem>
+{
+    ReplaceableOption<TItem> BetterMatch(TBusinessData businessData, TSearchRequest searchRequest, TItem item);
 }

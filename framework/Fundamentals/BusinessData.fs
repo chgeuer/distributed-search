@@ -9,10 +9,10 @@ module BusinessData =
     open Mercury.Fundamentals.Types
 
     type UpdateOutOfOrderError =
-        { DataWatermark: Watermark 
+        { DataWatermark: Watermark
           UpdateWatermark: Watermark }
 
-    type BusinessDataUpdateError = 
+    type BusinessDataUpdateError =
         | UpdateOutOfOrderError of UpdateOutOfOrderError
         | SnapshotDownloadError of Exception
 
@@ -27,15 +27,15 @@ module BusinessData =
         match data with
         | Error e -> Error e
         | Ok data ->
-            let newVersion = 
+            let newVersion =
                 match (data.Watermark, um.Watermark) with
-                | (dataWatermark, updateWatermark) when dataWatermark.Add(1L) <> updateWatermark -> 
+                | (dataWatermark, updateWatermark) when dataWatermark.Add(1L) <> updateWatermark ->
                     Error { DataWatermark = dataWatermark; UpdateWatermark= updateWatermark }
                 | (_, updateWatermark) -> Ok updateWatermark
 
             match newVersion with
                 | Error e -> Error (UpdateOutOfOrderError e)
-                | Ok newVersion -> 
+                | Ok newVersion ->
                     let newData = func data.Data um.Payload
                     Ok { data with Watermark = newVersion; Data = newData }
 
