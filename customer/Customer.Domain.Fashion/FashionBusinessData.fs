@@ -22,11 +22,8 @@ type FashionBusinessDataUpdate =
 
 [<Extension>]
 module FashionBusinessDataExtensions =
-    [<Extension>]
-    let ApplyFashionUpdate : SingleUpdate<FashionBusinessData, FashionBusinessDataUpdate> =
-        fun businessData update ->
-
-            match update with
+    let update (businessData: FashionBusinessData) (update: FashionBusinessDataUpdate) : FashionBusinessData =
+        match update with
             | MarkupUpdate(fashionType, markupPrice) ->
                 match markupPrice with
                 | price when price <= 0m ->
@@ -41,6 +38,10 @@ module FashionBusinessDataExtensions =
             | SetDefaultMarkup newDefaultPrice ->
                 { businessData with
                       DefaultMarkup = newDefaultPrice }
+
+    [<Extension>]
+    let ApplyFashionUpdate : SingleUpdate<FashionBusinessData, FashionBusinessDataUpdate> =
+        fun d u -> update d u
 
     [<Extension>]
     let ApplyFashionUpdates (businessData: FashionBusinessData) (updates: IEnumerable<FashionBusinessDataUpdate>): FashionBusinessData =
